@@ -14,6 +14,6 @@ export function dailySpendCapCents(): number | null {
 }
 
 export function aiGenerationEstimateCents(): number {
-  const value = Number(process.env.AI_GENERATION_ESTIMATE_CENTS ?? "10");
-  return Number.isFinite(value) && value > 0 ? Math.round(value) : 10;
+  const value = Number(process.env.AI_GENERATION_ESTIMATE_CENTS ?? "7");
+  return Number.isFinite(value) && value > 0 ? Math.round(value) : 7;
 }

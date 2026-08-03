@@ -3,13 +3,18 @@ import { getCurrentUser } from "@/lib/supabase/server";
 import { createCreemCheckout } from "@/lib/payments/creem-checkout";
 import { getPlan } from "@/lib/payments/plans";
 import { isCheckoutEnabled } from "@/lib/launch-flags";
+import { isJsonObject, isSameOriginRequest } from "@/lib/request-security";
 
 type CheckoutRequest = {
   planId?: string;
-  provider?: "creem" | "paypal" | "stripe";
+  provider?: string;
 };
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ code: "invalid_origin" }, { status: 403 });
+  }
+
   if (!isCheckoutEnabled()) {
     return NextResponse.json({ code: "checkout_disabled" }, { status: 503 });
   }
@@ -19,7 +24,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ code: "unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json()) as CheckoutRequest;
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ code: "invalid_json" }, { status: 400 });
+  }
+  if (!isJsonObject(payload)) {
+    return NextResponse.json({ code: "invalid_json" }, { status: 400 });
+  }
+  const body = payload as CheckoutRequest;
   const plan = body.planId ? getPlan(body.planId) : null;
   const provider = body.provider ?? "creem";
 
@@ -40,8 +54,7 @@ export async function POST(request: Request) {
       siteUrl
     });
     return NextResponse.json({ checkoutUrl, provider, planId: plan.id });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "checkout_failed";
-    return NextResponse.json({ code: "checkout_failed", message }, { status: 502 });
+  } catch {
+    return NextResponse.json({ code: "checkout_failed" }, { status: 502 });
   }
 }

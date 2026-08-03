@@ -4,6 +4,7 @@ import { Download, ImagePlus, RefreshCw, ShieldCheck, WandSparkles, X } from "lu
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Locale } from "@/lib/i18n";
 import type { MakeupStyle } from "@/lib/content";
+import { redirectToLogin } from "@/lib/client-navigation";
 import { BeforeAfterSlider } from "./before-after-slider";
 
 type Status = "idle" | "uploading" | "queued" | "running" | "done" | "failed";
@@ -20,6 +21,59 @@ type GenerationStatus = {
 
 const MAX_BYTES = 12 * 1024 * 1024;
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp"];
+const FULL_FACE_DRAFT_KEY = "full-face-pending";
+
+type PendingFullFaceDraft = {
+  source: Blob;
+  name: string;
+  styleId: string;
+  intensity: number;
+  consent: boolean;
+  at: number;
+};
+
+function openDraftDatabase(): Promise<IDBDatabase | null> {
+  if (typeof window === "undefined" || !("indexedDB" in window)) return Promise.resolve(null);
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("makeup-ai", 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains("drafts")) {
+        request.result.createObjectStore("drafts");
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function savePendingDraft(draft: PendingFullFaceDraft) {
+  const database = await openDraftDatabase();
+  if (!database) return;
+  await new Promise<void>((resolve, reject) => {
+    const transaction = database.transaction("drafts", "readwrite");
+    transaction.objectStore("drafts").put(draft, FULL_FACE_DRAFT_KEY);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+  database.close();
+}
+
+async function takePendingDraft(): Promise<PendingFullFaceDraft | null> {
+  const database = await openDraftDatabase();
+  if (!database) return null;
+  const draft = await new Promise<PendingFullFaceDraft | null>((resolve, reject) => {
+    const transaction = database.transaction("drafts", "readwrite");
+    const store = transaction.objectStore("drafts");
+    const request = store.get(FULL_FACE_DRAFT_KEY);
+    request.onsuccess = () => {
+      store.delete(FULL_FACE_DRAFT_KEY);
+      resolve((request.result as PendingFullFaceDraft | undefined) ?? null);
+    };
+    request.onerror = () => reject(request.error);
+  });
+  database.close();
+  return draft && Date.now() - draft.at <= 30 * 60 * 1000 ? draft : null;
+}
 
 function t(locale: Locale, en: string, zh: string) {
   return locale === "zh-CN" ? zh : en;
@@ -56,6 +110,22 @@ export function MakeupTool({
     },
     [previewUrl]
   );
+
+  useEffect(() => {
+    void takePendingDraft().then((draft) => {
+      if (!draft) return;
+      const restoredFile = new File([draft.source], draft.name || "restored-selfie.jpg", {
+        type: draft.source.type || "image/jpeg"
+      });
+      setStyleId(styles.some((style) => style.id === draft.styleId) ? draft.styleId : styles[0]?.id ?? "natural");
+      setIntensity(draft.intensity);
+      setConsent(draft.consent);
+      setFile(restoredFile);
+      setPreviewUrl(URL.createObjectURL(restoredFile));
+    }).catch(() => undefined);
+    // Draft restoration runs once after returning from login.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function pickFile(next: File | null) {
     setErrorMessage(null);
@@ -160,11 +230,35 @@ export function MakeupTool({
       return;
     }
 
-    setErrorMessage(null);
-    setResult(null);
-    setStatus("uploading");
-
     try {
+      const balanceResponse = await fetch("/api/credits/balance");
+      if (balanceResponse.status === 401) {
+        await savePendingDraft({
+          source: file,
+          name: file.name,
+          styleId,
+          intensity,
+          consent,
+          at: Date.now()
+        }).catch(() => undefined);
+        sessionStorage.setItem(
+          "makeup-full-face-pending",
+          JSON.stringify({ styleId, intensity, at: Date.now() })
+        );
+        redirectToLogin(window.location.pathname);
+        return;
+      }
+      if (!balanceResponse.ok) throw new Error("balance_unavailable");
+      const { balance } = (await balanceResponse.json()) as { balance: number };
+      if (balance < 1) {
+        throw new Error(
+          t(locale, "No credits left. Buy the $8 pack to continue.", "credits 已用完，请购买 $8 额度包。")
+        );
+      }
+
+      setErrorMessage(null);
+      setResult(null);
+      setStatus("uploading");
       const uploadKey = await uploadOriginal(file);
 
       const response = await fetch("/api/makeup/generate", {

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Plan } from "./plans";
 
 const CREEM_API_BASE = process.env.CREEM_API_BASE ?? "https://api.creem.io";
@@ -20,7 +21,7 @@ export async function createCreemCheckout(args: {
     },
     body: JSON.stringify({
       product_id: args.plan.creemProductId,
-      request_id: `checkout-${args.userId}-${args.plan.id}`,
+      request_id: `checkout-${args.userId}-${args.plan.id}-${randomUUID()}`,
       customer: { email: args.email },
       success_url: `${args.siteUrl}/dashboard?paid=creem`,
       metadata: {

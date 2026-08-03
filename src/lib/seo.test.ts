@@ -31,5 +31,10 @@ describe("SEO helpers", () => {
         { price: "8", priceCurrency: "USD" }
       ]
     });
+    expect(schemas[2]).toMatchObject({
+      step: expect.arrayContaining([
+        expect.objectContaining({ text: expect.any(String) })
+      ])
+    });
   });
 });

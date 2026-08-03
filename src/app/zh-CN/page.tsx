@@ -1,9 +1,12 @@
 import { LandingPage } from "@/components/landing-page";
 import { getLandingPage } from "@/lib/content";
-import { pageSchemas } from "@/lib/seo";
+import { metadataForPage, pageSchemas } from "@/lib/seo";
+
+const page = getLandingPage("home", "zh-CN");
+
+export const metadata = metadataForPage(page, "zh-CN", "/");
 
 export default function ChineseHomePage() {
-  const page = getLandingPage("home", "zh-CN");
   const schemas = pageSchemas(page, "zh-CN", "/");
 
   return (

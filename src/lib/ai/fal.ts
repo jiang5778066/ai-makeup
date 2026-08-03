@@ -14,6 +14,25 @@ export type GenerateResult = {
   beforeImageUrl: string;
 };
 
+type FalImageEditResult = {
+  data: { images?: Array<{ url?: string }> };
+  requestId: string;
+};
+
+type FalImageEditSubscribe = (
+  endpointId: "openai/gpt-image-2/edit",
+  options: {
+    input: {
+      image_urls: string[];
+      prompt: string;
+      quality: "medium";
+      image_size: "auto";
+      output_format: "png";
+      num_images: 1;
+    };
+  }
+) => Promise<FalImageEditResult>;
+
 export function isFalConfigured() {
   return Boolean(process.env.FAL_KEY);
 }
@@ -37,18 +56,21 @@ async function generateWithFal(args: GenerateArgs): Promise<GenerateResult> {
     expiresIn: 60 * 10
   });
 
-  // PhotoMaker preserves identity from a reference image; swap to another fal model if preferred.
-  const result = (await fal.subscribe("fal-ai/photomaker", {
+  // The endpoint is live on fal, but the generated endpoint union in @fal-ai/client 1.10.1
+  // has not caught up yet. Keep the narrow local contract aligned with fal's public schema.
+  const subscribe = fal.subscribe as unknown as FalImageEditSubscribe;
+  const result = await subscribe("openai/gpt-image-2/edit", {
     input: {
-      image_archive_url: beforeImageUrl,
+      image_urls: [beforeImageUrl],
       prompt: buildPrompt(args),
-      num_inference_steps: 30,
-      style_strength: Math.round((args.intensity / 100) * 50) + 10,
+      quality: "medium",
+      image_size: "auto",
+      output_format: "png",
       num_images: 1
     }
-  })) as { images?: Array<{ url: string }> };
+  });
 
-  const url = result.images?.[0]?.url;
+  const url = result.data.images?.[0]?.url;
   if (!url) throw new Error("fal_no_image_returned");
 
   return { resultImageUrl: url, beforeImageUrl };

@@ -2,6 +2,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { generations, projects } from "@/db/schema";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { isJsonObject, isSameOriginRequest } from "@/lib/request-security";
 
 export const dynamic = "force-dynamic";
 
@@ -33,13 +34,32 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ code: "invalid_origin" }, { status: 403 });
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ code: "unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json().catch(() => ({}))) as { name?: string };
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ code: "invalid_json" }, { status: 400 });
+  }
+  if (!isJsonObject(payload)) {
+    return NextResponse.json({ code: "invalid_json" }, { status: 400 });
+  }
+  const body = payload as { name?: unknown };
+  if (body.name !== undefined && typeof body.name !== "string") {
+    return NextResponse.json({ code: "invalid_name" }, { status: 400 });
+  }
   const name = body.name?.trim() || "Untitled project";
+  if (name.length > 100) {
+    return NextResponse.json({ code: "invalid_name" }, { status: 400 });
+  }
   const { db } = await import("@/db/client");
 
   const [row] = await db

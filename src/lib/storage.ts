@@ -39,13 +39,14 @@ export async function presignPutUrl(args: {
   bucket: string;
   key: string;
   contentType: string;
-  contentLengthMax?: number;
+  contentLength: number;
   expiresIn?: number;
 }): Promise<string> {
   const command = new PutObjectCommand({
     Bucket: args.bucket,
     Key: args.key,
-    ContentType: args.contentType
+    ContentType: args.contentType,
+    ContentLength: args.contentLength
   });
   return getSignedUrl(getClient(), command, { expiresIn: args.expiresIn ?? 60 * 5 });
 }

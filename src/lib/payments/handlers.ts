@@ -82,6 +82,7 @@ export type RefundRecord = {
   eventId: string;
   providerOrderId?: string;
   providerTransactionId?: string;
+  fullReversal?: boolean;
 };
 
 export async function reverseCreditsForRefund(
@@ -99,7 +100,17 @@ export async function reverseCreditsForRefund(
       refund.providerOrderId ? eq(orders.providerOrderId, refund.providerOrderId) : null,
       refund.providerTransactionId ? eq(orders.providerTransactionId, refund.providerTransactionId) : null
     ].filter((condition): condition is ReturnType<typeof eq> => condition !== null);
-    if (providerIdentity.length === 0) return "not_found";
+    if (providerIdentity.length === 0) {
+      await tx
+        .delete(webhookEvents)
+        .where(
+          and(
+            eq(webhookEvents.provider, refund.provider),
+            eq(webhookEvents.eventId, refund.eventId)
+          )
+        );
+      return "not_found";
+    }
 
     const [order] = await tx
       .select()
@@ -111,7 +122,25 @@ export async function reverseCreditsForRefund(
         )
       )
       .for("update");
-    if (!order) return "not_found";
+    if (!order) {
+      await tx
+        .delete(webhookEvents)
+        .where(
+          and(
+            eq(webhookEvents.provider, refund.provider),
+            eq(webhookEvents.eventId, refund.eventId)
+          )
+        );
+      return "not_found";
+    }
+    if (!order.userId) {
+      await tx.update(orders).set({ status: "refund_review" }).where(eq(orders.id, order.id));
+      return "not_refundable";
+    }
+    if (refund.fullReversal === false) {
+      await tx.update(orders).set({ status: "refund_review" }).where(eq(orders.id, order.id));
+      return "not_refundable";
+    }
 
     const [lot] = await tx
       .select()

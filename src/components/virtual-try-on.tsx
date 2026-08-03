@@ -21,6 +21,7 @@ import {
   type SourceMode
 } from "@/lib/makeup";
 import { renderMakeup, type FaceLandmark } from "@/lib/virtual-renderer";
+import { redirectToLogin } from "@/lib/client-navigation";
 import { BeforeAfterSlider } from "./before-after-slider";
 
 const PART_NAMES: Record<MakeupPart, { en: string; "zh-CN": string }> = {
@@ -418,7 +419,7 @@ export function VirtualTryOn({
       if (balanceResponse.status === 401) {
         await savePendingDraft({ source: sourceBlob, config, at: Date.now() }).catch(() => undefined);
         sessionStorage.setItem("makeup-pending-config", JSON.stringify({ config, at: Date.now() }));
-        window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}#try`);
+        redirectToLogin(window.location.pathname);
         return;
       }
       if (!balanceResponse.ok) throw new Error("balance_unavailable");

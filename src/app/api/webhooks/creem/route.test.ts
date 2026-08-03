@@ -64,6 +64,35 @@ describe("POST /api/webhooks/creem", () => {
     });
   });
 
+  it.each([
+    ["wrong product", "prod_other", 800, "USD"],
+    ["wrong amount", "prod_credits_100", 100, "USD"],
+    ["wrong currency", "prod_credits_100", 800, "EUR"]
+  ])("rejects checkout events with %s", async (_label, productId, amount, currency) => {
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      signedRequest({
+        id: `evt_${_label}`,
+        eventType: "checkout.completed",
+        object: {
+          id: "checkout_invalid",
+          product: { id: productId },
+          order: {
+            id: "order_invalid",
+            amount,
+            currency
+          },
+          metadata: { userId: "user_1", planId: "credits_100" }
+        }
+      })
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ code: "payment_mismatch" });
+    expect(mockGrantPurchaseCredits).not.toHaveBeenCalled();
+  });
+
   it("locates refunds by the official transaction_id when no order id is included", async () => {
     mockReverseCreditsForRefund.mockResolvedValue("reversed");
     const { POST } = await import("./route");
@@ -72,7 +101,10 @@ describe("POST /api/webhooks/creem", () => {
       signedRequest({
         id: "evt_refund_1",
         eventType: "refund.created",
-        object: { transaction_id: "transaction_1" }
+        object: {
+          refund_amount: 800,
+          transaction: { id: "transaction_1", amount_paid: 800 }
+        }
       })
     );
 
@@ -80,7 +112,59 @@ describe("POST /api/webhooks/creem", () => {
     expect(mockReverseCreditsForRefund).toHaveBeenCalledWith({
       provider: "creem",
       eventId: "evt_refund_1",
-      providerTransactionId: "transaction_1"
+      providerTransactionId: "transaction_1",
+      fullReversal: true
+    });
+  });
+
+  it("marks a partial refund for review instead of treating it as a full reversal", async () => {
+    mockReverseCreditsForRefund.mockResolvedValue("not_refundable");
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      signedRequest({
+        id: "evt_refund_partial",
+        eventType: "refund.created",
+        object: {
+          refund_amount: 200,
+          transaction: {
+            id: "transaction_1",
+            amount_paid: 800,
+            order: "order_1"
+          }
+        }
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockReverseCreditsForRefund).toHaveBeenCalledWith({
+      provider: "creem",
+      eventId: "evt_refund_partial",
+      providerOrderId: "order_1",
+      providerTransactionId: "transaction_1",
+      fullReversal: false
+    });
+  });
+
+  it("asks Creem to retry when a refund arrives before the matching order", async () => {
+    mockReverseCreditsForRefund.mockResolvedValue("not_found");
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      signedRequest({
+        id: "evt_refund_early",
+        eventType: "refund.created",
+        object: { transaction_id: "transaction_early" }
+      })
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({ code: "order_not_ready" });
+    expect(mockReverseCreditsForRefund).toHaveBeenCalledWith({
+      provider: "creem",
+      eventId: "evt_refund_early",
+      providerTransactionId: "transaction_early",
+      fullReversal: false
     });
   });
 });
