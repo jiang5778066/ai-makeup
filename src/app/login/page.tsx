@@ -2,12 +2,15 @@
 
 import { WandSparkles } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { safeNextPath } from "@/lib/auth-redirect";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -21,10 +24,13 @@ export default function LoginPage() {
 
     const supabase = getSupabaseBrowserClient();
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+    const next = safeNextPath(searchParams.get("next"));
+    const callbackUrl = new URL("/auth/callback", siteUrl);
+    callbackUrl.searchParams.set("next", next);
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`
+        emailRedirectTo: callbackUrl.toString()
       }
     });
 

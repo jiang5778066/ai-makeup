@@ -133,9 +133,7 @@ export const orders = pgTable(
   "orders",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => authUsers.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => authUsers.id, { onDelete: "set null" }),
     provider: text("provider").notNull(),
     providerOrderId: text("provider_order_id").notNull(),
     providerTransactionId: text("provider_transaction_id"),
@@ -167,6 +165,13 @@ export const webhookEvents = pgTable(
 export const aiDailyUsage = pgTable("ai_daily_usage", {
   usageDate: date("usage_date").primaryKey(),
   reservedCents: integer("reserved_cents").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+});
+
+export const rateLimitBuckets = pgTable("rate_limit_buckets", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull().default(0),
+  resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
 });
 

@@ -14,11 +14,11 @@ beforeEach(() => {
 });
 
 describe("daily AI budget", () => {
-  it("defaults to the agreed $20 cap and ten-cent reservation", async () => {
+  it("defaults to the agreed $20 cap and seven-cent reservation", async () => {
     const { aiGenerationEstimateCents, dailySpendCapCents } = await import("./launch-flags");
 
     expect(dailySpendCapCents()).toBe(2000);
-    expect(aiGenerationEstimateCents()).toBe(10);
+    expect(aiGenerationEstimateCents()).toBe(7);
   });
 
   it("reports whether the database accepted an atomic reservation", async () => {

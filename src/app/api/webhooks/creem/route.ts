@@ -19,9 +19,14 @@ type CreemObject = {
   order_id?: string;
   order?: CreemOrder;
   transaction_id?: string;
-  transaction?: string | { id?: string; order?: string | { id?: string } };
+  transaction?: string | {
+    id?: string;
+    order?: string | { id?: string };
+    amount_paid?: number;
+  };
   amount?: number;
   currency?: string;
+  refund_amount?: number;
   metadata?: Record<string, string>;
 };
 
@@ -76,8 +81,19 @@ export async function POST(request: Request) {
     const plan = resolvePlan(event.object);
     const userId = event.object.metadata?.userId;
     const providerOrderId = event.object.order?.id ?? event.object.order_id ?? event.object.id;
+    const productId = event.object.product_id ?? nestedId(event.object.product);
+    const amountCents = event.object.order?.amount ?? event.object.amount;
+    const currency = (event.object.order?.currency ?? event.object.currency)?.toUpperCase();
     if (!plan || !userId || !providerOrderId) {
       return NextResponse.json({ code: "unresolvable" }, { status: 400 });
+    }
+    if (
+      !productId ||
+      productId !== plan.creemProductId ||
+      amountCents !== plan.priceUsd * 100 ||
+      currency !== "USD"
+    ) {
+      return NextResponse.json({ code: "payment_mismatch" }, { status: 400 });
     }
     const { grantPurchaseCredits } = await import("@/lib/payments/handlers");
     await grantPurchaseCredits({
@@ -91,8 +107,8 @@ export async function POST(request: Request) {
       userId,
       planId: plan.id,
       credits: plan.credits,
-      amountCents: event.object.order?.amount ?? event.object.amount ?? plan.priceUsd * 100,
-      currency: (event.object.order?.currency ?? event.object.currency ?? "USD").toUpperCase()
+      amountCents,
+      currency
     });
     return NextResponse.json({ received: true });
   }
@@ -106,16 +122,29 @@ export async function POST(request: Request) {
       event.object.order?.id;
     const providerTransactionId =
       event.object.transaction_id ?? nestedId(event.object.transaction);
+    const transaction =
+      event.object.transaction && typeof event.object.transaction !== "string"
+        ? event.object.transaction
+        : undefined;
+    const fullReversal =
+      event.eventType === "dispute.created" ||
+      (typeof event.object.refund_amount === "number" &&
+        typeof transaction?.amount_paid === "number" &&
+        event.object.refund_amount >= transaction.amount_paid);
     if (!providerOrderId && !providerTransactionId) {
       return NextResponse.json({ code: "missing_order_or_transaction" }, { status: 400 });
     }
     const { reverseCreditsForRefund } = await import("@/lib/payments/handlers");
-    await reverseCreditsForRefund({
+    const result = await reverseCreditsForRefund({
       provider: "creem",
       eventId: event.id,
       ...(providerOrderId ? { providerOrderId } : {}),
-      ...(providerTransactionId ? { providerTransactionId } : {})
+      ...(providerTransactionId ? { providerTransactionId } : {}),
+      fullReversal
     });
+    if (result === "not_found") {
+      return NextResponse.json({ code: "order_not_ready" }, { status: 503 });
+    }
     return NextResponse.json({ received: true });
   }
 

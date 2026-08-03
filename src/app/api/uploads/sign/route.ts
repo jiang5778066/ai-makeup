@@ -9,6 +9,7 @@ import {
   presignPutUrl
 } from "@/lib/storage";
 import { rateLimit, requestIp } from "@/lib/rate-limit";
+import { isJsonObject, isSameOriginRequest } from "@/lib/request-security";
 
 type SignRequest = {
   contentType?: string;
@@ -17,6 +18,10 @@ type SignRequest = {
 };
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ code: "invalid_origin" }, { status: 403 });
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ code: "unauthorized" }, { status: 401 });
@@ -26,12 +31,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ code: "storage_unconfigured" }, { status: 503 });
   }
 
-  const limited = rateLimit(`upload:${user.id}:${requestIp(request)}`, 20, 60 * 60 * 1000);
+  const limited = await rateLimit(`upload:${user.id}:${requestIp(request)}`, 20, 60 * 60 * 1000);
   if (!limited.ok) {
     return NextResponse.json({ code: "rate_limited" }, { status: 429 });
   }
 
-  const body = (await request.json()) as SignRequest;
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ code: "invalid_json" }, { status: 400 });
+  }
+  if (!isJsonObject(payload)) {
+    return NextResponse.json({ code: "invalid_json" }, { status: 400 });
+  }
+  const body = payload as SignRequest;
   const contentType = body.contentType ?? "";
   const contentLength = body.contentLength ?? 0;
 
@@ -56,6 +70,7 @@ export async function POST(request: Request) {
     bucket: R2_BUCKET_ORIGINALS,
     key: uploadKey,
     contentType,
+    contentLength,
     expiresIn: 60 * 5
   });
 

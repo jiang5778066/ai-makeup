@@ -24,7 +24,7 @@ export function metadataForPage(page: LandingPage, locale: Locale, path: string)
       title: page.seoTitle,
       description: page.seoDescription,
       url: `${siteUrl}${localizePath(path, locale)}`,
-      siteName: "AI Makeup Studio",
+      siteName: "Makeup AI",
       locale,
       type: "website"
     },
@@ -71,9 +71,21 @@ export function pageSchemas(page: LandingPage, locale: Locale, path: string) {
       "@type": "HowTo",
       name: page.h1,
       step: [
-        { "@type": "HowToStep", name: locale === "zh-CN" ? "上传自拍" : "Upload a selfie" },
-        { "@type": "HowToStep", name: locale === "zh-CN" ? "选择妆容风格" : "Choose a makeup style" },
-        { "@type": "HowToStep", name: locale === "zh-CN" ? "生成并下载结果" : "Generate and download the result" }
+        {
+          "@type": "HowToStep",
+          name: locale === "zh-CN" ? "上传自拍" : "Upload a selfie",
+          text: locale === "zh-CN" ? "上传一张清晰、正面、单人自拍。" : "Upload one clear, front-facing selfie."
+        },
+        {
+          "@type": "HowToStep",
+          name: locale === "zh-CN" ? "选择妆容风格" : "Choose a makeup style",
+          text: locale === "zh-CN" ? "选择完整妆容风格或组合九种实时妆效。" : "Choose a full-face style or combine nine live effects."
+        },
+        {
+          "@type": "HowToStep",
+          name: locale === "zh-CN" ? "生成并下载结果" : "Generate and download the result",
+          text: locale === "zh-CN" ? "生成高清结果，在作品库中比较并下载。" : "Generate an HD result, then compare and download it from your creations."
+        }
       ]
     },
     {

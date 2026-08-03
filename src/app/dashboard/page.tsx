@@ -8,6 +8,7 @@ import { R2_BUCKET_RESULTS, isStorageConfigured, presignGetUrl } from "@/lib/sto
 import { getCurrentUser } from "@/lib/supabase/server";
 import { MAKEUP_PARTS } from "@/lib/makeup";
 import { generationMatchesFilter } from "@/lib/generation-filter";
+import { AccountSettings } from "@/components/account-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -198,6 +199,8 @@ export default async function DashboardPage({
             ))}
           </div>
         )}
+
+        <AccountSettings />
       </section>
     </main>
   );

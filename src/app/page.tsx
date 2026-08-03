@@ -1,9 +1,12 @@
 import { getLandingPage } from "@/lib/content";
 import { LandingPage } from "@/components/landing-page";
-import { pageSchemas } from "@/lib/seo";
+import { metadataForPage, pageSchemas } from "@/lib/seo";
+
+const page = getLandingPage("home", "en");
+
+export const metadata = metadataForPage(page, "en", "/");
 
 export default function HomePage() {
-  const page = getLandingPage("home", "en");
   const schemas = pageSchemas(page, "en", "/");
 
   return (

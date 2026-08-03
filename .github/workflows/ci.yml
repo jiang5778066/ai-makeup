@@ -23,6 +23,10 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: test
-          STRIPE_SECRET_KEY: sk_test_placeholder
-          STRIPE_WEBHOOK_SECRET: whsec_placeholder
+          SUPABASE_SERVICE_ROLE_KEY: test-service-role
+          CREEM_API_KEY: creem_test_placeholder
+          CREEM_WEBHOOK_SECRET: creem_webhook_placeholder
+          CREEM_PRODUCT_CREDITS_100: prod_test_credits_100
+          DAILY_AI_SPEND_CAP_CENTS: 2000
+          AI_GENERATION_ESTIMATE_CENTS: 7
       - run: npm audit --audit-level=high

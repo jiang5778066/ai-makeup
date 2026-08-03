@@ -4,6 +4,7 @@ import { generations, projects } from "@/db/schema";
 import { getStyleLibrary } from "@/lib/content";
 import { R2_BUCKET_RESULTS, isStorageConfigured, presignGetUrl } from "@/lib/storage";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { isSameOriginRequest } from "@/lib/request-security";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +61,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   });
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ code: "invalid_origin" }, { status: 403 });
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ code: "unauthorized" }, { status: 401 });

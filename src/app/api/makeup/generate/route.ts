@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/supabase/server";
 import { inngest } from "@/inngest/client";
 import { isGenerationEnabled } from "@/lib/launch-flags";
 import { rateLimit, requestIp } from "@/lib/rate-limit";
+import { isJsonObject, isSameOriginRequest } from "@/lib/request-security";
 import {
   normalizeMakeupConfig,
   type MakeupConfig,
@@ -31,6 +32,10 @@ const GENERATION_COST = 1;
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ code: "invalid_origin" }, { status: 403 });
+  }
+
   if (!isGenerationEnabled()) {
     return NextResponse.json({ code: "generation_disabled" }, { status: 503 });
   }
@@ -40,12 +45,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ code: "unauthorized" }, { status: 401 });
   }
 
-  const limited = rateLimit(`generation:${user.id}:${requestIp(request)}`, 30, 24 * 60 * 60 * 1000);
+  const limited = await rateLimit(`generation:${user.id}:${requestIp(request)}`, 30, 24 * 60 * 60 * 1000);
   if (!limited.ok) {
     return NextResponse.json({ code: "rate_limited" }, { status: 429 });
   }
 
-  const body = (await request.json()) as GenerateRequest;
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ code: "invalid_json" }, { status: 400 });
+  }
+  if (!isJsonObject(payload)) {
+    return NextResponse.json({ code: "invalid_json" }, { status: 400 });
+  }
+  const body = payload as GenerateRequest;
   const locale = toLocale(body.locale);
 
   if (!body.uploadKey) {
@@ -139,10 +153,16 @@ export async function POST(request: Request) {
     throw error;
   }
 
-  await inngest.send({
-    name: "makeup/generate.requested",
-    data: { generationId }
-  });
+  try {
+    await inngest.send({
+      name: "makeup/generate.requested",
+      data: { generationId }
+    });
+  } catch {
+    const { failAndRefundGeneration } = await import("@/lib/generation-failure");
+    await failAndRefundGeneration(generationId, "queue_unavailable");
+    return NextResponse.json({ code: "queue_unavailable" }, { status: 503 });
+  }
 
   return NextResponse.json({ generationId, status: "queued" }, { status: 202 });
 }

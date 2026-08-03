@@ -90,7 +90,7 @@ CREATE INDEX "credit_consumptions_grant_idx" ON "credit_consumptions" ("grant_id
 
 CREATE TABLE "orders" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  "user_id" uuid NOT NULL REFERENCES auth.users(id) ON DELETE cascade,
+  "user_id" uuid REFERENCES auth.users(id) ON DELETE set null,
   "provider" text NOT NULL,
   "provider_order_id" text NOT NULL,
   "provider_transaction_id" text,
@@ -126,6 +126,14 @@ CREATE TABLE "ai_daily_usage" (
   CONSTRAINT "ai_daily_usage_nonnegative" CHECK ("reserved_cents" >= 0)
 );
 
+CREATE TABLE "rate_limit_buckets" (
+  "key" text PRIMARY KEY,
+  "count" integer NOT NULL DEFAULT 0,
+  "reset_at" timestamp with time zone NOT NULL,
+  "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT "rate_limit_buckets_count_positive" CHECK ("count" > 0)
+);
+
 ALTER TABLE "projects" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "generations" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "credit_balances" ENABLE ROW LEVEL SECURITY;
@@ -135,3 +143,4 @@ ALTER TABLE "credit_consumptions" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "orders" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "webhook_events" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "ai_daily_usage" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "rate_limit_buckets" ENABLE ROW LEVEL SECURITY;

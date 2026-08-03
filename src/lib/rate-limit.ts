@@ -1,33 +1,31 @@
-type Bucket = {
-  count: number;
-  resetAt: number;
-};
+import { sql } from "drizzle-orm";
+import { db } from "@/db/client";
 
-declare global {
-  var __rateLimitBuckets: Map<string, Bucket> | undefined;
-}
-
-function buckets() {
-  global.__rateLimitBuckets ??= new Map<string, Bucket>();
-  return global.__rateLimitBuckets;
-}
-
-export function rateLimit(key: string, limit: number, windowMs: number) {
-  const now = Date.now();
-  const store = buckets();
-  const current = store.get(key);
-
-  if (!current || current.resetAt <= now) {
-    store.set(key, { count: 1, resetAt: now + windowMs });
-    return { ok: true, remaining: limit - 1, resetAt: now + windowMs };
-  }
-
-  if (current.count >= limit) {
-    return { ok: false, remaining: 0, resetAt: current.resetAt };
-  }
-
-  current.count += 1;
-  return { ok: true, remaining: limit - current.count, resetAt: current.resetAt };
+export async function rateLimit(key: string, limit: number, windowMs: number) {
+  const rows = await db.execute(sql`
+    INSERT INTO rate_limit_buckets (key, count, reset_at, updated_at)
+    VALUES (${key}, 1, NOW() + (${windowMs} * INTERVAL '1 millisecond'), NOW())
+    ON CONFLICT (key)
+    DO UPDATE SET
+      count = CASE
+        WHEN rate_limit_buckets.reset_at <= NOW() THEN 1
+        ELSE rate_limit_buckets.count + 1
+      END,
+      reset_at = CASE
+        WHEN rate_limit_buckets.reset_at <= NOW()
+          THEN NOW() + (${windowMs} * INTERVAL '1 millisecond')
+        ELSE rate_limit_buckets.reset_at
+      END,
+      updated_at = NOW()
+    RETURNING count, reset_at
+  `);
+  const row = rows[0] as { count: number; reset_at: Date | string };
+  const count = Number(row.count);
+  return {
+    ok: count <= limit,
+    remaining: Math.max(0, limit - count),
+    resetAt: new Date(row.reset_at).getTime()
+  };
 }
 
 export function requestIp(request: Request) {

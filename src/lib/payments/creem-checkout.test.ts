@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 describe("createCreemCheckout", () => {
-  it("creates an official Creem checkout with a stable request_id", async () => {
+  it("creates an official Creem checkout with a unique request_id", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ checkout_url: "https://checkout.creem.io/test" })
@@ -33,18 +33,18 @@ describe("createCreemCheckout", () => {
     });
 
     expect(url).toBe("https://checkout.creem.io/test");
+    const [, request] = mockFetch.mock.calls[0] as [string, RequestInit];
+    const payload = JSON.parse(String(request.body)) as Record<string, unknown>;
     expect(mockFetch).toHaveBeenCalledWith(
       "https://api.creem.io/v1/checkouts",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({
-          product_id: "prod_credits_100",
-          request_id: "checkout-user_1-credits_100",
-          customer: { email: "buyer@example.com" },
-          success_url: "https://makeup.example/dashboard?paid=creem",
-          metadata: { userId: "user_1", planId: "credits_100" }
-        })
-      })
+      expect.objectContaining({ method: "POST" })
     );
+    expect(payload).toMatchObject({
+      product_id: "prod_credits_100",
+      customer: { email: "buyer@example.com" },
+      success_url: "https://makeup.example/dashboard?paid=creem",
+      metadata: { userId: "user_1", planId: "credits_100" }
+    });
+    expect(payload.request_id).toMatch(/^checkout-user_1-credits_100-[0-9a-f-]{36}$/);
   });
 });
