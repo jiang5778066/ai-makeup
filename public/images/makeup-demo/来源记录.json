@@ -1,0 +1,119 @@
+[
+  {
+    "file": "k-beauty.webp",
+    "task_id": "img_task_7fe135e16d1a41cd8a72347a6bd1ddcc",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "2082bbe14f36d05c5493ed04db6fe043a0d97e2dff799e3337612bd05d52b9e3"
+  },
+  {
+    "file": "clean-girl.webp",
+    "task_id": "img_task_cf8b7e2432d34eafb888ba82c33013fc",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "ce4675f54933d9b940eda6c68af5177cbd15672e50fedcaca82a5b874bf728af"
+  },
+  {
+    "file": "douyin.webp",
+    "task_id": "img_task_5c435f13214c45e2b2fc995fe481a72f",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "a6a1726f25c0e8c52b0862cb166b0d1e7b3d32c6baa0ed5d7bf0e4ff0897aa90"
+  },
+  {
+    "file": "gothic.webp",
+    "task_id": "img_task_9875140470514d4cacd121a8090a63b9",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "c043d91b812574d2fcf0bfc87fb947b9304f2f8f3ca83b8dfbcd486c88ecdef5"
+  },
+  {
+    "file": "natural.webp",
+    "task_id": "img_task_7a3b6c3fbbd842d7ad209b4ea4db9c45",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "6c8d5d2e87f13105bea808b4796de24123ef300eecf9b299a8f692b7c83c1afe"
+  },
+  {
+    "file": "y2k.webp",
+    "task_id": "img_task_22e94151ad5e4510bcff7988ed3d3dda",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "37f53fcd16c75d2e995940b36613d73d5ed9970bf3c102c9dc3b1d3d52f042b9"
+  },
+  {
+    "file": "date-night.webp",
+    "task_id": "img_task_fb9f571282f3401389582c5c54ec17f1",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "fc9de7c88492dadfedcdf7fbe30cf5909486cc551274ea9c3b24472b3c76a73d"
+  },
+  {
+    "file": "cosplay.webp",
+    "task_id": "img_task_c8f066cd33654c3aa07557967334ee15",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "522fa4f053bf1de8283e40660313fe2de82aa9b6a91100fe86c4ae7f78c7fc6c"
+  },
+  {
+    "file": "hero-pair.webp",
+    "task_id": "img_task_ea0cce43cdb94208a8942a9757bf7a31",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "1538045977ad77537890ef2f0a6efc76930e39f0a5a4210a3a08887ee09bd5e3"
+  },
+  {
+    "file": "wedding.webp",
+    "task_id": "img_task_4742911df032416ba19d314166cb58de",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "44827e290c109be6301a3ebef362cfbd2326b4bdd9ecda45e5859d9dea6e3bdd"
+  },
+  {
+    "file": "soft-glam.webp",
+    "task_id": "img_task_801b3824624b46469c8056d6fc720b50",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "f6ead0b89e07b1239cf9fc50ad074fee39e5f263fd30e5e05f544965382e578a"
+  },
+  {
+    "file": "latina.webp",
+    "task_id": "img_task_5cceb0ff992c4e6db4a5aa5185e7eede",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "c7873feb07802af8cdc9076aa559fc85e9db0e4f93f4e0fffe12769cb698f830"
+  },
+  {
+    "file": "editorial.webp",
+    "task_id": "img_task_0d638a1497c743b4960f4d167c4b12a9",
+    "model": "gpt-image-2",
+    "quality": "1k",
+    "source": "用户授权，通过RouterTeam创作中心生成的原创AI虚拟人物示意",
+    "usage_note": "妆容示意，非真实产品效果",
+    "sha256": "c8f4031aed2b96a736ef2f05521422fef423944ebb7c4c2af2bb918832814673"
+  }
+]

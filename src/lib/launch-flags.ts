@@ -1,5 +1,5 @@
 export function isCheckoutEnabled() {
-  return process.env.DISABLE_CHECKOUT !== "1";
+  return process.env.ENABLE_CHECKOUT === "1" && process.env.DISABLE_CHECKOUT !== "1";
 }
 
 export function isGenerationEnabled() {

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGetCurrentUser = vi.fn();
 const mockCreateCreemCheckout = vi.fn();
@@ -26,9 +26,22 @@ beforeEach(() => {
   mockGetCurrentUser.mockResolvedValue({ id: "user_1", email: "buyer@example.com" });
   mockCreateCreemCheckout.mockResolvedValue("https://checkout.creem.io/test");
   process.env.CREEM_PRODUCT_CREDITS_100 = "prod_credits_100";
+  vi.stubEnv("ENABLE_CHECKOUT", "1");
 });
 
+afterEach(() => vi.unstubAllEnvs());
+
 describe("POST /api/billing/checkout", () => {
+  it.each([undefined, "0"])("disables checkout when ENABLE_CHECKOUT is %s", async (flag) => {
+    vi.stubEnv("ENABLE_CHECKOUT", flag);
+    const { POST } = await import("./route");
+
+    const response = await POST(jsonRequest({ planId: "credits_100", provider: "creem" }));
+
+    expect(response.status).toBe(503);
+    expect(mockCreateCreemCheckout).not.toHaveBeenCalled();
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+  });
   it("always creates the one-time Creem credit pack", async () => {
     const { POST } = await import("./route");
 

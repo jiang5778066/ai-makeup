@@ -21,7 +21,7 @@ function isProtected(pathname: string, prefixes: string[]) {
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-page-locale", pathname === "/zh-CN" || pathname.startsWith("/zh-CN/") ? "zh-CN" : "en");
+  requestHeaders.set("x-page-locale", pathname === "/zh/ai-makeup" || pathname === "/zh-CN" || pathname.startsWith("/zh-CN/") ? "zh-CN" : "en");
   const { response, user } = await updateSession(request, requestHeaders);
 
   if (!user && isProtected(pathname, PROTECTED_PAGE_PREFIXES)) {

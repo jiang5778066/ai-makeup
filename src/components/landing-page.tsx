@@ -51,6 +51,31 @@ export function LandingPage({
   const showVirtualTryOn = page.slug === "virtual-makeup-try-on" || Boolean(focusedVirtualPart);
   const heroTitle = page.h1.replaceAll("-", "‑");
 
+  if (page.slug === "ai-makeup" || page.slug === "home") {
+    return (
+      <SiteShell locale={locale} currentPath={currentPath}>
+        <main className="makeup-reference">
+          <section className="container makeup-intro">
+            <div className="makeup-hero">
+              <div className="makeup-hero-copy">
+                <span className="makeup-beta-badge">AI Makeup · {isChinese ? "Beta 开发中" : "Beta in development"}</span>
+                <h1><span className="makeup-title-accent">{isChinese ? "AI 虚拟妆容" : "AI Makeup"}</span><br />{isChinese ? "在线生成器" : "Generator"}</h1>
+                <p className="lead">{isChinese ? "上传自拍，选择喜欢的妆容，探索适合自己的新风格。Beta 开发中，当前本地演示仅用于界面验证。" : "Upload a selfie and explore your next look. Beta in development; the local demo verifies the interface only."}</p>
+              </div>
+              <div className="makeup-hero-comparison" aria-label={isChinese ? "AI 虚拟人物妆前妆后示意，非真实产品效果" : "AI-generated before and after illustration, not actual product results"}>
+                <Image src="/images/makeup-demo/hero-pair.webp" alt={isChinese ? "同一 AI 虚拟人物的素颜与柔和晚妆示意" : "AI-generated portrait illustrating bare skin and soft evening makeup"} fill sizes="(max-width: 800px) 100vw, 50vw" priority />
+                <div className="makeup-example-halves"><span>{isChinese ? "妆前" : "Before"}</span><span>{isChinese ? "妆后" : "After"}</span></div>
+                <p>{isChinese ? "AI 虚拟人物 · 妆容示意，非真实产品效果" : "AI-generated · Style illustration, not actual product results"}</p>
+              </div>
+            </div>
+            <MakeupTool locale={locale} styles={styles} cta={isChinese ? "生成妆容" : "Generate makeup"} />
+          </section>
+          <FaqSection page={page} locale={locale} />
+        </main>
+      </SiteShell>
+    );
+  }
+
   return (
     <SiteShell locale={locale} currentPath={currentPath}>
       <main>

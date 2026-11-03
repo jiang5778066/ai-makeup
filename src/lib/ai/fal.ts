@@ -1,5 +1,6 @@
 import { fal } from "@fal-ai/client";
-import { presignGetUrl, R2_BUCKET_ORIGINALS } from "@/lib/storage";
+import { zipSync } from "fflate";
+import { presignGetUrl, putObject, R2_BUCKET_ORIGINALS } from "@/lib/storage";
 
 export type GenerateArgs = {
   uploadKey: string;
@@ -37,21 +38,40 @@ async function generateWithFal(args: GenerateArgs): Promise<GenerateResult> {
     expiresIn: 60 * 10
   });
 
+  const source = await fetch(beforeImageUrl);
+  if (!source.ok) throw new Error(`source_image_failed:${source.status}`);
+  const archiveKey = `${args.uploadKey}.zip`;
+  await putObject({
+    bucket: R2_BUCKET_ORIGINALS,
+    key: archiveKey,
+    body: createStoredZip("image", new Uint8Array(await source.arrayBuffer())),
+    contentType: "application/zip"
+  });
+  const imageArchiveUrl = await presignGetUrl({
+    bucket: R2_BUCKET_ORIGINALS,
+    key: archiveKey,
+    expiresIn: 60 * 10
+  });
+
   // PhotoMaker preserves identity from a reference image; swap to another fal model if preferred.
   const result = (await fal.subscribe("fal-ai/photomaker", {
     input: {
-      image_archive_url: beforeImageUrl,
+      image_archive_url: imageArchiveUrl,
       prompt: buildPrompt(args),
       num_inference_steps: 30,
-      style_strength: Math.round((args.intensity / 100) * 50) + 10,
+      style_strength: Math.round(15 + (Math.max(0, Math.min(100, args.intensity)) / 100) * 35),
       num_images: 1
     }
-  })) as { images?: Array<{ url: string }> };
+  })) as { data?: { images?: Array<{ url: string }> } };
 
-  const url = result.images?.[0]?.url;
+  const url = result.data?.images?.[0]?.url;
   if (!url) throw new Error("fal_no_image_returned");
 
   return { resultImageUrl: url, beforeImageUrl };
+}
+
+function createStoredZip(filename: string, data: Uint8Array): Uint8Array {
+  return zipSync({ [filename]: data });
 }
 
 export async function generateMakeup(args: GenerateArgs): Promise<GenerateResult> {

@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   typedRoutes: false,
+  async rewrites() {
+    return [{ source: "/zh/ai-makeup", destination: "/zh-CN/ai-makeup" }];
+  },
   async redirects() {
     return [
       { source: "/ai-makeup/generator", destination: "/ai-makeup", permanent: true },

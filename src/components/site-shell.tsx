@@ -43,7 +43,7 @@ export function SiteShell({
   const isActive = (href: string) => currentPath === href || currentPath.endsWith(href);
 
   return (
-    <div className="site-shell">
+    <div className={`site-shell${currentPath === "/" || currentPath.endsWith("/ai-makeup") || currentPath === "/zh-CN" ? " reference-shell" : ""}`}>
       <header className="boutique-header">
         <div className="nav-inner">
           <Link className="boutique-brand" href={localizePath("/", locale)} aria-label="Makeup AI home">
@@ -64,9 +64,16 @@ export function SiteShell({
             <Link className="nav-cta" href={`/login?next=${encodeURIComponent(localizePath(currentPath, locale))}`}>
               <Sparkles size={15} aria-hidden="true" /> {isChinese ? "登录领 3 次" : "Get 3 free"}
             </Link>
-            <Link className="mobile-menu-button" href={localizePath("/virtual-makeup-try-on", locale)} aria-label={isChinese ? "打开实时试妆" : "Open live try-on"}>
-              <Menu size={20} aria-hidden="true" />
-            </Link>
+            <details className="mobile-menu">
+              <summary aria-label={isChinese ? "打开导航" : "Open navigation"}><Menu size={20} aria-hidden="true" /></summary>
+              <nav aria-label={isChinese ? "移动菜单" : "Mobile menu"}>
+                {primaryNavigation.map((item) => <Link key={item.href} href={localizePath(item.href, locale)}>{item.label[locale]}</Link>)}
+                {tools.map((tool) => <Link key={tool.href} href={localizePath(tool.href, locale)}>{tool.label[locale]}</Link>)}
+                <Link href={localizePath("/pricing", locale)}>{isChinese ? "价格" : "Pricing"}</Link>
+                <Link href="/dashboard">{isChinese ? "我的作品" : "My creations"}</Link>
+                <Link href={localizePath(currentPath, alternateLocale)}>{isChinese ? "English" : "简体中文"}</Link>
+              </nav>
+            </details>
           </div>
         </div>
       </header>
@@ -128,7 +135,7 @@ export function SiteShell({
               <div>
                 <span className="brand-seal small">M</span>
                 <h2>{isChinese ? "先试妆，再决定。" : "Try the look. Then decide."}</h2>
-                <p>{isChinese ? "本地实时预览，高清结果按次付费。" : "Private live previews with pay-per-result HD exports."}</p>
+                <p>{isChinese ? "上传照片，选择妆容，查看前后对比。" : "Upload a photo, choose a look, and compare the result."}</p>
               </div>
               <div className="footer-links">
                 <div>
@@ -150,7 +157,7 @@ export function SiteShell({
                 </div>
               </div>
             </div>
-            <div className="footer-bottom">© 2026 Makeup AI · {isChinese ? "付费 Beta" : "Paid Beta"}</div>
+            <div className="footer-bottom">© 2026 Makeup AI · {isChinese ? "Beta 开发中" : "Beta in development"}</div>
           </footer>
         </div>
       </div>
