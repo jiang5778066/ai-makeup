@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true }
 };
 
-const LAST_UPDATED = "2026-08-03";
+const LAST_UPDATED = "2026-11-03";
 const CONTACT = process.env.PRIVACY_EMAIL ?? "privacy@yourdomain.com";
 
 export default function PrivacyPage() {
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
       <ul>
         <li>Supabase (authentication and database hosting).</li>
         <li>Cloudflare R2 (object storage for uploads and results).</li>
-        <li>fal.ai (AI inference).</li>
+        <li>Router Creative Center (AI inference using the configured GPT or Grok model).</li>
         <li>AWS Rekognition (content safety screening).</li>
         <li>Inngest (background job queue).</li>
         <li>Creem (checkout, order, dispute, and refund processing).</li>

@@ -59,22 +59,6 @@ export async function presignGetUrl(args: {
   return getSignedUrl(getClient(), command, { expiresIn: args.expiresIn ?? 60 * 15 });
 }
 
-export async function putObject(args: {
-  bucket: string;
-  key: string;
-  body: Uint8Array;
-  contentType: string;
-}): Promise<void> {
-  await getClient().send(
-    new PutObjectCommand({
-      Bucket: args.bucket,
-      Key: args.key,
-      Body: args.body,
-      ContentType: args.contentType
-    })
-  );
-}
-
 export async function deleteObject(bucket: string, key: string): Promise<void> {
   await getClient().send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }

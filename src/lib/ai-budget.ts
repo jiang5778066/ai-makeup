@@ -2,9 +2,10 @@ import { sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { aiGenerationEstimateCents, dailySpendCapCents } from "./launch-flags";
 
-export async function reserveDailyAiSpend(): Promise<boolean> {
+export async function reserveDailyAiSpend(providerCostCents = 0): Promise<boolean> {
   const cap = dailySpendCapCents();
-  const estimate = aiGenerationEstimateCents();
+  if (!Number.isFinite(providerCostCents) || providerCostCents < 0) return false;
+  const estimate = Math.max(aiGenerationEstimateCents(), Math.ceil(providerCostCents));
   if (cap === null || cap < estimate) return false;
 
   const rows = await db.execute(sql`

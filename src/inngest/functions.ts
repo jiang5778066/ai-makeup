@@ -1,6 +1,8 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { generations } from "@/db/schema";
-import { generateMakeup } from "@/lib/ai/fal";
+import { prepareMakeup, makeupReferenceUrl } from "@/lib/ai/makeup";
+import { submitImageTask } from "@/lib/ai/creative-center";
+import { runImageJob, type ImageJobSteps, type ImageJobResume } from "@/lib/ai/image-job";
 import { moderateImage } from "@/lib/moderation";
 import { getStyleLibrary } from "@/lib/content";
 import { toLocale } from "@/lib/i18n";
@@ -29,22 +31,21 @@ function getR2Upload() {
   return client;
 }
 
-async function fetchToBuffer(url: string): Promise<Buffer> {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`fetch_result_failed:${response.status}`);
-  const ab = await response.arrayBuffer();
-  return Buffer.from(ab);
-}
-
 async function uploadResultToR2(generationId: string, sourceUrl: string): Promise<string> {
-  const bytes = await fetchToBuffer(sourceUrl);
-  const key = `${generationId}.png`;
+  const response = await fetch(sourceUrl, { signal: AbortSignal.timeout(60_000) });
+  if (!response.ok) throw new Error(`fetch_result_failed:${response.status}`);
+  const contentType = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
+  const extensions: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
+  const extension = contentType && extensions[contentType];
+  if (!extension) throw new Error("invalid_result_content_type");
+  const bytes = Buffer.from(await response.arrayBuffer());
+  const key = `${generationId}.${extension}`;
   await getR2Upload().send(
     new PutObjectCommand({
       Bucket: R2_BUCKET_RESULTS,
       Key: key,
       Body: bytes,
-      ContentType: "image/png"
+      ContentType: contentType
     })
   );
   return key;
@@ -71,21 +72,21 @@ async function copyRenderedUploadToResults(
   return key;
 }
 
-function errorMessage(value: unknown): string {
-  if (value instanceof Error) return value.message;
-  if (typeof value === "string") return value;
-  return "generation_failed";
-}
-
 export const makeupGenerate = inngest.createFunction(
   {
     id: "makeup-generate",
     retries: 2,
+    concurrency: { limit: 1, key: "event.data.generationId" },
     triggers: [{ event: "makeup/generate.requested" }],
     onFailure: async ({ event, step }) => {
       const original = event.data.event as { data?: { generationId?: string } };
       const generationId = original.data?.generationId;
       if (!generationId) return { status: "missing_generation_id" };
+      const { db } = await import("@/db/client");
+      const [generation] = await db.select().from(generations).where(eq(generations.id, generationId));
+      // 提交结果未知时保留额度，等待原任务核对，不能退款后再次生成。
+      if (generation?.error === "creative_submission_pending") return { status: "awaiting_provider_reconciliation" };
+      if (generation?.error === "creative_result_pending") return { status: "awaiting_result_storage" };
       const failure = event.data.error as { message?: string } | undefined;
       return step.run("refund-terminal-failure", () =>
         failAndRefundGeneration(generationId, failure?.message ?? "generation_failed")
@@ -93,7 +94,7 @@ export const makeupGenerate = inngest.createFunction(
     }
   },
   async ({ event, step }) => {
-    const { generationId } = event.data as { generationId: string };
+    const { generationId, imageResume } = event.data as { generationId: string; imageResume?: ImageJobResume };
 
     const gen = await step.run("load-generation", async () => {
       const { db } = await import("@/db/client");
@@ -102,20 +103,28 @@ export const makeupGenerate = inngest.createFunction(
       return row;
     });
 
-    await step.run("mark-moderating", async () => {
-      const { db } = await import("@/db/client");
-      await db
-        .update(generations)
-        .set({ status: "moderating", updatedAt: new Date() })
-        .where(eq(generations.id, generationId));
-    });
+    if (["done", "failed", "refunded"].includes(gen.status)) return { status: gen.status };
+    // 新到的重复事件不能创建新快照，已有任务应恢复原执行或其继续事件。
+    if (!imageResume && ["creative_submission_pending", "creative_result_pending"].includes(gen.error ?? "")) {
+      return { status: "awaiting_original_execution" };
+    }
 
-    const moderation = await step.run("moderate", () => moderateImage(gen.uploadKey));
-    if (!moderation.ok) {
-      await step.run("mark-rejected", async () => {
-        await failAndRefundGeneration(generationId, `moderation:${moderation.reason}`);
+    if (!imageResume) {
+      await step.run("mark-moderating", async () => {
+        const { db } = await import("@/db/client");
+        await db
+          .update(generations)
+          .set({ status: "moderating", updatedAt: new Date() })
+          .where(eq(generations.id, generationId));
       });
-      return { status: "refunded", reason: moderation.reason };
+
+      const moderation = await step.run("moderate", () => moderateImage(gen.uploadKey));
+      if (!moderation.ok) {
+        await step.run("mark-rejected", async () => {
+          await failAndRefundGeneration(generationId, `moderation:${moderation.reason}`);
+        });
+        return { status: "refunded", reason: moderation.reason };
+      }
     }
 
     if (gen.mode === "virtual_try_on") {
@@ -146,13 +155,26 @@ export const makeupGenerate = inngest.createFunction(
         const { db } = await import("@/db/client");
         await db
           .update(generations)
-          .set({ status: "done", resultKey, updatedAt: new Date() })
+          .set({ status: "done", resultKey, error: null, updatedAt: new Date() })
           .where(eq(generations.id, generationId));
       });
       return { status: "done", resultKey };
     }
 
-    const budgetReserved = await step.run("reserve-ai-budget", () => reserveDailyAiSpend());
+    const locale = toLocale(gen.locale);
+    const styles = getStyleLibrary(locale);
+    const style = styles.find((s) => s.id === gen.styleId) ?? styles[0];
+    const submission = imageResume?.submission ?? await step.run("prepare-image", () => prepareMakeup({
+      requestId: generationId,
+      uploadKey: gen.uploadKey,
+      styleName: style.name,
+      styleDescription: style.description,
+      intensity: gen.intensity
+    }));
+    const budgetAlreadyReserved = Boolean(imageResume);
+    const budgetReserved = budgetAlreadyReserved
+      ? true
+      : await step.run("reserve-ai-budget", () => reserveDailyAiSpend(submission.costCents));
     if (!budgetReserved) {
       await step.run("refund-budget-cap", () =>
         failAndRefundGeneration(generationId, "daily_ai_spend_cap_reached")
@@ -168,33 +190,56 @@ export const makeupGenerate = inngest.createFunction(
         .where(eq(generations.id, generationId));
     });
 
-    const locale = toLocale(gen.locale);
-    const styles = getStyleLibrary(locale);
-    const style = styles.find((s) => s.id === gen.styleId) ?? styles[0];
-
-    const aiResult = await step.run("ai-generate", async () => {
-      try {
-        return await generateMakeup({
-          uploadKey: gen.uploadKey,
-          styleId: gen.styleId,
-          intensity: gen.intensity,
-          styleName: style.name,
-          styleDescription: style.description
-        });
-      } catch (error) {
-        throw new Error(`ai_generate:${errorMessage(error)}`);
+    const referenceUrl = imageResume ? "" : await step.run("reference-image-url", () => makeupReferenceUrl(gen.uploadKey));
+    let aiResult: string | ImageJobResume;
+    try {
+      const imageSteps: ImageJobSteps = {
+        // 此编排步骤只返回 JSON 数据，可安全使用 Inngest 的持久化序列化结果。
+        run: async <T>(name: string, callback: () => Promise<T>) => await step.run(name, callback) as T,
+        sleep: (name, duration) => step.sleep(name, duration)
+      };
+      aiResult = await runImageJob(imageSteps, submission, referenceUrl, {
+        resume: imageResume,
+        submit: async () => {
+          const { db } = await import("@/db/client");
+          // 先原子登记提交意图：步骤重放或并发事件均不能重复提交付费请求。
+          const claimed = await db.update(generations)
+            .set({ error: "creative_submission_pending", updatedAt: new Date() })
+            .where(and(eq(generations.id, generationId), isNull(generations.error)))
+            .returning({ id: generations.id });
+          if (!claimed.length) return { status: "submission_unknown" };
+          return submitImageTask(submission, referenceUrl);
+        }
+      });
+    } catch (error) {
+      if (error instanceof Error && /^(creative_task_failed|creative_http_4\d\d)$/.test(error.message)) {
+        await step.run("refund-provider-failure", () => failAndRefundGeneration(generationId, error.message));
+        return { status: "refunded", reason: error.message };
       }
+      throw error;
+    }
+    if (typeof aiResult !== "string") {
+      await step.sendEvent("continue-image-task", {
+        name: "makeup/generate.requested",
+        data: { generationId, imageResume: aiResult }
+      });
+      return { status: "awaiting_provider", taskId: aiResult.taskId };
+    }
+    await step.run("mark-provider-completed", async () => {
+      const { db } = await import("@/db/client");
+      await db.update(generations).set({ error: "creative_result_pending", updatedAt: new Date() }).where(eq(generations.id, generationId));
     });
 
+    const resultImageUrl = aiResult;
     const resultKey = await step.run("upload-result", () =>
-      uploadResultToR2(generationId, aiResult.resultImageUrl)
+      uploadResultToR2(generationId, resultImageUrl)
     );
 
     await step.run("finalize", async () => {
       const { db } = await import("@/db/client");
       await db
         .update(generations)
-        .set({ status: "done", resultKey, updatedAt: new Date() })
+        .set({ status: "done", resultKey, error: null, updatedAt: new Date() })
         .where(eq(generations.id, generationId));
     });
 

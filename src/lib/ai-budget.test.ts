@@ -28,4 +28,18 @@ describe("daily AI budget", () => {
     await expect(reserveDailyAiSpend()).resolves.toBe(true);
     await expect(reserveDailyAiSpend()).resolves.toBe(false);
   });
+  it("所选模型成本高于估算时使用实际价格预留", async () => {
+    process.env.DAILY_AI_SPEND_CAP_CENTS = "12";
+    const { reserveDailyAiSpend } = await import("./ai-budget");
+    await expect(reserveDailyAiSpend(15)).resolves.toBe(false);
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  it("实际价格低于环境估算时仍保留预算下限", async () => {
+    process.env.DAILY_AI_SPEND_CAP_CENTS = "7";
+    const { reserveDailyAiSpend } = await import("./ai-budget");
+    await expect(reserveDailyAiSpend(5)).resolves.toBe(false);
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
 });

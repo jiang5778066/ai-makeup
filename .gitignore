@@ -6,3 +6,6 @@ coverage
 .env
 .env.local
 .superpowers
+
+# 本地模型验收状态与生成素材
+/output/imagegen/
