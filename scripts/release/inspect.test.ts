@@ -27,7 +27,7 @@ const fixture = async (wrongLink = false) => {
   }
   const adapter = new Adapter({ sha, token: "fixture" } as ReleaseConfig, async (_binary, args, childEnv) => {
     calls.push({ args, env: childEnv });
-    if (args.includes("pull")) { await writeFile(resolve(root, ".vercel/.env.production.local"), 'SPECIAL="wrong\\nvalue"'); await writeFile(resolve(root, ".vercel/project.json"), JSON.stringify({ projectId: wrongLink ? "other" : TARGET.project, orgId: TARGET.team })); }
+    if (args.includes("pull")) { expect(JSON.parse(await readFile(resolve(root, ".vercel/project.json"), "utf8"))).toEqual({ projectId: TARGET.project, orgId: TARGET.team }); await writeFile(resolve(root, ".vercel/.env.production.local"), 'SPECIAL="wrong\\nvalue"'); await writeFile(resolve(root, ".vercel/project.json"), JSON.stringify({ projectId: wrongLink ? "other" : TARGET.project, orgId: TARGET.team })); }
     if (args.includes("promote")) promoted = true;
     return "https://new.vercel.app";
   }, root);

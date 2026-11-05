@@ -109,3 +109,5 @@ CI与发布分别对两棵完整树执行`npm audit --audit-level=high --include
 用户已决定首次上线只覆盖网站和数据库，生产配置使用 `RELEASE_PROFILE=website-db`。该模式仍要求数据库、Supabase公开客户端配置及正式网站地址；未开通的R2、AWS Rekognition、Inngest和Creem保持空缺，相应业务功能尚不可用。配置齐全后改为 `full`，恢复所有业务服务配置检查。依赖审计仍按告警策略记录，技术失败停止。
 
 Supabase使用官方Root 2021 CA验证证书链和主机名，不关闭TLS验证。迁移在同一物理会话和事务内持锁，连接中断整体回滚。
+
+仓库 `vercel.json` 关闭Git自动部署，避免推送main绕过候选验收直接切换生产域名；正式发布由手动触发的工作流或本机同一入口完成。

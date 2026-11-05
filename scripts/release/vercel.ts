@@ -37,6 +37,7 @@ export class Vercel {
     const previous = await previousProduction(this.api.bind(this), this.config.bootstrap);
     await mkdir(resolve(this.root, ".vercel"), { recursive: true, mode: 0o700 });
     await chmod(resolve(this.root, ".vercel"), 0o700);
+    await writeFile(resolve(this.root, ".vercel/project.json"), JSON.stringify({ projectId: TARGET.project, orgId: TARGET.team }), { mode: 0o600 });
     await this.cli(["pull", "--yes", "--environment=production"]);
     const link = JSON.parse(await readFile(resolve(this.root, ".vercel/project.json"), "utf8"));
     if (link.projectId !== TARGET.project || link.orgId !== TARGET.team) throw new Error("本地项目链接不匹配");
