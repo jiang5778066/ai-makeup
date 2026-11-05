@@ -38,3 +38,9 @@ it("仅网站和数据库模式允许第三方服务留空，核心配置仍必�
   expect(() => snapshotRuntime({ ...env, DATABASE_URL: "" }, sha)).toThrow();
   expect(() => snapshotRuntime({ ...env, RELEASE_PROFILE: "unknown" }, sha)).toThrow();
 });
+it("平台临时OIDC令牌和部署地址不进入应用配置快照", () => {
+  const first = snapshotRuntime({ ...cloud(), VERCEL_OIDC_TOKEN: "临时令牌一", VERCEL_URL: "" }, sha);
+  const second = snapshotRuntime({ ...cloud(), VERCEL_OIDC_TOKEN: "临时令牌二", VERCEL_URL: "" }, sha);
+  expect(first.VERCEL_OIDC_TOKEN).toBeUndefined(); expect(first.VERCEL_URL).toBeUndefined();
+  expect(() => assertSameSnapshot(first, second)).not.toThrow();
+});

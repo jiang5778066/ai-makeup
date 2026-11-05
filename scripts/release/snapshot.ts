@@ -5,7 +5,9 @@ export const snapshotRuntime = (input: unknown, sha: string): RuntimeSnapshot =>
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("未取得完整生产JSON配置");
   const entries = Object.entries(input);
   if (entries.some(([k, v]) => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(k) || typeof v !== "string" || v.includes("\0") || /VERCEL_SENSITIVE_ENV_VALUE|sensitive_env_value_placeholder|\[SENSITIVE\]/i.test(v))) throw new Error("生产快照存在无效或不可读取配置");
-  const runtime = { ...Object.fromEntries(entries) as Record<string, string>, NODE_ENV: "production", RELEASE_SHA: sha, RELEASE_PROJECT_ID: TARGET.project, VERCEL_GIT_COMMIT_SHA: sha };
+  // 平台临时令牌及部署地址由Vercel运行时注入，不属于可重复比较的应用配置。
+  const application = entries.filter(([key]) => !/^VERCEL(?:_|$)/.test(key));
+  const runtime = { ...Object.fromEntries(application) as Record<string, string>, NODE_ENV: "production", RELEASE_SHA: sha, RELEASE_PROJECT_ID: TARGET.project };
   validateRuntime(runtime);
   return Object.freeze(runtime);
 };
@@ -13,6 +15,7 @@ export const buildEnvironment = (runtime: RuntimeSnapshot = {}, parent: Record<s
   ...Object.fromEntries(["PATH", "HOME", "TMPDIR", "TEMP", "TMP", "SystemRoot", "SHELL", "LANG"].filter(key => parent[key] !== undefined).map(key => [key, parent[key]])),
   ...runtime,
   NODE_ENV: "production", CI: "1", VERCEL_ORG_ID: TARGET.team, VERCEL_PROJECT_ID: TARGET.project,
+  ...(runtime.RELEASE_SHA ? { VERCEL_GIT_COMMIT_SHA: runtime.RELEASE_SHA } : {}),
   VERCEL_TELEMETRY_DISABLED: "1", VERCEL_CLI_USE_NATIVE_BINARY: "0", NO_UPDATE_NOTIFIER: "1"
 });
 export const assertSameSnapshot = (first: RuntimeSnapshot, second: RuntimeSnapshot) => {
