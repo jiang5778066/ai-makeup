@@ -9,3 +9,10 @@ coverage
 
 # 本地模型验收状态与生成素材
 /output/imagegen/
+
+# 发布凭据和本地构建证据
+.env.*
+!.env.example
+.vercel/
+release-result/
+*.tsbuildinfo

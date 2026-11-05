@@ -13,7 +13,13 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "check:image": "tsx scripts/check-image-generation.ts"
+    "check:image": "tsx scripts/check-image-generation.ts",
+    "release": "tsx scripts/release/cli.ts",
+    "release:verify": "vitest run --config scripts/release/vitest.config.ts",
+    "db:migrate": "tsx scripts/db/cli.ts migrate",
+    "db:status": "tsx scripts/db/cli.ts status",
+    "release:tools:install": "npm ci --prefix scripts/release/tools",
+    "release:audit": "tsx scripts/release/audit-cli.ts"
   },
   "dependencies": {
     "@aws-sdk/client-rekognition": "^3.1053.0",

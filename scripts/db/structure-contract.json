@@ -1,0 +1,1223 @@
+{
+  "postgresMajor": 17,
+  "prefixes": [
+    {
+      "hashes": [
+        "d329a93157f11c146dd783a1dc4c0644183500025e8b67d46b9e16f2063b63c0"
+      ],
+      "tables": [
+        {
+          "name": "ai_daily_usage",
+          "kind": "r",
+          "rls": true,
+          "force_rls": false,
+          "columns": [
+            {
+              "name": "usage_date",
+              "type": "date",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 1,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "reserved_cents",
+              "type": "integer",
+              "default": "0",
+              "identity": "",
+              "not_null": true,
+              "position": 2,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "updated_at",
+              "type": "timestamp with time zone",
+              "default": "now()",
+              "identity": "",
+              "not_null": true,
+              "position": 3,
+              "collation": null,
+              "generated": ""
+            }
+          ],
+          "constraints": [
+            {
+              "name": "ai_daily_usage_nonnegative",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((reserved_cents >= 0))"
+            },
+            {
+              "name": "ai_daily_usage_pkey",
+              "type": "p",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "PRIMARY KEY (usage_date)"
+            }
+          ],
+          "indexes": [
+            {
+              "name": "ai_daily_usage_pkey",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": true,
+              "definition": "CREATE UNIQUE INDEX ai_daily_usage_pkey ON public.ai_daily_usage USING btree (usage_date)",
+              "replica_identity": false
+            }
+          ],
+          "policies": [],
+          "triggers": []
+        },
+        {
+          "name": "credit_balances",
+          "kind": "r",
+          "rls": true,
+          "force_rls": false,
+          "columns": [
+            {
+              "name": "user_id",
+              "type": "uuid",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 1,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "balance",
+              "type": "integer",
+              "default": "0",
+              "identity": "",
+              "not_null": true,
+              "position": 2,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "updated_at",
+              "type": "timestamp with time zone",
+              "default": "now()",
+              "identity": "",
+              "not_null": true,
+              "position": 3,
+              "collation": null,
+              "generated": ""
+            }
+          ],
+          "constraints": [
+            {
+              "name": "credit_balances_nonnegative",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((balance >= 0))"
+            },
+            {
+              "name": "credit_balances_pkey",
+              "type": "p",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "PRIMARY KEY (user_id)"
+            },
+            {
+              "name": "credit_balances_user_id_fkey",
+              "type": "f",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            }
+          ],
+          "indexes": [
+            {
+              "name": "credit_balances_pkey",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": true,
+              "definition": "CREATE UNIQUE INDEX credit_balances_pkey ON public.credit_balances USING btree (user_id)",
+              "replica_identity": false
+            }
+          ],
+          "policies": [],
+          "triggers": []
+        },
+        {
+          "name": "credit_consumptions",
+          "kind": "r",
+          "rls": true,
+          "force_rls": false,
+          "columns": [
+            {
+              "name": "id",
+              "type": "uuid",
+              "default": "gen_random_uuid()",
+              "identity": "",
+              "not_null": true,
+              "position": 1,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "user_id",
+              "type": "uuid",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 2,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "grant_id",
+              "type": "uuid",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 3,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "amount",
+              "type": "integer",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 4,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "ref_type",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 5,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "ref_id",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 6,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "refunded_at",
+              "type": "timestamp with time zone",
+              "default": null,
+              "identity": "",
+              "not_null": false,
+              "position": 7,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "created_at",
+              "type": "timestamp with time zone",
+              "default": "now()",
+              "identity": "",
+              "not_null": true,
+              "position": 8,
+              "collation": null,
+              "generated": ""
+            }
+          ],
+          "constraints": [
+            {
+              "name": "credit_consumptions_amount_check",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((amount > 0))"
+            },
+            {
+              "name": "credit_consumptions_grant_id_fkey",
+              "type": "f",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "FOREIGN KEY (grant_id) REFERENCES credit_grants(id) ON DELETE CASCADE"
+            },
+            {
+              "name": "credit_consumptions_pkey",
+              "type": "p",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "PRIMARY KEY (id)"
+            },
+            {
+              "name": "credit_consumptions_user_id_fkey",
+              "type": "f",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            }
+          ],
+          "indexes": [
+            {
+              "name": "credit_consumptions_grant_idx",
+              "ready": true,
+              "valid": true,
+              "unique": false,
+              "primary": false,
+              "definition": "CREATE INDEX credit_consumptions_grant_idx ON public.credit_consumptions USING btree (grant_id)",
+              "replica_identity": false
+            },
+            {
+              "name": "credit_consumptions_pkey",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": true,
+              "definition": "CREATE UNIQUE INDEX credit_consumptions_pkey ON public.credit_consumptions USING btree (id)",
+              "replica_identity": false
+            },
+            {
+              "name": "credit_consumptions_reference_idx",
+              "ready": true,
+              "valid": true,
+              "unique": false,
+              "primary": false,
+              "definition": "CREATE INDEX credit_consumptions_reference_idx ON public.credit_consumptions USING btree (user_id, ref_type, ref_id)",
+              "replica_identity": false
+            }
+          ],
+          "policies": [],
+          "triggers": []
+        },
+        {
+          "name": "credit_grants",
+          "kind": "r",
+          "rls": true,
+          "force_rls": false,
+          "columns": [
+            {
+              "name": "id",
+              "type": "uuid",
+              "default": "gen_random_uuid()",
+              "identity": "",
+              "not_null": true,
+              "position": 1,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "user_id",
+              "type": "uuid",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 2,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "source_type",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 3,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "source_id",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 4,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "initial_amount",
+              "type": "integer",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 5,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "remaining",
+              "type": "integer",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 6,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "created_at",
+              "type": "timestamp with time zone",
+              "default": "now()",
+              "identity": "",
+              "not_null": true,
+              "position": 7,
+              "collation": null,
+              "generated": ""
+            }
+          ],
+          "constraints": [
+            {
+              "name": "credit_grants_amount_check",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK (((initial_amount > 0) AND ((remaining >= 0) AND (remaining <= initial_amount))))"
+            },
+            {
+              "name": "credit_grants_pkey",
+              "type": "p",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "PRIMARY KEY (id)"
+            },
+            {
+              "name": "credit_grants_user_id_fkey",
+              "type": "f",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            }
+          ],
+          "indexes": [
+            {
+              "name": "credit_grants_pkey",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": true,
+              "definition": "CREATE UNIQUE INDEX credit_grants_pkey ON public.credit_grants USING btree (id)",
+              "replica_identity": false
+            },
+            {
+              "name": "credit_grants_source_uq",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": false,
+              "definition": "CREATE UNIQUE INDEX credit_grants_source_uq ON public.credit_grants USING btree (source_type, source_id)",
+              "replica_identity": false
+            },
+            {
+              "name": "credit_grants_user_idx",
+              "ready": true,
+              "valid": true,
+              "unique": false,
+              "primary": false,
+              "definition": "CREATE INDEX credit_grants_user_idx ON public.credit_grants USING btree (user_id, created_at)",
+              "replica_identity": false
+            }
+          ],
+          "policies": [],
+          "triggers": []
+        },
+        {
+          "name": "credits_ledger",
+          "kind": "r",
+          "rls": true,
+          "force_rls": false,
+          "columns": [
+            {
+              "name": "id",
+              "type": "uuid",
+              "default": "gen_random_uuid()",
+              "identity": "",
+              "not_null": true,
+              "position": 1,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "user_id",
+              "type": "uuid",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 2,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "delta",
+              "type": "integer",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 3,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "reason",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 4,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "ref_type",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": false,
+              "position": 5,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "ref_id",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": false,
+              "position": 6,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "created_at",
+              "type": "timestamp with time zone",
+              "default": "now()",
+              "identity": "",
+              "not_null": true,
+              "position": 7,
+              "collation": null,
+              "generated": ""
+            }
+          ],
+          "constraints": [
+            {
+              "name": "credits_ledger_delta_nonzero",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((delta <> 0))"
+            },
+            {
+              "name": "credits_ledger_pkey",
+              "type": "p",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "PRIMARY KEY (id)"
+            },
+            {
+              "name": "credits_ledger_user_id_fkey",
+              "type": "f",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            }
+          ],
+          "indexes": [
+            {
+              "name": "credits_ledger_pkey",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": true,
+              "definition": "CREATE UNIQUE INDEX credits_ledger_pkey ON public.credits_ledger USING btree (id)",
+              "replica_identity": false
+            },
+            {
+              "name": "credits_ledger_reference_uq",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": false,
+              "definition": "CREATE UNIQUE INDEX credits_ledger_reference_uq ON public.credits_ledger USING btree (user_id, reason, ref_type, ref_id)",
+              "replica_identity": false
+            },
+            {
+              "name": "credits_ledger_user_idx",
+              "ready": true,
+              "valid": true,
+              "unique": false,
+              "primary": false,
+              "definition": "CREATE INDEX credits_ledger_user_idx ON public.credits_ledger USING btree (user_id)",
+              "replica_identity": false
+            }
+          ],
+          "policies": [],
+          "triggers": []
+        },
+        {
+          "name": "generations",
+          "kind": "r",
+          "rls": true,
+          "force_rls": false,
+          "columns": [
+            {
+              "name": "id",
+              "type": "uuid",
+              "default": "gen_random_uuid()",
+              "identity": "",
+              "not_null": true,
+              "position": 1,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "user_id",
+              "type": "uuid",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 2,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "project_id",
+              "type": "uuid",
+              "default": null,
+              "identity": "",
+              "not_null": false,
+              "position": 3,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "upload_key",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 4,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "rendered_upload_key",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": false,
+              "position": 5,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "result_key",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": false,
+              "position": 6,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "style_id",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 7,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "mode",
+              "type": "text",
+              "default": "'full_face'::text",
+              "identity": "",
+              "not_null": true,
+              "position": 8,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "source_mode",
+              "type": "text",
+              "default": "'upload'::text",
+              "identity": "",
+              "not_null": true,
+              "position": 9,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "makeup_config",
+              "type": "jsonb",
+              "default": null,
+              "identity": "",
+              "not_null": false,
+              "position": 10,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "intensity",
+              "type": "integer",
+              "default": "62",
+              "identity": "",
+              "not_null": true,
+              "position": 11,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "locale",
+              "type": "text",
+              "default": "'en'::text",
+              "identity": "",
+              "not_null": true,
+              "position": 12,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "status",
+              "type": "text",
+              "default": "'queued'::text",
+              "identity": "",
+              "not_null": true,
+              "position": 13,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "error",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": false,
+              "position": 14,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "credits_refunded_at",
+              "type": "timestamp with time zone",
+              "default": null,
+              "identity": "",
+              "not_null": false,
+              "position": 15,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "created_at",
+              "type": "timestamp with time zone",
+              "default": "now()",
+              "identity": "",
+              "not_null": true,
+              "position": 16,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "updated_at",
+              "type": "timestamp with time zone",
+              "default": "now()",
+              "identity": "",
+              "not_null": true,
+              "position": 17,
+              "collation": null,
+              "generated": ""
+            }
+          ],
+          "constraints": [
+            {
+              "name": "generations_intensity_check",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK (((intensity >= 20) AND (intensity <= 100)))"
+            },
+            {
+              "name": "generations_locale_check",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((locale = ANY (ARRAY['en'::text, 'zh-CN'::text])))"
+            },
+            {
+              "name": "generations_mode_check",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((mode = ANY (ARRAY['full_face'::text, 'virtual_try_on'::text])))"
+            },
+            {
+              "name": "generations_pkey",
+              "type": "p",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "PRIMARY KEY (id)"
+            },
+            {
+              "name": "generations_project_id_fkey",
+              "type": "f",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL"
+            },
+            {
+              "name": "generations_source_mode_check",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((source_mode = ANY (ARRAY['upload'::text, 'camera'::text])))"
+            },
+            {
+              "name": "generations_status_check",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((status = ANY (ARRAY['queued'::text, 'moderating'::text, 'running'::text, 'done'::text, 'failed'::text, 'refunded'::text])))"
+            },
+            {
+              "name": "generations_user_id_fkey",
+              "type": "f",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            }
+          ],
+          "indexes": [
+            {
+              "name": "generations_pkey",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": true,
+              "definition": "CREATE UNIQUE INDEX generations_pkey ON public.generations USING btree (id)",
+              "replica_identity": false
+            },
+            {
+              "name": "generations_status_idx",
+              "ready": true,
+              "valid": true,
+              "unique": false,
+              "primary": false,
+              "definition": "CREATE INDEX generations_status_idx ON public.generations USING btree (status)",
+              "replica_identity": false
+            },
+            {
+              "name": "generations_user_idx",
+              "ready": true,
+              "valid": true,
+              "unique": false,
+              "primary": false,
+              "definition": "CREATE INDEX generations_user_idx ON public.generations USING btree (user_id)",
+              "replica_identity": false
+            }
+          ],
+          "policies": [],
+          "triggers": []
+        },
+        {
+          "name": "orders",
+          "kind": "r",
+          "rls": true,
+          "force_rls": false,
+          "columns": [
+            {
+              "name": "id",
+              "type": "uuid",
+              "default": "gen_random_uuid()",
+              "identity": "",
+              "not_null": true,
+              "position": 1,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "user_id",
+              "type": "uuid",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 2,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "provider",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 3,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "provider_order_id",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 4,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "provider_transaction_id",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": false,
+              "position": 5,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "plan_id",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 6,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "amount_cents",
+              "type": "bigint",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 7,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "currency",
+              "type": "text",
+              "default": "'USD'::text",
+              "identity": "",
+              "not_null": true,
+              "position": 8,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "credits_awarded",
+              "type": "integer",
+              "default": "0",
+              "identity": "",
+              "not_null": true,
+              "position": 9,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "status",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 10,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "refunded_at",
+              "type": "timestamp with time zone",
+              "default": null,
+              "identity": "",
+              "not_null": false,
+              "position": 11,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "created_at",
+              "type": "timestamp with time zone",
+              "default": "now()",
+              "identity": "",
+              "not_null": true,
+              "position": 12,
+              "collation": null,
+              "generated": ""
+            }
+          ],
+          "constraints": [
+            {
+              "name": "orders_amount_check",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((amount_cents >= 0))"
+            },
+            {
+              "name": "orders_credits_check",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((credits_awarded >= 0))"
+            },
+            {
+              "name": "orders_pkey",
+              "type": "p",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "PRIMARY KEY (id)"
+            },
+            {
+              "name": "orders_provider_check",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((provider = 'creem'::text))"
+            },
+            {
+              "name": "orders_user_id_fkey",
+              "type": "f",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            }
+          ],
+          "indexes": [
+            {
+              "name": "orders_pkey",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": true,
+              "definition": "CREATE UNIQUE INDEX orders_pkey ON public.orders USING btree (id)",
+              "replica_identity": false
+            },
+            {
+              "name": "orders_provider_order_uq",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": false,
+              "definition": "CREATE UNIQUE INDEX orders_provider_order_uq ON public.orders USING btree (provider, provider_order_id)",
+              "replica_identity": false
+            },
+            {
+              "name": "orders_provider_transaction_uq",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": false,
+              "definition": "CREATE UNIQUE INDEX orders_provider_transaction_uq ON public.orders USING btree (provider, provider_transaction_id) WHERE (provider_transaction_id IS NOT NULL)",
+              "replica_identity": false
+            },
+            {
+              "name": "orders_user_idx",
+              "ready": true,
+              "valid": true,
+              "unique": false,
+              "primary": false,
+              "definition": "CREATE INDEX orders_user_idx ON public.orders USING btree (user_id)",
+              "replica_identity": false
+            }
+          ],
+          "policies": [],
+          "triggers": []
+        },
+        {
+          "name": "projects",
+          "kind": "r",
+          "rls": true,
+          "force_rls": false,
+          "columns": [
+            {
+              "name": "id",
+              "type": "uuid",
+              "default": "gen_random_uuid()",
+              "identity": "",
+              "not_null": true,
+              "position": 1,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "user_id",
+              "type": "uuid",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 2,
+              "collation": null,
+              "generated": ""
+            },
+            {
+              "name": "name",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 3,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "created_at",
+              "type": "timestamp with time zone",
+              "default": "now()",
+              "identity": "",
+              "not_null": true,
+              "position": 4,
+              "collation": null,
+              "generated": ""
+            }
+          ],
+          "constraints": [
+            {
+              "name": "projects_pkey",
+              "type": "p",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "PRIMARY KEY (id)"
+            },
+            {
+              "name": "projects_user_id_fkey",
+              "type": "f",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            }
+          ],
+          "indexes": [
+            {
+              "name": "projects_pkey",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": true,
+              "definition": "CREATE UNIQUE INDEX projects_pkey ON public.projects USING btree (id)",
+              "replica_identity": false
+            },
+            {
+              "name": "projects_user_idx",
+              "ready": true,
+              "valid": true,
+              "unique": false,
+              "primary": false,
+              "definition": "CREATE INDEX projects_user_idx ON public.projects USING btree (user_id)",
+              "replica_identity": false
+            }
+          ],
+          "policies": [],
+          "triggers": []
+        },
+        {
+          "name": "webhook_events",
+          "kind": "r",
+          "rls": true,
+          "force_rls": false,
+          "columns": [
+            {
+              "name": "provider",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 1,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "event_id",
+              "type": "text",
+              "default": null,
+              "identity": "",
+              "not_null": true,
+              "position": 2,
+              "collation": "\"default\"",
+              "generated": ""
+            },
+            {
+              "name": "received_at",
+              "type": "timestamp with time zone",
+              "default": "now()",
+              "identity": "",
+              "not_null": true,
+              "position": 3,
+              "collation": null,
+              "generated": ""
+            }
+          ],
+          "constraints": [
+            {
+              "name": "webhook_events_pkey",
+              "type": "p",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "PRIMARY KEY (provider, event_id)"
+            },
+            {
+              "name": "webhook_events_provider_check",
+              "type": "c",
+              "deferred": false,
+              "validated": true,
+              "deferrable": false,
+              "definition": "CHECK ((provider = 'creem'::text))"
+            }
+          ],
+          "indexes": [
+            {
+              "name": "webhook_events_pkey",
+              "ready": true,
+              "valid": true,
+              "unique": true,
+              "primary": true,
+              "definition": "CREATE UNIQUE INDEX webhook_events_pkey ON public.webhook_events USING btree (provider, event_id)",
+              "replica_identity": false
+            }
+          ],
+          "policies": [],
+          "triggers": []
+        }
+      ]
+    }
+  ]
+}

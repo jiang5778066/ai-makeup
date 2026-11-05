@@ -1,6 +1,8 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import supabaseCa from "./supabase-ca.json";
+import { checkServerIdentity } from "node:tls";
 
 declare global {
   var __pgClient: ReturnType<typeof postgres> | undefined;
@@ -18,8 +20,11 @@ const client =
   global.__pgClient ??
   postgres(getConnectionString(), {
     prepare: false,
-    max: 10,
-    connect_timeout: 1
+    max: 1,
+    connect_timeout: 10,
+    ...(process.env.NODE_ENV === "production" ? {
+      ssl: { ca: supabaseCa.certificate, rejectUnauthorized: true, servername: new URL(getConnectionString()).hostname, checkServerIdentity }
+    } : {})
   });
 
 if (process.env.NODE_ENV !== "production") {

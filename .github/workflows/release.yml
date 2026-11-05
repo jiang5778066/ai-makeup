@@ -1,0 +1,140 @@
+name: 生产发布
+run-name: 生产发布 ${{ inputs.sha }}
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 已验收并获准上线的完整小写提交 SHA
+        required: true
+        type: string
+      mode:
+        description: 只读核验不读取生产秘密；正式发布仍受全部门禁约束
+        required: true
+        default: readonly
+        type: choice
+        options:
+          - readonly
+          - release
+      bootstrap:
+        description: 首次健康上线，必须API证明无READY生产服务
+        required: true
+        default: false
+        type: boolean
+permissions:
+  actions: read
+  contents: read
+  deployments: read
+concurrency:
+  group: production-release
+  cancel-in-progress: false
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.trust.outputs.sha }}
+    steps:
+      - name: 校验工作流来源
+        env:
+          REQUESTED_SHA: ${{ inputs.sha }}
+        run: |
+          test "$GITHUB_REPOSITORY" = 'jiang5778066/ai-makeup'
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$GITHUB_WORKFLOW_REF" = 'jiang5778066/ai-makeup/.github/workflows/release.yml@refs/heads/main'
+          [[ "$REQUESTED_SHA" =~ ^[a-f0-9]{40}$ ]]
+      - name: 核对 Production 环境只允许 main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/jiang5778066/ai-makeup/environments/Production > "$RUNNER_TEMP/release-environment.json"
+          jq -e '.deployment_branch_policy.custom_branch_policies == true' "$RUNNER_TEMP/release-environment.json"
+          gh api repos/jiang5778066/ai-makeup/environments/Production/deployment-branch-policies > "$RUNNER_TEMP/release-branch-policies.json"
+          jq -e '.total_count == 1 and .branch_policies[0].name == "main" and .branch_policies[0].type == "branch"' "$RUNNER_TEMP/release-branch-policies.json"
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: 固定受信提交
+        id: trust
+        env:
+          REQUESTED_SHA: ${{ inputs.sha }}
+        run: |
+          git cat-file -e "$REQUESTED_SHA^{commit}"
+          git merge-base --is-ancestor "$REQUESTED_SHA" refs/remotes/origin/main
+          echo "sha=$REQUESTED_SHA" >> "$GITHUB_OUTPUT"
+      - name: 无生产秘密的只读核验结果
+        if: inputs.mode == 'readonly'
+        run: echo '已核对运行来源、完整SHA与Production分支规则；此模式不进入Production、不读取生产秘密、不访问Vercel或Supabase。' >> "$GITHUB_STEP_SUMMARY"
+  dependencies:
+    needs: source
+    if: inputs.mode == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.source.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            scripts/release/tools/package-lock.json
+      - run: npm ci
+      - run: npm run release:tools:install
+      - name: 记录两个依赖锁
+        run: |
+          mkdir -p release-result
+          sha256sum package-lock.json scripts/release/tools/package-lock.json > release-result/dependency-locks.sha256
+      - name: 双范围依赖审计（漏洞告警，技术失败停止）
+        run: npm run release:audit
+      - name: 保存无生产秘密的审计证据
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audits-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release-result/
+          if-no-files-found: warn
+          retention-days: 30
+  release:
+    needs: [source, dependencies]
+    if: inputs.mode == 'release' && github.repository == 'jiang5778066/ai-makeup' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: Production
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.source.outputs.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run release:tools:install
+      - name: 唯一发布入口
+        run: npm run release
+        env:
+          RELEASE_SHA: ${{ needs.source.outputs.sha }}
+          RELEASE_BOOTSTRAP: ${{ inputs.bootstrap }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          RELEASE_DOMAIN: ${{ vars.RELEASE_DOMAIN }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      - name: 保存安全发布结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release-result/result.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: 清理本地生产环境文件
+        if: always()
+        run: rm -rf .vercel
