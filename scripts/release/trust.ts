@@ -5,7 +5,11 @@ import { lstat, readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 const generated = (path: string) => /^(node_modules\/|scripts\/release\/tools\/node_modules\/|\.next\/|coverage\/|\.vercel\/|release-result\/)/.test(path) || path === "tsconfig.tsbuildinfo";
-const gitAt = (root: string) => (...args: string[]) => command("git", args, { ...buildEnvironment(), GIT_OPTIONAL_LOCKS: "0" }, root, { timeoutMs: 20_000, maxOutputBytes: 2_000_000 });
+const gitAt = (root: string) => (...args: string[]) => command("git", args, { ...buildEnvironment(), GIT_OPTIONAL_LOCKS: "0" }, root, {
+  timeoutMs: 20_000,
+  // 完整依赖目录的未跟踪清单保留逐项核验，仅此精确枚举命令采用较大的有界额度。
+  maxOutputBytes: args.length === 4 && args[0] === "ls-files" && args[1] === "--others" && args[2] === "-t" && args[3] === "-z" ? 16_000_000 : 2_000_000
+});
 const cacheMode = async (root: string) => {
   try {
     const file = await lstat(resolve(root, "tsconfig.tsbuildinfo"));

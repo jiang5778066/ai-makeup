@@ -1,13 +1,13 @@
 // @vitest-environment node
-import { afterEach, expect, it } from "vitest";
-import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { afterEach, expect, it, vi } from "vitest";
+import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { command } from "./command";
 import { trustSource } from "./trust";
 import { REPOSITORY_ROOT } from "./paths";
 const roots: string[] = [];
-afterEach(async () => { for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true }); });
+afterEach(async () => { vi.unstubAllEnvs(); for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true }); }, 60_000);
 const fixture = async () => {
   const root = await mkdtemp(join(tmpdir(), "release-sha-")); roots.push(root);
   const git = (...args: string[]) => command("git", args, process.env, root);
@@ -55,3 +55,39 @@ it("前导空白未跟踪路径不能冒充已批准生成目录", async () => {
   const f = await fixture(); await mkdir(join(f.root, "\n.next")); await writeFile(join(f.root, "\n.next/cache"), "unreviewed");
   await expect(trustSource(f.sha, f.root)).rejects.toThrow();
 });
+
+const generatedListing = async (root: string, count: number) => {
+  const directory = join(root, "node_modules"); await mkdir(directory);
+  for (let start = 0; start < count; start += 100) {
+    await Promise.all(Array.from({ length: Math.min(100, count - start) }, (_, offset) =>
+      writeFile(join(directory, "x".repeat(220) + "-" + String(start + offset).padStart(6, "0")), "")));
+  }
+  return command("git", ["ls-files", "--others", "-t", "-z"], process.env, root, { maxOutputBytes: 20_000_000 });
+};
+it("超过2MB的完整合法生成清单仍可通过来源门禁", async () => {
+  const f = await fixture(); const output = await generatedListing(f.root, 9_000);
+  expect(Buffer.byteLength(output)).toBeGreaterThan(2_000_000);
+  await expect(trustSource(f.sha, f.root)).resolves.toBeUndefined();
+}, 60_000);
+it("超过2MB清单尾部的未授权源码仍逐项拒绝", async () => {
+  const f = await fixture(); await generatedListing(f.root, 9_000);
+  await writeFile(join(f.root, "zz-unreviewed.ts"), "unreviewed");
+  const output = await command("git", ["ls-files", "--others", "-t", "-z"], process.env, f.root, { maxOutputBytes: 20_000_000 });
+  expect(Buffer.byteLength(output)).toBeGreaterThan(2_000_000);
+  expect(output.endsWith("? zz-unreviewed.ts\0")).toBe(true);
+  await expect(trustSource(f.sha, f.root)).rejects.toThrow("发布工作树含未跟踪源码或配置");
+}, 60_000);
+it("超过16MB仍有界拒绝并确认枚举子进程已回收", async () => {
+  const f = await fixture(); const output = await generatedListing(f.root, 70_000);
+  expect(Buffer.byteLength(output)).toBeGreaterThan(16_000_000);
+  const realGit = await command("which", ["git"]);
+  const bin = await mkdtemp(join(tmpdir(), "release-git-pid-")); roots.push(bin);
+  const pidFile = join(bin, "pid");
+  const quote = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
+  // 仅记录本夹具真实Git进程身份，参数及完整输出原样透传。
+  await writeFile(join(bin, "git"), `#!/bin/sh\nprintf '%s' "$$" > ${quote(pidFile)}\nexec ${quote(realGit)} "$@"\n`, { mode: 0o755 });
+  vi.stubEnv("PATH", bin + ":" + process.env.PATH);
+  await expect(trustSource(f.sha, f.root)).rejects.toThrow("子命令输出超过上限");
+  const pid = Number(await readFile(pidFile, "utf8")); expect(pid).toBeGreaterThan(0);
+  expect(() => process.kill(pid, 0)).toThrowError(expect.objectContaining({ code: "ESRCH" }));
+}, 90_000);
