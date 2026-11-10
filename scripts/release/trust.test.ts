@@ -141,7 +141,7 @@ it("已有空文件转为intent-to-add即使stage条目及标志相同仍由暂�
   await f.git("rm", "--cached", "empty.txt"); await f.git("add", "-N", "empty.txt");
   expect(await f.git("ls-files", "--stage", "-z")).toBe(stage); expect(await f.git("ls-files", "-v", "-z")).toBe(flags);
   expect(await f.git("diff", "--cached", "--name-only", "-z")).toBe("empty.txt\0");
-  await expect(guard()).rejects.toThrow("发布工作树存在已跟踪改动");
+  await expect(guard()).rejects.toThrow("发布索引语义发生变化");
 });
 it.each(["symlink", "mode"])("构建后根缓存%s变化给出独立固定错误", async change => {
   const f = await builtFixture(); const guard = await trustBuiltSource(f.sha, f.root); const cache = join(f.root, "tsconfig.tsbuildinfo");
@@ -159,4 +159,27 @@ it("复核期间后半段索引变化仍由第二次语义检查拒绝", async (
   await writeFile(join(bin, "git"), `#!/bin/sh\n${quote(realGit)} "$@"\nresult=$?\nif [ "$#" -eq 4 ] && [ "$1" = ls-files ] && [ "$2" = --others ] && [ "$3" = -t ] && [ "$4" = -z ]; then\n ${quote(realGit)} update-index --chmod=+x package.json || exit 1\nfi\nexit "$result"\n`, { mode: 0o755 });
   vi.stubEnv("PATH", bin + ":" + process.env.PATH);
   await expect(guard()).rejects.toThrow("发布索引语义发生变化");
+});
+
+it.each(["same-oid-ita", "--skip-worktree", "--assume-unchanged", "staged-content"])("末尾复核的%s组合变化仍拒绝", async change => {
+  const f = await builtFixture(); await f.git("update-index", "--index-version", "4");
+  const guard = await trustBuiltSource(f.sha, f.root);
+  const stage = await f.git("ls-files", "--stage", "-z"), flags = await f.git("ls-files", "-v", "-z");
+  const format = (await readFile(join(f.root, ".git/index"))).subarray(0, 8).toString("hex");
+  const realGit = await command("which", ["git"]); const bin = await mkdtemp(join(tmpdir(), "release-late-ita-")); roots.push(bin);
+  const quote = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
+  const mutation = change === "same-oid-ita"
+    ? `${quote(realGit)} rm --cached --quiet empty.txt || exit 1\n ${quote(realGit)} add -N empty.txt || exit 1`
+    : change === "staged-content"
+      ? `printf '%s' late > package.json\n ${quote(realGit)} add package.json || exit 1`
+      : `${quote(realGit)} update-index ${quote(change)} package.json || exit 1`;
+  // 与Reviewer反例相同：完整枚举透传后、中段源码检查结束与末尾二检之间注入。
+  await writeFile(join(bin, "git"), `#!/bin/sh\n${quote(realGit)} "$@"\nresult=$?\nif [ "$#" -eq 4 ] && [ "$1" = ls-files ] && [ "$2" = --others ] && [ "$3" = -t ] && [ "$4" = -z ]; then\n ${mutation}\nfi\nexit "$result"\n`, { mode: 0o755 });
+  vi.stubEnv("PATH", bin + ":" + process.env.PATH);
+  await expect(guard()).rejects.toThrow("发布索引语义发生变化");
+  if (change === "same-oid-ita") {
+    expect(await f.git("ls-files", "--stage", "-z")).toBe(stage); expect(await f.git("ls-files", "-v", "-z")).toBe(flags);
+    expect((await readFile(join(f.root, ".git/index"))).subarray(0, 8).toString("hex")).toBe(format);
+    expect(await f.git("diff", "--cached", "--name-only", "-z")).toBe("empty.txt\0");
+  }
 });

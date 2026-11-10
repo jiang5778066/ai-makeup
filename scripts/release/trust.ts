@@ -46,7 +46,8 @@ export const trustBuiltSource = async (sha: string, root = REPOSITORY_ROOT) => {
   const initialIndex = await indexHash(), format = await indexFormat(), mode = await cacheMode(root);
   return async () => {
     const unchanged = async () => {
-      if (await indexHash() !== initialIndex) throw new Error("发布索引语义发生变化");
+      // 同OID空文件的intent-to-add不改变stage/-v清单，两次复核均须额外拒绝暂存差异。
+      if (await git("diff", "--cached", "--name-only", "-z") || await indexHash() !== initialIndex) throw new Error("发布索引语义发生变化");
       if (await indexFormat() !== format) throw new Error("发布索引格式发生变化");
       if (await cacheMode(root) !== mode) throw new Error("发布根构建缓存类型/模式发生变化");
     };
