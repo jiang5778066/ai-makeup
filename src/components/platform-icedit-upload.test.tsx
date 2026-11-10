@@ -1,0 +1,72 @@
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { PlatformIceditUpload } from './platform-icedit-upload';
+import { icedItConfig, initializeIcedit } from '@/lib/platform-icedit-data';
+import { decodeLocalPreview } from '@/lib/platform-generator-upload';
+vi.mock('@/lib/platform-generator-upload', async importOriginal => ({ ...await importOriginal<typeof import('@/lib/platform-generator-upload')>(), decodeLocalPreview: vi.fn().mockResolvedValue(undefined) }));
+const revoke = vi.fn(), create = vi.fn();
+beforeEach(() => { vi.mocked(decodeLocalPreview).mockReset().mockResolvedValue(undefined); create.mockReset().mockImplementation(file => `blob:${file.name}`); revoke.mockClear(); vi.stubGlobal('URL', class extends URL { static createObjectURL = create; static revokeObjectURL = revoke; }); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+describe('ICEdit 单图本地上传', () => {
+  it('取消替换、移除 A 后，普通选择 B 仍创建和展示预览', async () => {
+    const view = render(<PlatformIceditUpload config={icedItConfig(initializeIcedit())!} locale="en" onFiles={vi.fn()}/>);
+    const input = view.container.querySelector('input')!;
+    const a = new File(['image-a'], 'a.png', { type: 'image/png' });
+    const b = new File(['image-b'], 'b.png', { type: 'image/png' });
+    fireEvent.click(screen.getByRole('button', { name: '📁 Select Image' }));
+    fireEvent.change(input, { target: { files: [a] } });
+    await waitFor(() => expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:a.png'));
+    fireEvent.click(screen.getByRole('button', { name: 'Replace image' }));
+    fireEvent(input, new Event('cancel'));
+    expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:a.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove image' }));
+    fireEvent.click(screen.getByRole('button', { name: '📁 Select Image' }));
+    fireEvent.change(input, { target: { files: [b] } });
+    await waitFor(() => expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:b.png'));
+    expect(create).toHaveBeenCalledWith(b);
+    expect(decodeLocalPreview).toHaveBeenCalledWith(b, 'blob:b.png');
+    expect(revoke.mock.calls).toEqual([['blob:a.png']]);
+    view.unmount();
+    expect(revoke.mock.calls).toEqual([['blob:a.png'], ['blob:b.png']]);
+  });
+
+  it('替换选择器打开后 A 解码失败消失，提交 B 转为普通选择', async () => {
+    let failA!: (reason: Error) => void;
+    vi.mocked(decodeLocalPreview).mockImplementationOnce(() => new Promise<void>((_resolve, reject) => { failA = reject; }));
+    const view = render(<PlatformIceditUpload config={icedItConfig(initializeIcedit())!} locale="en" onFiles={vi.fn()}/>);
+    const input = view.container.querySelector('input')!;
+    const b = new File(['image-b'], 'b.png', { type: 'image/png' });
+    fireEvent.change(input, { target: { files: [new File(['image-a'], 'a.png', { type: 'image/png' })] } });
+    expect(screen.getByRole('status')).toHaveTextContent('Reading image');
+    fireEvent.click(screen.getByRole('button', { name: 'Replace image' }));
+    await act(async () => { failA(new Error('A 解码失败')); });
+    expect(screen.queryByRole('button', { name: 'Replace image' })).toBeNull();
+    expect(screen.getByRole('alert')).toHaveTextContent('Unable to decode');
+    fireEvent.change(input, { target: { files: [b] } });
+    await waitFor(() => expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:b.png'));
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(create).toHaveBeenCalledWith(b);
+    expect(decodeLocalPreview).toHaveBeenCalledWith(b, 'blob:b.png');
+    expect(revoke.mock.calls).toEqual([['blob:a.png']]);
+    view.unmount();
+    expect(revoke.mock.calls).toEqual([['blob:a.png'], ['blob:b.png']]);
+  });
+
+  it('校验格式、预览、替换、移除和卸载释放，不上传网络', async () => {
+    const onFiles = vi.fn(), view = render(<PlatformIceditUpload config={icedItConfig(initializeIcedit())!} locale="en" onFiles={onFiles}/>);
+    const input = view.container.querySelector('input')!;
+    fireEvent.change(input, { target: { files: [new File(['bad'], 'a.txt', { type: 'text/plain' })] } });
+    expect(screen.getByRole('alert')).toHaveTextContent('Choose an image'); expect(create).not.toHaveBeenCalled();
+    fireEvent.change(input, { target: { files: [new File(['image'], 'one.png', { type: 'image/png' })] } });
+    await waitFor(() => expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:one.png'));
+    fireEvent.click(screen.getByRole('button', { name: 'Replace image' }));
+    fireEvent.change(input, { target: { files: [new File(['image'], 'two.png', { type: 'image/png' })] } });
+    await waitFor(() => expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:two.png'));
+    expect(revoke).toHaveBeenCalledWith('blob:one.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove image' }));
+    expect(screen.queryByRole('img')).toBeNull(); expect(revoke).toHaveBeenCalledWith('blob:two.png');
+    fireEvent.change(input, { target: { files: [new File(['image'], 'three.png', { type: 'image/png' })] } });
+    await waitFor(() => expect(screen.getByRole('img')).toBeInTheDocument());
+    view.unmount(); expect(revoke).toHaveBeenCalledWith('blob:three.png'); expect(onFiles).toHaveBeenCalled();
+  });
+});

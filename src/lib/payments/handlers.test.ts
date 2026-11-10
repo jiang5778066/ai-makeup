@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createHash } from "node:crypto";
+const mockSelect = vi.fn();
+vi.mock("@/lib/platform-billing-persistence", () => ({ensureBillingPersistence:vi.fn()}));
 const mockReturning = vi.fn();
 const mockValues = vi.fn();
 const mockExecute = vi.fn();
@@ -19,6 +22,7 @@ vi.mock("@/db/client", () => ({
             };
           }
         }),
+        select: () => ({ from: () => ({ where: () => { const p = mockSelect(); return Object.assign(p, {limit:()=>p,for:()=>p}); } }) }),
         execute: (...args: unknown[]) => mockExecute(...args)
       });
     }
@@ -26,6 +30,7 @@ vi.mock("@/db/client", () => ({
 }));
 
 beforeEach(() => {
+  mockSelect.mockReset();
   mockReturning.mockReset();
   mockValues.mockReset();
   mockExecute.mockReset();
@@ -69,13 +74,16 @@ describe("Creem payment handlers", () => {
   });
 
   it("does not grant credits for a duplicate webhook event", async () => {
-    mockReturning.mockResolvedValueOnce([]);
+    mockReturning.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    const hash = createHash("sha256").update(JSON.stringify(["checkout.completed","creem","user_1","credits_100","order_1","transaction_1",800,"USD",100,null,null])).digest("hex");
+    mockSelect.mockResolvedValueOnce([{payloadIdentity:hash}]).mockResolvedValueOnce([{userId:"user_1",providerOrderId:"order_1",providerTransactionId:"transaction_1",planId:"credits_100",amountCents:800,currency:"USD",creditsAwarded:100}]).mockResolvedValueOnce([]);
     const { grantPurchaseCredits } = await import("./handlers");
 
     const result = await grantPurchaseCredits({
       provider: "creem",
       eventId: "evt_1",
       providerOrderId: "order_1",
+      providerTransactionId: "transaction_1",
       userId: "user_1",
       planId: "credits_100",
       credits: 100,

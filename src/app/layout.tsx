@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
+import { PlatformNavigationProvider } from "@/components/platform-navigation-link";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -19,7 +20,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const locale = requestHeaders.get("x-page-locale") === "zh-CN" ? "zh-CN" : "en";
   return (
     <html lang={locale}>
-      <body>{children}</body>
+      <body><PlatformNavigationProvider>{children}</PlatformNavigationProvider></body>
     </html>
   );
 }

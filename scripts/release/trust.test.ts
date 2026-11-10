@@ -34,6 +34,24 @@ it("仓库外调用默认迁移预检仍读取固定历史，不在调用cwd找S
       return []; };
     sql.begin = async (mode, fn) => { if(mode !== "read only") throw Error("write"); return fn(sql); };
     migrationOnClient(sql, "status").then(value => console.log(JSON.stringify(value))).catch(() => process.exitCode=1);`;
-  const out = await command(process.execPath, [join(REPOSITORY_ROOT, "node_modules/tsx/dist/cli.mjs"), "-e", code], process.env, f.root);
-  expect(JSON.parse(out)).toEqual({ applied: [], pending: ["0001_production_readiness"] });
+  const out = await command(process.execPath, ["--import", join(REPOSITORY_ROOT, "node_modules/tsx/dist/loader.mjs"), "-e", code], process.env, f.root);
+  expect(JSON.parse(out)).toEqual({ applied: [], pending: ["0001_production_readiness", "0002_d1_creation_visibility", "0002_d2_checkout_attempts", "0003_e1_media_tasks"] });
+});
+
+it.each(["--assume-unchanged", "--skip-worktree"])("不能用%s隐藏未提交源码", async flag => {
+ const f=await fixture();await f.git("update-index",flag,"package.json");await writeFile(join(f.root,"package.json"),'{"changed":true}');await expect(trustSource(f.sha,f.root)).rejects.toThrow();
+});
+
+it("近似生成路径不能被命令输出trim误识别为根缓存或生成目录", async () => {
+  const f = await fixture();
+  await writeFile(join(f.root, "\ntsconfig.tsbuildinfo"), "tracked");
+  await f.git("add", "."); await f.git("commit", "-m", "测试：近似路径");
+  const sha = await f.git("rev-parse", "HEAD"); await f.git("update-ref", "refs/remotes/origin/main", sha);
+  const { trustBuiltSource } = await import("./trust"); const guard = await trustBuiltSource(sha, f.root);
+  await writeFile(join(f.root, "\ntsconfig.tsbuildinfo"), "changed");
+  await expect(guard()).rejects.toThrow();
+});
+it("前导空白未跟踪路径不能冒充已批准生成目录", async () => {
+  const f = await fixture(); await mkdir(join(f.root, "\n.next")); await writeFile(join(f.root, "\n.next/cache"), "unreviewed");
+  await expect(trustSource(f.sha, f.root)).rejects.toThrow();
 });

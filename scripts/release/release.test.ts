@@ -64,3 +64,12 @@ describe("严格健康验收", () => {
   it.each(["evil.test", "candidate.vercel.app.evil.test", "https://candidate.vercel.app/path", "user@candidate.vercel.app"])("请求前拒绝不可信 URL %s", async (host) => { let called = false; await expect(checkHealth(host, identity, async () => { called = true; return new Response(); })).rejects.toThrow(); expect(called).toBe(false); });
   it.each([[{}, 302, "application/json"], [{}, 200, "text/html"], [{ status: "ready", ...identity, sha: "b".repeat(40) }, 200, "application/json"], [{ status: "ready", ...identity, deployment: "other.vercel.app" }, 200, "application/json"]] as const)("拒绝登录页/重定向/错误身份", async (body, status, type) => { await expect(checkHealth("candidate.vercel.app", identity, fetcher(body, status, type))).rejects.toThrow(); });
 });
+
+it("显式原生来源继续执行同一pipeline及全部检查点，前置失败不部署",async()=>{
+ const native={...config,authMode:"native-cli" as const,source:"local" as const,workflowRef:"",token:"",migrationSource:"vercel-production" as const,migrationUrl:""};
+ const normal=fixture();const checkpoints: string[]=[];
+ const result=await release(native,normal.ops,async r=>{checkpoints.push(r.stage);expect(JSON.stringify(r)).not.toContain("fixture-secret");});
+ expect(result.ok).toBe(true);expect(normal.calls).toEqual(["trust","audit","inspect","validate","build","candidate","migrate","candidateHealth","promote","productionHealth"]);
+ expect(checkpoints).toContain("migrate");expect(checkpoints).toContain("production-health");
+ for(const failure of ["trust","audit","inspect","validate","build"]){const f=fixture(failure);const r=await release(native,f.ops);expect(r.ok).toBe(false);expect(f.calls).not.toContain("candidate");expect(f.calls).not.toContain("promote");}
+});

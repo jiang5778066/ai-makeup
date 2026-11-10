@@ -6,6 +6,7 @@ const mockInsertReturning = vi.fn();
 const mockUpdateReturning = vi.fn();
 const mockSelectWhere = vi.fn();
 const mockTxForUpdate = vi.fn();
+const mockLockedTable = vi.fn();
 
 vi.mock("@/db/client", () => ({
   db: {
@@ -32,10 +33,10 @@ vi.mock("@/db/client", () => ({
           }
         }),
         select: () => ({
-          from: () => ({
+          from: (table: unknown) => ({
             where: () => ({
-              orderBy: () => ({ for: () => mockTxForUpdate() }),
-              for: () => mockTxForUpdate()
+              orderBy: () => ({ for: () => { mockLockedTable(table); return mockTxForUpdate(); } }),
+              for: () => { mockLockedTable(table); return mockTxForUpdate(); }
             })
           })
         }),
@@ -56,6 +57,7 @@ beforeEach(() => {
   mockUpdateReturning.mockReset();
   mockSelectWhere.mockReset();
   mockSelectWhere.mockResolvedValue([]);
+  mockLockedTable.mockReset();
   mockTxForUpdate.mockReset();
   mockTxForUpdate.mockResolvedValue([{ id: "lot_1", remaining: 5 }]);
 });
@@ -141,4 +143,11 @@ describe("credits balance ledger", () => {
       })
     );
   });
+});
+
+it("生成失败退款先锁本人余额再锁消费，空消费仍保持一次退款语义",async()=>{
+ mockTxForUpdate.mockResolvedValueOnce([{userId:"user_1"}]).mockResolvedValueOnce([]);
+ const {refundGenerationCredits}=await import("./credits");const {creditBalances,creditConsumptions}=await import("@/db/schema");
+ expect(await refundGenerationCredits("user_1","empty_generation")).toBe("duplicate");
+ expect(mockLockedTable.mock.calls.map(c=>c[0])).toEqual([creditBalances,creditConsumptions]);expect(mockInsertValues).not.toHaveBeenCalled();
 });

@@ -1,3 +1,4 @@
+import { PlatformPricingLoginLink } from "./platform-pricing-login-link";
 import { BadgeCheck, Camera, Check, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -51,7 +52,7 @@ export function LandingPage({
   const showVirtualTryOn = page.slug === "virtual-makeup-try-on" || Boolean(focusedVirtualPart);
   const heroTitle = page.h1.replaceAll("-", "‑");
 
-  if (page.slug === "ai-makeup" || page.slug === "home") {
+  if (page.slug === "ai-makeup") {
     return (
       <SiteShell locale={locale} currentPath={currentPath}>
         <main className="makeup-reference">
@@ -184,9 +185,9 @@ export function PricingSection({ locale }: Readonly<{ locale: Locale }>) {
         <div className="section-header">
           <div>
             <span className="eyebrow"><Lock size={15} aria-hidden="true" /> {isChinese ? "简单价格" : "Simple pricing"}</span>
-            <h2>{isChinese ? "先免费生成 3 次，再按次购买" : "Three free results, then pay as you go"}</h2>
+            <h2>{isChinese ? "注册赠送 3 积分，按需购买积分包" : "3 signup credits, then top up as needed"}</h2>
           </div>
-          <p>{isChinese ? "实时预览免费；每次高清保存消耗 1 credit。Creem 一次性支付，无订阅。" : "Live preview is free. Each saved HD result uses one credit. One-time Creem checkout, no subscription."}</p>
+          <p>{isChinese ? "注册积分仅发放一次；当前美妆生成每次消耗 1 积分。一次性购买，无订阅。" : "Signup credits are granted once. Each makeup generation currently uses 1 credit. One-time purchase, no subscription."}</p>
         </div>
         <div className="pricing-grid">
           {pricingPlans.map((plan) => {
@@ -195,16 +196,16 @@ export function PricingSection({ locale }: Readonly<{ locale: Locale }>) {
               <article className={plan.highlight ? "pricing-card highlight" : "pricing-card"} key={plan.id}>
                 <span className="eyebrow">{plan.id === "free" ? (isChinese ? "新账户" : "New account") : (isChinese ? "一次性额度包" : "One-time pack")}</span>
                 <div className="price">{plan.monthly}</div>
-                <p>{isChinese ? (plan.id === "free" ? "3 次高清结果" : "100 次高清结果") : plan.credits}</p>
+                <p>{isChinese ? (plan.id === "free" ? "一次性注册赠送 3 积分" : "100 积分") : plan.credits}</p>
                 <ul>
-                  <li><Check size={15} aria-hidden="true" /> {isChinese ? "全脸 AI 与实时试妆" : "Full-face AI and live try-on"}</li>
-                  <li><Check size={15} aria-hidden="true" /> {isChinese ? "作品历史与下载" : "Creation history and downloads"}</li>
-                  <li><Check size={15} aria-hidden="true" /> {isChinese ? "失败自动退回 credit" : "Automatic credit return on failure"}</li>
+                  <li><Check size={15} aria-hidden="true" /> {isChinese ? "美妆生成每次 1 积分" : "1 credit per makeup generation"}</li>
+                  <li><Check size={15} aria-hidden="true" /> {isChinese ? "积分不等于生成次数" : "Credits are not generation counts"}</li>
+                  <li><Check size={15} aria-hidden="true" /> {isChinese ? "明确失败退回本次积分一次" : "Explicit failures return credits once"}</li>
                 </ul>
                 {checkoutPlanId ? (
-                  <CheckoutButtons planId={checkoutPlanId} cta={isChinese ? "使用 Creem 购买 100 次" : "Buy 100 with Creem"} />
+                  <CheckoutButtons planId={checkoutPlanId} cta={isChinese ? "购买 100 积分" : "Buy 100 credits"} locale={locale} />
                 ) : (
-                  <Link href="/login" className="ghost-button" style={{ marginTop: 16, width: "100%" }}>{isChinese ? "免费注册" : "Sign up free"}</Link>
+                  <PlatformPricingLoginLink nextPath={locale === "zh-CN" ? "/zh-CN/pricing" : "/pricing"} className="ghost-button" style={{ marginTop: 16, width: "100%" }}>{isChinese ? "免费注册" : "Sign up free"}</PlatformPricingLoginLink>
                 )}
               </article>
             );

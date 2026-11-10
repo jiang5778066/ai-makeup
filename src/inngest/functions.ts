@@ -1,3 +1,5 @@
+import {mediaGenerate,mediaScan} from './media-functions';
+import { legacyGenerationFields } from "@/lib/platform-creations-legacy-schema";
 import { and, eq, isNull } from "drizzle-orm";
 import { generations } from "@/db/schema";
 import { prepareMakeup, makeupReferenceUrl } from "@/lib/ai/makeup";
@@ -83,7 +85,7 @@ export const makeupGenerate = inngest.createFunction(
       const generationId = original.data?.generationId;
       if (!generationId) return { status: "missing_generation_id" };
       const { db } = await import("@/db/client");
-      const [generation] = await db.select().from(generations).where(eq(generations.id, generationId));
+      const [generation] = await db.select(legacyGenerationFields).from(generations).where(eq(generations.id, generationId));
       // 提交结果未知时保留额度，等待原任务核对，不能退款后再次生成。
       if (generation?.error === "creative_submission_pending") return { status: "awaiting_provider_reconciliation" };
       if (generation?.error === "creative_result_pending") return { status: "awaiting_result_storage" };
@@ -98,7 +100,7 @@ export const makeupGenerate = inngest.createFunction(
 
     const gen = await step.run("load-generation", async () => {
       const { db } = await import("@/db/client");
-      const [row] = await db.select().from(generations).where(eq(generations.id, generationId));
+      const [row] = await db.select(legacyGenerationFields).from(generations).where(eq(generations.id, generationId));
       if (!row) throw new Error("generation_missing");
       return row;
     });
@@ -247,4 +249,4 @@ export const makeupGenerate = inngest.createFunction(
   }
 );
 
-export const functions = [makeupGenerate];
+export const functions = [makeupGenerate,mediaGenerate,mediaScan];

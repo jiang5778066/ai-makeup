@@ -49,7 +49,8 @@ it("Vercel 使用独立工具的绝对入口，明确应用工作目录", async 
   expect(invocation?.args[0]).toBe(VERCEL_ENTRY); expect(isAbsolute(VERCEL_ENTRY)).toBe(true);
   expect(VERCEL_ENTRY).toContain("/scripts/release/tools/node_modules/vercel/");
   const lock = JSON.parse(readFileSync(resolve(TOOL_DIRECTORY, "package-lock.json"), "utf8"));
-  expect(VERCEL_ENTRY).toBe(resolve(TOOL_DIRECTORY, "node_modules/vercel", lock.packages["node_modules/vercel"].bin.vercel));
+  expect(lock.packages["node_modules/vercel"].version).toBe("65.11.0");
+  expect(VERCEL_ENTRY).toBe(resolve(TOOL_DIRECTORY, "node_modules/vercel/dist/index.js"));
   expect(invocation?.cwd).toBe(REPOSITORY_ROOT);
   expect(invocation?.args).toEqual(expect.arrayContaining(["--cwd", REPOSITORY_ROOT]));
 });

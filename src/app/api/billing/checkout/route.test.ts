@@ -1,70 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const mockGetCurrentUser = vi.fn();
-const mockCreateCreemCheckout = vi.fn();
-
-vi.mock("@/lib/supabase/server", () => ({
-  getCurrentUser: () => mockGetCurrentUser()
-}));
-
-vi.mock("@/lib/payments/creem-checkout", () => ({
-  createCreemCheckout: (...args: unknown[]) => mockCreateCreemCheckout(...args)
-}));
-
-function jsonRequest(body: unknown) {
-  return new Request("https://makeup.example/api/billing/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-}
-
-beforeEach(() => {
-  vi.resetModules();
-  mockGetCurrentUser.mockReset();
-  mockCreateCreemCheckout.mockReset();
-  mockGetCurrentUser.mockResolvedValue({ id: "user_1", email: "buyer@example.com" });
-  mockCreateCreemCheckout.mockResolvedValue("https://checkout.creem.io/test");
-  process.env.CREEM_PRODUCT_CREDITS_100 = "prod_credits_100";
-  vi.stubEnv("ENABLE_CHECKOUT", "1");
-});
-
-afterEach(() => vi.unstubAllEnvs());
-
-describe("POST /api/billing/checkout", () => {
-  it.each([undefined, "0"])("disables checkout when ENABLE_CHECKOUT is %s", async (flag) => {
-    vi.stubEnv("ENABLE_CHECKOUT", flag);
-    const { POST } = await import("./route");
-
-    const response = await POST(jsonRequest({ planId: "credits_100", provider: "creem" }));
-
-    expect(response.status).toBe(503);
-    expect(mockCreateCreemCheckout).not.toHaveBeenCalled();
-    expect(mockGetCurrentUser).not.toHaveBeenCalled();
-  });
-  it("always creates the one-time Creem credit pack", async () => {
-    const { POST } = await import("./route");
-
-    const response = await POST(jsonRequest({ planId: "credits_100", provider: "creem" }));
-    const payload = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(payload).toEqual({
-      checkoutUrl: "https://checkout.creem.io/test",
-      provider: "creem",
-      planId: "credits_100"
-    });
-    expect(mockCreateCreemCheckout).toHaveBeenCalledOnce();
-  });
-
-  it("rejects legacy Stripe or PayPal checkout requests", async () => {
-    const { POST } = await import("./route");
-
-    const response = await POST(jsonRequest({ planId: "credits_100", provider: "stripe" }));
-    const payload = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(payload.code).toBe("creem_only");
-    expect(mockCreateCreemCheckout).not.toHaveBeenCalled();
-  });
-});
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+const user = vi.fn(), start = vi.fn();
+vi.mock("@/lib/supabase/server",()=>({getCurrentUser:()=>user()}));
+vi.mock("@/lib/platform-billing-attempts",()=>({startBillingAttempt:(...a:unknown[])=>start(...a)}));
+function request(body:unknown, origin="https://makeup.example") { return new Request("https://makeup.example/api/billing/checkout",{method:"POST",headers:{"Content-Type":"application/json",Origin:origin},body:JSON.stringify(body)}); }
+beforeEach(()=>{vi.resetModules();user.mockReset().mockResolvedValue({id:"user_1",email:"buyer@example.invalid"});start.mockReset().mockResolvedValue({id:"attempt_1",status:"ready",checkoutUrl:"https://www.creem.io/payment/test"});for(const [k,v] of Object.entries({ENABLE_CHECKOUT:"1",DISABLE_CHECKOUT:"0",CREEM_API_KEY:"synthetic",CREEM_PRODUCT_CREDITS_100:"prod_credits_100",CREEM_WEBHOOK_SECRET:"synthetic",CREEM_API_BASE:"https://api.creem.io",NEXT_PUBLIC_SITE_URL:"https://makeup.example"}))vi.stubEnv(k,v);});
+afterEach(()=>vi.unstubAllEnvs());
+it.each([undefined,"0"])("收费开关%s阻止所有调用",async flag=>{vi.stubEnv("ENABLE_CHECKOUT",flag);const{POST}=await import("./route");expect((await POST(request({planId:"credits_100"}))).status).toBe(503);expect(start).not.toHaveBeenCalled();expect(user).not.toHaveBeenCalled();});
+it.each(["CREEM_WEBHOOK_SECRET","CREEM_API_KEY","CREEM_PRODUCT_CREDITS_100"])("缺少%s在外呼前503",async key=>{vi.stubEnv(key,undefined);const{POST}=await import("./route");const r=await POST(request({planId:"credits_100"}));expect(r.status).toBe(503);expect(await r.json()).toEqual({code:"checkout_unconfigured"});expect(start).not.toHaveBeenCalled();});
+it("非法API配置在外呼前503",async()=>{vi.stubEnv("CREEM_API_BASE","https://untrusted.invalid");const{POST}=await import("./route");expect((await POST(request({planId:"credits_100"}))).status).toBe(503);expect(start).not.toHaveBeenCalled();});
+it("服务端固定套餐金额与安全返回origin，忽略客户端账务及返回URL",async()=>{const{POST}=await import("./route");const r=await POST(request({planId:"credits_100",amountCents:1,credits:999,success_url:"https://evil.invalid",locale:"zh-CN"}));expect(r.status).toBe(200);expect(start).toHaveBeenCalledWith(expect.objectContaining({userId:"user_1",plan:expect.objectContaining({priceUsd:8,credits:100}),siteUrl:"https://makeup.example",locale:"zh-CN"}));expect(r.headers.get("cache-control")).toBe("no-store");});
+it("拒绝其它provider与未知plan",async()=>{const{POST}=await import("./route");expect((await POST(request({planId:"credits_100",provider:"stripe"}))).status).toBe(400);expect((await POST(request({planId:"__proto__"}))).status).toBe(400);expect(start).not.toHaveBeenCalled();});
+it("跨站拒绝且未登录401",async()=>{const{POST}=await import("./route");expect((await POST(request({planId:"credits_100"},"https://evil.invalid"))).status).toBe(403);user.mockResolvedValue(null);expect((await POST(request({planId:"credits_100"}))).status).toBe(401);expect(start).not.toHaveBeenCalled();});
+it("无效JSON与超限正文有界拒绝",async()=>{const{POST}=await import("./route");for(const [body,status] of [["{",400],["x".repeat(4097),413]] as const){const r=await POST(new Request("https://makeup.example/api/billing/checkout",{method:"POST",headers:{Origin:"https://makeup.example","Content-Type":"application/json"},body}));expect(r.status).toBe(status);expect(r.headers.get("cache-control")).toBe("no-store");}expect(start).not.toHaveBeenCalled();});
+it("unknown明确202等待核对，不能变普通新购错误",async()=>{start.mockResolvedValue({id:"attempt_1",status:"unknown"});const{POST}=await import("./route");const r=await POST(request({planId:"credits_100"}));expect(r.status).toBe(202);expect((await r.json()).checkoutUrl).toBeUndefined();});
+it("缺迁移503与其它DB故障区分且不泄露内部错误",async()=>{const{POST}=await import("./route");start.mockRejectedValueOnce(new Error("billing_migration_required")).mockRejectedValueOnce(new Error("database-private"));expect(await (await POST(request({planId:"credits_100"}))).json()).toEqual({code:"billing_migration_required"});const r=await POST(request({planId:"credits_100"}));expect(r.status).toBe(503);expect(await r.json()).toEqual({code:"billing_unavailable"});});
+it("任意checkout地址拒绝，跨用户attempt404",async()=>{const{POST}=await import("./route");start.mockResolvedValueOnce({status:"ready",checkoutUrl:"https://evil.invalid"});expect((await POST(request({planId:"credits_100"}))).status).toBe(503);start.mockRejectedValueOnce(new Error("attempt_not_found"));expect((await POST(request({planId:"credits_100",attemptId:"00000000-0000-4000-8000-000000000001"}))).status).toBe(404);});

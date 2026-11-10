@@ -1,0 +1,496 @@
+{
+  "note": "固定完整英文与实际/拟译中文逐题映射；实际产品还须按coverage第7节就近归因，不将外部主张冒作本站承诺。",
+  "pages": [
+    {
+      "page": "grok-imagine",
+      "englishSource": "evidence/reference-c-02d/grok-imagine-en-content.json",
+      "chineseSource": "evidence/reference-c-02d/grok-imagine-zh-request-content.json",
+      "faq": [
+        {
+          "index": 1,
+          "en": {
+            "q": "Is Grok Imagine on Lanta AI free?",
+            "a": "Yes. New users on Lanta AI get 40 free credits to try Grok AI video generation. Since the xAI Imagine API is paid, Grok Imagine Video costs credits based on video length and resolution."
+          },
+          "zh-CN": {
+            "q": "Lanta AI 上的 Grok Imagine 免费吗？",
+            "a": "是的。Lanta AI 新用户可获得 40 个免费积分，用于体验 Grok AI 视频生成。由于 xAI Imagine API 本身是付费的，Grok Imagine Video 会根据视频时长和分辨率消耗积分。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 2,
+          "en": {
+            "q": "How long can Grok Imagine videos be?",
+            "a": "Grok Imagine videos can be 1 to 15 seconds long through the API. On some third-party platforms or websites, the available video length may be shorter depending on the mode, plan, or usage limits."
+          },
+          "zh-CN": {
+            "q": "Grok Imagine 视频最长可以多长？",
+            "a": "通过 API，Grok Imagine 视频可生成 1 到 15 秒。在某些第三方平台或网站上，可用视频时长可能会因模式、套餐或使用限制而更短。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 3,
+          "en": {
+            "q": "How do I make longer videos with Grok Imagine?",
+            "a": "Do not try to make a full long video in one prompt. Break the idea into short shots. Generate one 5–10 second scene at a time, use the last frame or video extension to continue the story, then edit the clips together in a video editor."
+          },
+          "zh-CN": {
+            "q": "如何用 Grok Imagine 制作更长的视频？",
+            "a": "不要试图用一个提示词生成完整长视频。把想法拆成多个短镜头。每次生成一个 5–10 秒的场景，使用最后一帧或视频延展继续故事，然后在视频编辑器中把片段剪辑到一起。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 4,
+          "en": {
+            "q": "Does Grok Imagine support image-to-video?",
+            "a": "Yes. Grok Imagine can turn a still image into a video. You can upload a source image, such as a product shot, portrait, landscape, anime image, or concept art, and add a prompt describing how you want the scene to move."
+          },
+          "zh-CN": {
+            "q": "Grok Imagine 支持图片生成视频吗？",
+            "a": "支持。Grok Imagine 可以把静态图片变成视频。你可以上传源图片，例如产品图、人像、风景、动漫图片或概念图，并添加提示词说明你希望场景如何运动。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 5,
+          "en": {
+            "q": "Does Grok Imagine support reference images?",
+            "a": "Yes. Grok Imagine supports reference images for video generation. The API allows up to 7 reference images in one request. When using reference images, label each image clearly in your prompt, such as “Image 1 is the character,” “Image 2 is the outfit,” and “Image 3 is the background.”"
+          },
+          "zh-CN": {
+            "q": "Grok Imagine 支持参考图吗？",
+            "a": "支持。Grok Imagine 支持使用参考图进行视频生成。API 允许一次请求最多使用 7 张参考图。使用参考图时，请在提示词中清楚标注每张图，例如“Image 1 is the character”“Image 2 is the outfit”“Image 3 is the background”。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 6,
+          "en": {
+            "q": "Why does Grok Imagine change my character?",
+            "a": "This often happens when the prompt is too broad or the reference images are not clearly explained. Fast camera moves, complex actions, face turns, crowd scenes, and long shots can also make the character drift. Use a clear front-facing reference image, and keep the action simple."
+          },
+          "zh-CN": {
+            "q": "为什么 Grok Imagine 会改变我的角色？",
+            "a": "这通常是因为提示词过于宽泛，或参考图没有解释清楚。快速镜头移动、复杂动作、转脸、人群场景和远景也可能导致角色漂移。请使用清晰的正面参考图，并保持动作简单。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 7,
+          "en": {
+            "q": "Is Grok Imagine good for professional videos?",
+            "a": "Grok Imagine is a strong tool for short creative videos, social media clips, and early marketing ideas. But it is not a full replacement for a professional video production."
+          },
+          "zh-CN": {
+            "q": "Grok Imagine 适合专业视频吗？",
+            "a": "Grok Imagine 是制作短创意视频、社交媒体片段和早期营销创意的强大工具。但它并不能完全替代专业视频制作。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 8,
+          "en": {
+            "q": "Is Grok Imagine safe for real people’s photos?",
+            "a": "Yes. Lanta AI keeps uploaded photos private and does not publicly share your images. Use real people’s photos only when you have permission. Avoid prompts that create misleading, sexual, harmful, or private depictions of a real person."
+          },
+          "zh-CN": {
+            "q": "Grok Imagine 处理真人照片安全吗？",
+            "a": "是的。Lanta AI 会保护上传照片的隐私，不会公开分享你的图片。只有在获得许可时才使用真人照片。避免生成对真人具有误导性、性化、有害或涉及隐私的内容。"
+          },
+          "chineseSource": "captured"
+        }
+      ]
+    },
+    {
+      "page": "mindvideo-ai",
+      "englishSource": "evidence/reference-c-02d/mindvideo-ai-en-content.json",
+      "chineseSource": "本轮拟译，不是采到的参照中文",
+      "faq": [
+        {
+          "index": 1,
+          "en": {
+            "q": "What can I create with MindVideo AI?",
+            "a": "You can turn a written scene into a short video or animate an existing photo, illustration, or product image. These workflows work well for social hooks, visual concepts, product reveals, and story previews."
+          },
+          "zh-CN": {
+            "q": "MindVideo AI可以创作什么？",
+            "a": "可将文字场景变成短片，或让已有照片、插画、产品图动起来。这些工作流适合社媒开场钩子、视觉概念、产品揭晓和故事预览。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 2,
+          "en": {
+            "q": "How do I start using MindVideo AI here?",
+            "a": "Use the generator on this page, choose Text to Video or Image to Video, add your prompt or source image, review the available settings, and generate. Your completed video will appear in the generation workflow for review and download."
+          },
+          "zh-CN": {
+            "q": "如何在这里开始使用MindVideo AI？",
+            "a": "使用本页生成器，选择文生或图生，添加提示词或源图，核对当前可用设置再生成。完成的视频会在生成工作流中显示，供复核与下载。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 3,
+          "en": {
+            "q": "Can I try MindVideo AI with trial credits?",
+            "a": "New Lanta AI accounts receive trial credits, but video generation is not unlimited. The form shows the current access condition and credit estimate before you generate, so review those details for the input and settings you choose."
+          },
+          "zh-CN": {
+            "q": "可以用试用额度体验MindVideo AI吗？",
+            "a": "新的Lanta AI账户获得试用额度，但视频生成不是无限的。表单在生成前显示当前准入条件及额度估算，应按所选输入和设置核对。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 4,
+          "en": {
+            "q": "Can I create from both text and images?",
+            "a": "Yes. Choose the Text to Video tab to start from a written scene or the Image to Video tab to animate an existing visual. Use the duration, resolution, ratio, audio, and reference options shown for the selected workflow."
+          },
+          "zh-CN": {
+            "q": "可以同时从文字和图片创作吗？",
+            "a": "可以。选择文生标签从文字场景开始，选择图生标签让已有视觉素材动起来。使用所选工作流实际显示的时长、分辨率、画幅、音频和参考选项。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 5,
+          "en": {
+            "q": "How can I keep faces and product details recognizable?",
+            "a": "Start with a clear image and keep the main subject easy to see. Ask for one compatible action and a restrained camera move. Review faces, hands, logos, labels, and edges, then simplify the motion if those details change."
+          },
+          "zh-CN": {
+            "q": "如何保持人脸与产品细节可辨认？",
+            "a": "从清晰图片开始，让主体容易识别。要求一个合适动作和克制的运镜。检查脸、手、logo、标签及边缘；细节改变时简化动作。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 6,
+          "en": {
+            "q": "Can I use the generated video in ads or client work?",
+            "a": "Commercial use depends on the service, model, plan, and source material involved. Check the current Lanta AI plan terms and confirm your rights to every uploaded image, person, logo, character, and audio asset before publishing or delivering the result."
+          },
+          "zh-CN": {
+            "q": "生成视频可用于广告或客户项目吗？",
+            "a": "商业使用取决于涉及的服务、模型、套餐和源素材。发布或交付前，检查Lanta AI当前套餐条款，确认对所有上传图片、人物、logo、角色和音频资产拥有权利。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 7,
+          "en": {
+            "q": "Should I start with text or an image?",
+            "a": "Choose Text to Video when you need to create a scene from a written idea. Choose Image to Video when a photo, product image, portrait, or illustration should define the subject and composition of the generated video."
+          },
+          "zh-CN": {
+            "q": "应从文字还是图片开始？",
+            "a": "需要按文字想法创建新场景时用文生；照片、产品图、人像或插画应决定生成片段的主体和构图时用图生。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 8,
+          "en": {
+            "q": "Can I reuse a prompt from another project?",
+            "a": "You can adapt the same natural-language scene idea, but the result may change because each model interprets prompts differently. Preserve the subject, main action, environment, and camera direction first, then adjust one instruction or setting at a time."
+          },
+          "zh-CN": {
+            "q": "可复用其它项目的提示词吗？",
+            "a": "可以改编同一自然语言场景想法，但模型对提示词的理解不同，结果可能改变。先保留主体、主要动作、环境和镜头方向，再一次调整一个指令或设置。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 9,
+          "en": {
+            "q": "Where can I check duration and resolution options?",
+            "a": "The available duration and resolution options are shown directly in the generator and can vary by input and other settings. Use the current form as the source of truth before submitting a generation."
+          },
+          "zh-CN": {
+            "q": "在哪里查看时长与分辨率选项？",
+            "a": "可用时长和分辨率直接显示在生成器中，并可能随输入及其它设置变化。提交生成前以当前表单为准。"
+          },
+          "chineseSource": "proposed-translation"
+        }
+      ]
+    },
+    {
+      "page": "sora-2",
+      "englishSource": "evidence/reference-c-02d/sora-2-en-content.json",
+      "chineseSource": "本轮拟译，不是采到的参照中文",
+      "faq": [
+        {
+          "index": 1,
+          "en": {
+            "q": "What is Sora 2 and how does it work?",
+            "a": "Sora 2 is OpenAI's latest text-to-video AI model that uses advanced deep learning algorithms to convert text descriptions into high-quality video content. The sora ai system analyzes your text prompt, understands the scene, characters, actions, and visual style you want, then generates a coherent video up to 60 seconds long. It combines natural language processing with computer vision to create realistic, physics-accurate videos that match your description."
+          },
+          "zh-CN": {
+            "q": "Sora 2是什么，如何工作？",
+            "a": "Sora 2被介绍为OpenAI最新的文生视频模型，使用先进深度学习把文字描述转换为高质量视频。系统分析提示词，理解所需场景、角色、动作与视觉风格，随后生成最长60秒的连贯片段；结合自然语言处理和计算机视觉，创建符合描述、写实且物理准确的视频。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 2,
+          "en": {
+            "q": "How long does it take to generate a video with Sora 2?",
+            "a": "Video generation time with Sora 2 typically ranges from 2-5 minutes depending on video length and complexity. Short videos (10-20 seconds) usually take 2-3 minutes, while longer 60-second videos may take 4-5 minutes. This is significantly faster than traditional video production, which can take hours or days. The sora openai platform also provides real-time progress updates so you can monitor the generation process."
+          },
+          "zh-CN": {
+            "q": "Sora 2生成视频需要多久？",
+            "a": "生成时间通常为2–5分钟，取决于时长和复杂度。10–20秒短视频通常需2–3分钟，60秒较长视频可能需4–5分钟。相比耗时数小时或数天的传统制作更快。参照还称sora openai平台提供实时进度供监测。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 3,
+          "en": {
+            "q": "What video quality and resolution does Sora 2 support?",
+            "a": "Sora AI supports multiple resolution options including 720p (HD) and 1080p (Full HD). Videos are generated at 24-30 frames per second for smooth, professional-quality output. The system automatically optimizes video quality based on your content type and intended use. All videos maintain consistent quality throughout with proper color grading, lighting, and visual coherence that meets professional production standards."
+          },
+          "zh-CN": {
+            "q": "Sora 2支持何种画质与分辨率？",
+            "a": "参照称支持720p高清与1080p全高清，以24–30fps生成顺滑的专业质量视频。系统按内容类型及用途自动优化；整个视频保持一致质量，配有符合专业制作标准的调色、灯光与视觉连贯性。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 4,
+          "en": {
+            "q": "Can I edit or modify videos after generation?",
+            "a": "Yes! Sora 2 provides several editing options. You can regenerate specific sections by modifying your text prompt, adjust visual parameters like style and lighting, or extend your video by adding new scenes. Generated videos can be downloaded in standard formats (MP4, MOV) and further edited in any professional video editing software. The platform also offers built-in tools for basic adjustments like trimming, color correction, and adding text overlays."
+          },
+          "zh-CN": {
+            "q": "生成后可以编辑或修改吗？",
+            "a": "参照称可以改提示词重新生成特定部分，调整风格/灯光等视觉参数，或添加新场景延长视频；可下载MP4、MOV等标准格式，用专业视频编辑器继续编辑。平台还被描述为内置裁剪、色彩校正、文字叠加等基本工具。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 5,
+          "en": {
+            "q": "What types of videos can I create with Sora AI?",
+            "a": "Sora OpenAI supports a wide range of video types including marketing videos, product demonstrations, educational content, social media clips, animated explainers, cinematic scenes, nature documentaries, and abstract art videos. You can create content in various styles from photorealistic to cartoon animation, vintage film to futuristic sci-fi. The system handles diverse subjects including people, animals, objects, landscapes, and complex multi-character scenes with accurate physics and realistic movements."
+          },
+          "zh-CN": {
+            "q": "Sora AI可创建哪些视频？",
+            "a": "包括营销、产品演示、教育、社媒短片、动画讲解、电影场景、自然纪录与抽象艺术；风格可从照片写实到卡通，从复古胶片到未来科幻。参照称能处理人物、动物、物体、风景及复杂多角色场景，并保持准确物理和真实动作。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 6,
+          "en": {
+            "q": "Do I need technical skills or video editing experience?",
+            "a": "No technical skills are required! Sora 2 is designed for everyone, from complete beginners to professional creators. The interface is intuitive - simply describe what you want in plain language, and the AI handles all the technical complexity. You don't need to know about cameras, lighting, editing software, or animation. However, understanding basic storytelling and visual composition can help you write better prompts and get more impressive results from sora ai."
+          },
+          "zh-CN": {
+            "q": "需要技术或剪辑经验吗？",
+            "a": "参照称不需要，初学者与专业创作者都可使用；以日常语言描述需求，AI处理技术复杂性，不要求摄影、灯光、剪辑软件或动画知识。了解基本叙事与视觉构图仍有助于写出更好的提示词、获得更好的结果。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 7,
+          "en": {
+            "q": "Can I use Sora 2 videos for commercial purposes?",
+            "a": "Yes! Videos generated with Sora 2 on paid plans come with full commercial usage rights. You can use them for advertising, marketing campaigns, social media, websites, presentations, and any commercial projects. You own the rights to your generated content and can monetize it freely. Free trial videos may have usage restrictions, so check the specific terms. The sora ai platform ensures all generated content is original and doesn't infringe on existing copyrights."
+          },
+          "zh-CN": {
+            "q": "Sora 2视频可以商用吗？",
+            "a": "参照称付费套餐生成的视频具有完整商业使用权，可用于广告、营销、社媒、网站、演示与其它商业项目，用户拥有生成内容权利并可变现；免费试用视频可能受使用限制，应检查具体条款。参照还声称平台确保原创、不侵犯现有版权；这些是外部服务主张而非本项目法律或原创保证。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 8,
+          "en": {
+            "q": "How does Sora 2 compare to traditional video production?",
+            "a": "Sora AI offers significant advantages over traditional production: 90% cost reduction (no equipment, crew, or location costs), 95% faster turnaround (minutes vs. days/weeks), unlimited creative freedom (any scene imaginable), and easy iteration (regenerate instantly vs. reshooting). However, traditional production still excels for specific live-action needs, celebrity appearances, and certain artistic visions. Many creators use Sora 2 for rapid prototyping, concept testing, and content that would be impractical to film traditionally."
+          },
+          "zh-CN": {
+            "q": "Sora 2与传统视频制作相比如何？",
+            "a": "参照列出：成本减少90%（无器材、团队、场地成本）、周转加快95%（分钟而非数天或数周）、不受想象场景限制、易于重新生成而非重拍。也明确传统制作仍适合特定真人拍摄、名人出演和某些艺术表达；许多创作者用Sora 2做快速原型、概念测试和传统拍摄不现实的内容。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 9,
+          "en": {
+            "q": "Is my data and content secure with Sora OpenAI?",
+            "a": "Absolutely. Sora OpenAI takes security and privacy seriously. All data is encrypted in transit and at rest. Your prompts and generated videos are private and not used to train the model without explicit permission. We comply with GDPR, CCPA, and other data protection regulations. Enterprise plans offer additional security features including SSO, dedicated instances, and custom data retention policies. You can delete your content anytime, and we provide transparent privacy controls in your account settings."
+          },
+          "zh-CN": {
+            "q": "Sora OpenAI的数据与内容安全吗？",
+            "a": "参照称传输和静态数据均加密，提示词及生成视频私密，未经明确同意不用于训练；称遵守GDPR、CCPA及其它数据保护法规。企业套餐被描述为具有SSO、独立实例、自定义留存政策等额外安全功能；可随时删内容，账户设置提供透明隐私控制。上述均须保外部主体与未独立验证边界。"
+          },
+          "chineseSource": "proposed-translation"
+        }
+      ]
+    },
+    {
+      "page": "veo-3",
+      "englishSource": "evidence/reference-c-02d/veo-3-en-content.json",
+      "chineseSource": "本轮拟译，不是采到的参照中文",
+      "faq": [
+        {
+          "index": 1,
+          "en": {
+            "q": "Which Veo version is available on this page?",
+            "a": "The generator on this page is configured for Veo 3.1 Fast. The page also uses the broader Veo 3 name because that is how many people refer to and search for this model family."
+          },
+          "zh-CN": {
+            "q": "本页实际提供哪个Veo版本？",
+            "a": "本页生成器配置为Veo 3.1 Fast。页面也使用更广义的Veo 3名称，因为许多人以该名称称呼和搜索这个模型家族。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 2,
+          "en": {
+            "q": "Can I create a video from text or an image?",
+            "a": "Yes. You can begin with a text prompt or upload one source image. The available fields and format options are shown directly in the generator."
+          },
+          "zh-CN": {
+            "q": "可以从文字或图片创建视频吗？",
+            "a": "可以从文字提示词开始，或上传一张源图。可用字段与格式选项直接显示在生成器中。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 3,
+          "en": {
+            "q": "How long is a generated video?",
+            "a": "The Veo 3.1 Fast option on this page is configured to create an 8-second video."
+          },
+          "zh-CN": {
+            "q": "生成视频有多长？",
+            "a": "本页的Veo 3.1 Fast选项配置为8秒视频。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 4,
+          "en": {
+            "q": "How does audio work with Veo 3.1 Fast?",
+            "a": "This page does not expose an audio on/off switch for Veo 3.1 Fast. Add any desired dialogue, ambience or sound cues to your prompt; the model handles audio as part of generation."
+          },
+          "zh-CN": {
+            "q": "Veo 3.1 Fast的音频如何工作？",
+            "a": "本页没有为Veo 3.1 Fast提供音频开关。在提示词中加入所需对白、环境或声音线索，模型将音频作为生成的一部分处理。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 5,
+          "en": {
+            "q": "How many credits does a Veo video use?",
+            "a": "The generator displays the current credit estimate for your selected settings before submission. Check that estimate because product costs can change."
+          },
+          "zh-CN": {
+            "q": "一个Veo视频需要多少额度？",
+            "a": "生成器在提交前按所选设置显示当前额度估算。产品成本可能变化，应核对该估算。"
+          },
+          "chineseSource": "proposed-translation"
+        },
+        {
+          "index": 6,
+          "en": {
+            "q": "Is Lanta AI an official Google Veo service?",
+            "a": "No. Lanta AI is an independent creative platform that provides access to supported video models; it is not an official Google service or a statement of partnership with Google."
+          },
+          "zh-CN": {
+            "q": "Lanta AI是Google官方Veo服务吗？",
+            "a": "不是。Lanta AI是提供受支持视频模型访问的独立创作平台，并非Google官方服务，也不表示与Google存在合作关系。"
+          },
+          "chineseSource": "proposed-translation"
+        }
+      ]
+    },
+    {
+      "page": "vheer",
+      "englishSource": "evidence/reference-c-02d/vheer-en-content.json",
+      "chineseSource": "evidence/reference-c-02d/vheer-zh-request-content.json",
+      "faq": [
+        {
+          "index": 1,
+          "en": {
+            "q": "What can I create with Vheer AI Image to Video?",
+            "a": "You can create product showcases, social media clips, cinematic previews, character animations, short ads, story previews, classroom visuals, and quick concept videos from an image or prompt."
+          },
+          "zh-CN": {
+            "q": "我可以用 Vheer AI 图生视频创建什么？",
+            "a": "你可以从图片或提示词创建产品展示、社媒短片、电影感预览、角色动画、短广告、故事预览、课堂视觉和快速概念视频。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 2,
+          "en": {
+            "q": "Can I start from either an image or a text prompt?",
+            "a": "Yes. Use image-to-video when you already have a strong visual, or use text-to-video when you want to create a new scene from scratch."
+          },
+          "zh-CN": {
+            "q": "可以从图片或文字提示词开始吗？",
+            "a": "可以。已有强视觉素材时使用图生视频；想从零创建新场景时使用文生视频。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 3,
+          "en": {
+            "q": "What should I include in my prompt?",
+            "a": "Describe the subject, action, background, lighting, camera movement, atmosphere, and final format. Clear motion direction usually creates a more useful Vheer AI video."
+          },
+          "zh-CN": {
+            "q": "提示词里应该写什么？",
+            "a": "描述主体、动作、背景、光线、镜头运动、氛围和最终格式。清晰的运动方向通常能生成更实用的 Vheer AI 视频。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 4,
+          "en": {
+            "q": "Which video format should I choose?",
+            "a": "Use vertical video for TikTok, Reels, and Shorts. Use landscape for YouTube, websites, presentations, and ads. Use square or 4:5 for social feeds and product posts."
+          },
+          "zh-CN": {
+            "q": "应该选择哪种视频格式？",
+            "a": "TikTok、Reels 和 Shorts 适合竖屏。YouTube、网站、演示和广告适合横屏。社媒信息流和产品帖子适合方形或 4:5。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 5,
+          "en": {
+            "q": "Is Vheer AI Video useful for product marketing?",
+            "a": "Yes. Product photos can become short ad-like clips with camera movement, reflections, light sweeps, steam, mist, rotation, or background motion for ecommerce, launches, ads, and website hero sections."
+          },
+          "zh-CN": {
+            "q": "Vheer AI 视频适合产品营销吗？",
+            "a": "适合。产品照片可以变成带镜头运动、反射、光扫、蒸汽、薄雾、旋转或背景动态的短广告式片段，用于电商、发布、广告和网站首屏。"
+          },
+          "chineseSource": "captured"
+        },
+        {
+          "index": 6,
+          "en": {
+            "q": "How do I get a polished result?",
+            "a": "Start with a clear image or focused idea, describe the motion you want, preview the result, then refine the prompt, motion direction, format, or variation until the clip matches your goal."
+          },
+          "zh-CN": {
+            "q": "怎样获得更精致的结果？",
+            "a": "从清晰图片或聚焦的想法开始，描述想要的运动效果，预览结果，然后细化提示词、运动方向、格式或变体，直到短片符合目标。"
+          },
+          "chineseSource": "captured"
+        }
+      ]
+    }
+  ]
+}

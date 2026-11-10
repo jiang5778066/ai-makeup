@@ -1,3 +1,4 @@
+import { legacyGenerationFields } from "@/lib/platform-creations-legacy-schema";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { generations } from "@/db/schema";
@@ -20,7 +21,7 @@ export async function GET(
   const { id } = await params;
   const { db } = await import("@/db/client");
   const [row] = await db
-    .select()
+    .select(legacyGenerationFields)
     .from(generations)
     .where(and(eq(generations.id, id), eq(generations.userId, user.id)));
 

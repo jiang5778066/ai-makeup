@@ -1,3 +1,4 @@
+import { legacyGenerationFields } from "@/lib/platform-creations-legacy-schema";
 import { and, desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { generations, projects } from "@/db/schema";
@@ -33,7 +34,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 
   const rows = await db
-    .select()
+    .select(legacyGenerationFields)
     .from(generations)
     .where(and(eq(generations.projectId, id), eq(generations.userId, user.id)))
     .orderBy(desc(generations.createdAt));

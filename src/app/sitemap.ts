@@ -5,9 +5,9 @@ import { locales, localizePath } from "@/lib/i18n";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const paths = landingSlugs
+  const paths = ["/home", ...landingSlugs
     .filter((slug) => slug !== "ai-makeup/generator" && slug !== "ai-makeup/filter")
-    .map((slug) => (slug === "home" ? "/" : `/${slug}`));
+    .map((slug) => (slug === "home" ? "/" : `/${slug}`))];
 
   return paths.flatMap((path) =>
     locales.map((locale) => ({

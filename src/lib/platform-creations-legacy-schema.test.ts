@@ -1,0 +1,13 @@
+import { beforeEach, expect, it, vi } from "vitest";
+import { PgDialect } from "drizzle-orm/pg-core";
+const mocks = vi.hoisted(() => ({ user: vi.fn(), execute: vi.fn(), deduct: vi.fn(), send: vi.fn(), update: vi.fn() }));
+vi.mock("@/lib/supabase/server", () => ({ getCurrentUser: mocks.user }));
+vi.mock("@/db/client", () => ({ db: { execute: mocks.execute, update: () => ({ set: (values: unknown) => { mocks.update(values); return { where: async () => [] }; } }) } }));
+vi.mock("@/inngest/client", () => ({ inngest: { send: mocks.send } }));
+vi.mock("@/lib/credits", () => ({ deductCredits: mocks.deduct, InsufficientCreditsError: class InsufficientCreditsError extends Error {} }));
+import { POST } from "@/app/api/makeup/generate/route";
+import { InsufficientCreditsError } from "@/lib/credits";
+beforeEach(() => { vi.stubEnv("DISABLE_GENERATION", "0"); mocks.user.mockResolvedValue({ id: "alice" }); mocks.execute.mockReset().mockResolvedValue([{ id: "original-task" }]); mocks.deduct.mockReset().mockResolvedValue(undefined); mocks.send.mockReset(); mocks.update.mockReset(); });
+const req = () => new Request("https://studio.test/api/makeup/generate", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ uploadKey: "alice/source.png", styleId: "natural", consent: true, locale: "en" }) });
+it("旧真实生成handler保持202、原任务ID与一次扣费，实际插入SQL排除新列", async () => { const r = await POST(req()); expect(r.status).toBe(202); expect(await r.json()).toEqual({ generationId: "original-task", status: "queued" }); const compiled = new PgDialect().sqlToQuery(mocks.execute.mock.calls[0][0]); expect(compiled.sql).not.toContain("deleted_at"); expect(compiled.sql).toContain('"upload_key"'); expect(compiled.params).toContain("alice/source.png"); expect(mocks.deduct).toHaveBeenCalledOnce(); expect(mocks.deduct).toHaveBeenCalledWith("alice", 1, "generation", { type: "generation", id: "original-task" }); expect(mocks.send).toHaveBeenCalledOnce(); });
+it("额度不足仍402并标记原任务failed，不派供应商事件", async () => { mocks.deduct.mockRejectedValueOnce(new InsufficientCreditsError()); const r = await POST(req()); expect(r.status).toBe(402); expect(mocks.update).toHaveBeenCalledWith({ status: "failed", error: "insufficient_credits" }); expect(mocks.send).not.toHaveBeenCalled(); });

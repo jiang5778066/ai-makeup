@@ -1,0 +1,10 @@
+import React from 'react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { PlatformPerchanceForm } from './platform-perchance-form';
+import { initializePerchance } from '@/lib/platform-perchance-state';
+describe('Perchance 本地表单',()=>{
+ it('只有已观察提示词与五种比例，无上传或模式选择',()=>{const change=vi.fn();const {container}=render(<PlatformPerchanceForm state={initializePerchance('')} onChange={change} locale="en"/>);expect(screen.getByRole('textbox')).toHaveAttribute('name','prompt');expect(container.querySelector('input[type=file]')).toBeNull();expect(screen.queryByRole('tab')).toBeNull();expect(screen.getByRole('button',{name:'1:1 Square'})).toHaveAttribute('aria-pressed','true');fireEvent.click(screen.getByRole('button',{name:'9:16 Story'}));expect(change.mock.lastCall?.[0].parameters).toEqual({ratio:'9:16'});expect(screen.getByRole('button',{name:/Enter a prompt/})).toBeDisabled()});
+ it('输入后通用生成保持不可用，不伪造账户作品',()=>{const change=vi.fn(),s={...initializePerchance(''),prompt:'星空下的森林'};const {container}=render(<PlatformPerchanceForm state={s} onChange={change} locale="zh-CN"/>);expect(screen.getByRole('button',{name:/生成暂不可用/})).toBeDisabled();expect(screen.getByText('暂无本站生成作品')).toBeVisible();fireEvent.change(screen.getByRole('textbox'),{target:{value:'雨后的森林'}});expect(change.mock.lastCall?.[0].prompt).toBe('雨后的森林');fireEvent.submit(container.querySelector('form')!);expect(container.querySelector('a[download]')).toBeNull()});
+ it.each(['gpt-image-2','unknown'])('外页或未知模型%s没有比例配置，主动恢复后才启用',model=>{const change=vi.fn();const s={...initializePerchance(`model=${model}`),prompt:'保留提示词'};render(<PlatformPerchanceForm state={s} onChange={change} locale="en"/>);expect(screen.queryByRole('button',{name:'1:1 Square'})).toBeNull();expect(screen.getByRole('alert')).toHaveTextContent(model);fireEvent.click(screen.getByRole('button',{name:'Select Perchance Text to Image'}));expect(change.mock.lastCall?.[0]).toMatchObject({model:'perchance',mode:'text',prompt:'保留提示词',parameters:{ratio:'1:1'}})});
+});

@@ -1,0 +1,46 @@
+.page{min-width:0;overflow-x:clip}
+.breadcrumb{display:flex;align-items:center;gap:10px;min-height:68px;padding:20px 24px;background:#080a0c;color:#c4c4cc;font-size:14px}
+.breadcrumb span{color:#d8b4fe}
+.source{margin:0 auto!important;max-width:1280px;padding:6px 24px 10px;color:#8d8c9d;font-size:11px;line-height:1.5!important}
+.source a{text-decoration:underline!important;text-underline-offset:2px}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;padding:0 32px 24px;max-width:1440px;margin:auto;align-items:start;scroll-margin-top:90px}
+.form{padding:16px!important;background:radial-gradient(ellipse at 50% 0,#34234c90,transparent 40%),linear-gradient(135deg,#11131f,#04070e 48%,#0f121d)!important}
+.page .form h2{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:700;line-height:28px;letter-spacing:-.025em;margin:0 8px 12px}
+.page .form :global(.platform-generator-mode-tabs){margin:0 8px 20px}
+.page .form :global(.platform-generator-model-trigger){min-height:40px;border-radius:20px}
+.page .form :global(.platform-generator-picker){margin-bottom:12px}
+.page .form :global(.platform-generator-field){margin-bottom:14px}
+.page .form :global(.platform-generator-label){margin-bottom:10px;font-size:14px;font-weight:600}
+.page .form textarea{height:130px;padding:16px 20px;border-radius:22px;background:#0d101b;border:1px solid #c4b5fd29;font-size:16px;line-height:24px}
+.page .form :global(.platform-generator-choices) button{min-width:78px;border-radius:18px;padding:8px 14px}
+.page .form :global(.platform-generator-ratios){display:flex;flex-wrap:wrap;gap:8px}
+.page .form :global(.platform-generator-ratios) button{width:58px;min-width:0;height:60px;flex-direction:column;border-radius:14px;gap:5px}
+.page .form :global(.platform-generator-submit){min-height:48px;border-radius:22px}
+.wallpaperPreview{border-radius:24px;background:linear-gradient(140deg,#151627,#1c1029);padding:28px;min-height:480px}
+.devices{position:relative;height:308px;margin:32px 0 24px}
+.page .devices img[data-artwork=mountain]{position:absolute;width:84%;height:auto;top:0;left:0;border-radius:12px;aspect-ratio:16/9;object-fit:cover}
+.page .devices img[data-artwork=phone]{position:absolute;width:28%;height:80%;right:0;top:28px;object-fit:cover;border:6px solid #181525;border-radius:24px;box-shadow:0 20px 60px #0008}
+.page .wallpaperPreview h3{font-size:20px;font-weight:700;margin-bottom:14px}
+.page .wallpaperPreview p{font-size:14px;color:#b8b6c2}
+.bannerWorkspace{grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px;padding:0 16px 24px}
+.bannerWorkspace .form{border-radius:12px;padding:24px!important;background:linear-gradient(130deg,#272939,#474b5c)!important}
+.page .bannerWorkspace .form h2{margin:0 0 18px;font-size:24px}
+.page .bannerWorkspace .form :global(.platform-generator-mode-tabs){min-height:68px;margin:0 0 24px}
+.page .bannerWorkspace .form :global(.platform-generator-model-trigger){height:64px;border:1px solid #d5d0e1;border-radius:22px;padding:20px}
+.page .bannerWorkspace .form textarea{height:190px}
+.page .bannerWorkspace .form :global(.platform-generator-choices){display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.page .bannerWorkspace .form :global(.platform-generator-ratios){display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.page .bannerWorkspace .form :global(.platform-generator-ratios) button{width:100%;height:100px}
+.gallery{border:1px solid #1e293b;border-radius:12px;padding:16px;background:#070c16;max-height:1100px;overflow-y:auto}
+.page .gallery>p{font-size:11px;color:#aaa;line-height:1.4}
+.gallery article{padding:16px 0;border-bottom:1px solid #293143;display:flex;flex-direction:column;align-items:center;gap:8px}
+.page .gallery img{width:120px;max-height:220px;object-fit:contain}
+.gallery article>div{display:flex;justify-content:flex-end;gap:12px;width:100%}
+.gallery button{opacity:.45}
+.notice{max-width:1280px;padding:8px 24px;color:#c4b5fd}
+@media(max-width:767px){.breadcrumb{min-height:48px;padding:12px 16px;font-size:12px;gap:8px}.workspace{grid-template-columns:1fr;padding:0 16px 20px;gap:24px}.source{padding:4px 16px 10px;font-size:10px}.page .form h2{font-size:18px;line-height:24px;margin:0 4px 12px}.page .form :global(.platform-generator-mode-tabs){margin:0 0 20px}.page .form :global(.platform-generator-choices) button{min-width:44px}.page .form :global(.platform-generator-ratios){gap:6px}.page .form :global(.platform-generator-ratios) button{width:44px;height:52px;font-size:12px}.wallpaperPreview{min-height:0;padding:24px}.devices{height:220px;margin:16px 0}.bannerWorkspace{padding:0 4px 24px}.bannerWorkspace .form{padding:24px!important}.page .bannerWorkspace .form h2{font-size:18px}.page .bannerWorkspace .form :global(.platform-generator-choices) button{padding:10px 4px}.gallery{display:none}}
+@media(prefers-reduced-motion:reduce){.page :global(*){animation:none!important;transition:none!important}}
+
+.page .form{gap:0}.page .form :global(.platform-generator-model-trigger){border:1px solid #a991ee33;background:linear-gradient(180deg,#12141f,#090b14)}
+
+@media(max-width:767px){.page .form :global(.platform-generator-mode-tabs) button{font-size:12px;gap:8px;white-space:nowrap;min-height:36px;padding:8px 4px}.page .bannerWorkspace .form :global(.platform-generator-mode-tabs) button{font-size:14px;min-height:52px}}

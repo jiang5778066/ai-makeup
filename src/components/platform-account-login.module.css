@@ -1,0 +1,12 @@
+.page { min-height: 100vh; background: #141217; color: #f4f0f8; display: flex; align-items: center; justify-content: center; padding: 28px 18px; }
+.card { width: 100%; max-width: 480px; padding: 36px; border: 1px solid #3c304b; border-radius: 18px; background: #1e1925; box-shadow: 0 18px 70px #0004; }
+.card h1 { color: #faf7ff; letter-spacing: -.04em; }
+.card p { color: #bdb2c9; line-height: 1.7; }
+.card form { margin-top: 26px; display: flex; flex-direction: column; gap: 20px; }
+.card input { background: #15111c; border-color: #4c3f5c; color: #fff; }
+.card button { background: #8b4ce0; color: #fff; }
+.card > a:last-child { color: #dbcaed; border-color: #4c3f5c; background: transparent; }
+@media (max-width: 520px) { .card { padding: 28px 22px; }.card h1 { font-size: 2rem !important; } }
+.card p { font-size: 14px !important; }
+.card label, .card input, .card button, .card > a:last-child { font-size: 14px; }
+@media (max-width: 520px) { .card h1 { font-size: 30px !important; }.card { padding: 28px 22px; } }

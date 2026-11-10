@@ -67,7 +67,7 @@ const sharedEnglishFaqs = [
   {
     question: "Can I use the AI makeup generator for free?",
     answer:
-      "Yes. Guests can try a limited number of generations, and signed-in users receive free credits before upgrading."
+      "Local live preview is free without sign-in. HD and full-face generation require sign-in and account credits; new accounts receive 3 credits, then credits can be purchased."
   },
   {
     question: "What photos work best?",
@@ -84,7 +84,7 @@ const sharedEnglishFaqs = [
 const sharedChineseFaqs = [
   {
     question: "AI 妆容生成器可以免费使用吗？",
-    answer: "可以。游客可获得有限试用次数，登录用户可获得免费 credits，之后可升级套餐或购买额度。"
+    answer: "本地实时预览免费，无需登录。高清与全脸生成需登录并使用账户额度；新账户获 3 个额度，用完后可购买。"
   },
   {
     question: "什么样的照片效果最好？",
@@ -103,30 +103,30 @@ const englishPages: Record<LandingSlug, LandingPage> = {
     eyebrow: "AI beauty tools for creators and shoppers",
     h1: "Try makeup ideas before they touch your face",
     description:
-      "Generate realistic makeup looks, compare styles, and get personalized beauty advice from one international AI makeup workspace.",
-    primaryCta: "Try AI makeup free",
+      "Preview local live makeup for free, sign in for generated looks, and compare general style references.",
+    primaryCta: "Explore makeup styles",
     secondaryCta: "View pricing",
     seoTitle: "AI Makeup Studio | Virtual Makeup Try-On and Beauty Advisor",
     seoDescription:
-      "Try AI makeup online, generate virtual makeup looks, compare styles, and get personalized makeup advice with an international beauty AI studio.",
+      "Try free local makeup previews, sign in to generate with credits, and compare general makeup style references.",
     keywords: ["ai makeup", "virtual makeup try on", "ai beauty tools"],
-    sections: ["AI makeup generator", "Virtual try-on studio", "Personalized makeup advisor"],
+    sections: ["AI makeup generator", "Virtual try-on studio", "General style reference"],
     faqs: sharedEnglishFaqs
   },
   "ai-makeup": {
     slug: "ai-makeup",
     title: "AI Makeup Generator",
-    eyebrow: "AI makeup online free",
+    eyebrow: "Free local preview · sign in to generate",
     h1: "AI Makeup Generator Online",
     description:
-      "Upload a selfie, choose a style, and preview realistic makeup in seconds with before-and-after comparison and face-fit notes.",
+      "Upload a selfie, choose a style, and sign in to generate with account credits. Compare before and after with general style notes.",
     primaryCta: "Upload selfie",
     secondaryCta: "See styles",
-    seoTitle: "AI Makeup Generator Online Free | Virtual Makeup Try-On",
+    seoTitle: "AI Makeup Generator | Free Local Virtual Preview",
     seoDescription:
       "Use an AI makeup generator online to try natural, glam, bridal, Douyin, K-beauty, lipstick, foundation, and eye makeup styles.",
     keywords: ["ai makeup", "ai makeup online free", "makeup ai", "ai makeup generator"],
-    sections: ["Upload and generate", "Before and after preview", "Face-fit makeup advice"],
+    sections: ["Upload and generate", "Before and after preview", "General style reference"],
     faqs: [
       {
         question: "What is an AI makeup generator?",
@@ -187,17 +187,17 @@ const englishPages: Record<LandingSlug, LandingPage> = {
   "what-makeup-suits-my-face-ai": {
     slug: "what-makeup-suits-my-face-ai",
     title: "What Makeup Suits My Face AI",
-    eyebrow: "Personalized makeup advisor",
+    eyebrow: "General style reference",
     h1: "Find what makeup suits your face with AI",
     description:
-      "Get style recommendations based on face shape, skin tone, occasion, and the features you want to emphasize.",
-    primaryCta: "Analyze my face",
+      "Compare general style references for different occasions. These notes are not an analysis of your photo, face shape, or skin tone.",
+    primaryCta: "Explore style references",
     secondaryCta: "Read examples",
-    seoTitle: "What Makeup Suits My Face AI | Personalized Makeup Advisor",
+    seoTitle: "What Makeup Suits My Face AI | General Style References",
     seoDescription:
-      "Use AI to discover what makeup suits your face, skin tone, face shape, and occasion with personalized style notes.",
+      "Explore makeup style examples and general notes; photo-based face shape and skin tone analysis is not available.",
     keywords: ["what makeup suits my face ai", "makeup advisor ai", "face makeup analysis"],
-    sections: ["Face-fit notes", "Occasion recommendations", "Feature emphasis"],
+    sections: ["General style notes", "Occasion recommendations", "Feature emphasis"],
     faqs: sharedEnglishFaqs
   },
   "ai-foundation-makeup": {
@@ -213,7 +213,7 @@ const englishPages: Record<LandingSlug, LandingPage> = {
     seoDescription:
       "Use AI foundation makeup preview to compare base finishes and complexion styles online before trying a new look.",
     keywords: ["ai foundation makeup", "foundation makeup ai", "foundation try on"],
-    sections: ["Finish previews", "Tone-aware notes", "Natural base options"],
+    sections: ["Finish previews", "General base references", "Natural base options"],
     faqs: sharedEnglishFaqs
   },
   "ai-lipstick-try-on": {
@@ -396,7 +396,7 @@ const englishPages: Record<LandingSlug, LandingPage> = {
     eyebrow: "Simple pay-as-you-go credits",
     h1: "Three free looks, then $8 for 100",
     description:
-      "Preview live makeup for free. New accounts receive three HD results, then one $8 pack adds 100 more generations.",
+      "Local live preview is free. Sign in to use the 3 credits granted to new accounts; one $8 pack adds 100 generation credits.",
     primaryCta: "Start free",
     secondaryCta: "See plans",
     seoTitle: "AI Makeup Pricing | $8 for 100 HD Generations",
@@ -414,27 +414,27 @@ const chinesePages: Record<LandingSlug, LandingPage> = {
     title: "AI 妆容工作室",
     eyebrow: "面向创作者与美妆用户的 AI 工具",
     h1: "先在线试妆，再决定真实妆容",
-    description: "生成真实感 AI 妆容，比较不同风格，并获得适合脸型、肤色和场景的个性化妆容建议。",
+    description: "免费预览本地实时妆效，登录后生成妆容，并比较不同场景的通用风格参考。",
     primaryCta: "免费试妆",
     secondaryCta: "查看价格",
     seoTitle: "AI 妆容工作室 | 虚拟试妆与 AI 美妆顾问",
-    seoDescription: "在线使用 AI 妆容生成器，进行虚拟试妆、风格对比和个性化美妆建议。",
+    seoDescription: "免费使用本地实时预览，登录后用账户额度生成妆容，并查看通用风格参考。",
     keywords: ["AI 妆容", "虚拟试妆", "AI 美妆工具"],
-    sections: ["AI 妆容生成器", "虚拟试妆工作台", "个性化妆容顾问"],
+    sections: ["AI 妆容生成器", "虚拟试妆工作台", "通用风格参考"],
     faqs: sharedChineseFaqs
   },
   "ai-makeup": {
     ...englishPages["ai-makeup"],
     title: "AI 妆容生成器",
-    eyebrow: "在线免费 AI 试妆",
+    eyebrow: "本地预览免费 · 登录后生成",
     h1: "AI 妆容生成器",
-    description: "上传自拍、选择妆容风格，即可生成真实感试妆效果，并查看前后对比和适配建议。",
+    description: "上传自拍并选择风格，登录后使用账户额度生成，查看前后对比与通用风格参考。",
     primaryCta: "上传自拍",
     secondaryCta: "查看风格",
     seoTitle: "AI 妆容生成器 | 在线虚拟试妆工具",
     seoDescription: "使用 AI 妆容生成器在线试妆，支持自然妆、甜美妆、婚礼妆、Douyin 妆、韩系妆等风格。",
     keywords: ["AI 妆容生成器", "AI 试妆", "虚拟试妆", "什么妆容适合我 AI"],
-    sections: ["上传并生成", "前后对比预览", "脸型适配建议"],
+    sections: ["上传并生成", "前后对比预览", "通用风格参考"],
     faqs: [
       {
         question: "什么是 AI 妆容生成器？",
@@ -488,15 +488,15 @@ const chinesePages: Record<LandingSlug, LandingPage> = {
   "what-makeup-suits-my-face-ai": {
     ...englishPages["what-makeup-suits-my-face-ai"],
     title: "什么妆容适合我 AI",
-    eyebrow: "个性化妆容顾问",
+    eyebrow: "通用风格参考",
     h1: "用 AI 找到适合你的妆容",
-    description: "根据脸型、肤色、场景和想突出的五官，获得妆容推荐和原因说明。",
-    primaryCta: "分析我的脸",
+    description: "比较不同场景的通用风格参考；这些说明并非根据照片识别脸型、肤色的个性化分析。",
+    primaryCta: "查看风格参考",
     secondaryCta: "查看示例",
-    seoTitle: "什么妆容适合我 AI | 个性化妆容顾问",
-    seoDescription: "使用 AI 分析脸型、肤色和场景，找到更适合你的妆容风格和上妆重点。",
+    seoTitle: "什么妆容适合我 AI | 通用风格参考",
+    seoDescription: "查看妆容示例与通用风格说明；当前不提供基于照片的脸型或肤色分析。",
     keywords: ["什么妆容适合我 AI", "AI 妆容顾问", "脸型妆容分析"],
-    sections: ["脸型适配说明", "场景推荐", "五官重点"],
+    sections: ["通用风格说明", "场景推荐", "五官重点"],
     faqs: sharedChineseFaqs
   },
   "ai-foundation-makeup": {
@@ -510,7 +510,7 @@ const chinesePages: Record<LandingSlug, LandingPage> = {
     seoTitle: "AI 粉底妆容 | 在线预览底妆效果",
     seoDescription: "用 AI 粉底妆容工具在线比较不同底妆妆效，预览自然、柔焦和水光底妆。",
     keywords: ["AI 粉底妆容", "粉底试妆", "底妆 AI"],
-    sections: ["妆效预览", "肤色适配说明", "自然底妆选择"],
+    sections: ["妆效预览", "通用底妆参考", "自然底妆选择"],
     faqs: sharedChineseFaqs
   },
   "ai-lipstick-try-on": {
@@ -686,7 +686,7 @@ const chinesePages: Record<LandingSlug, LandingPage> = {
     title: "价格",
     eyebrow: "简单按次付费",
     h1: "先送 3 次，再以 $8 购买 100 次",
-    description: "实时预览免费，新账户获得 3 次高清结果；用完后可一次性购买 100 次，无订阅。",
+    description: "本地实时预览免费；登录后可用新账户赠送的 3 个额度生成，用完后可一次性购买 100 次，无订阅。",
     primaryCta: "免费开始",
     secondaryCta: "查看套餐",
     seoTitle: "AI 妆容价格 | $8 购买 100 次高清生成",
@@ -780,13 +780,13 @@ export const pricingPlans = [
   {
     id: "free",
     monthly: "$0",
-    credits: "3 free generations",
+    credits: "3 signup credits (once)",
     highlight: false
   },
   {
     id: "credits_100",
     monthly: "$8 once",
-    credits: "100 generations",
+    credits: "100 credits",
     highlight: true
   }
 ] as const;

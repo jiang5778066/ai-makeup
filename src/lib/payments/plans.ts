@@ -21,7 +21,7 @@ const PLANS: Record<PlanId, Plan> = {
 };
 
 export function getPlan(planId: string): Plan | null {
-  return (PLANS as Record<string, Plan>)[planId] ?? null;
+  return Object.hasOwn(PLANS, planId) ? PLANS[planId as PlanId] : null;
 }
 
 export function planByCreemProductId(productId: string): Plan | null {

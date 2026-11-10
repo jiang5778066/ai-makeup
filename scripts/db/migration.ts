@@ -12,7 +12,7 @@ export const APPROVED_FOLDER = fileURLToPath(new URL("../../drizzle/", import.me
 const migrationConfig = (folder: string) => ({ migrationsFolder: folder, migrationsSchema: "drizzle", migrationsTable: "__drizzle_migrations" });
 const inspect = async (db: Sql, folder: string, approved: string[]) => {
   const migrations = readMigrationFiles(migrationConfig(folder));
-  if (!migrations.length || migrations.some((m, i) => !approved.includes(m.hash) || (i > 0 && m.folderMillis <= migrations[i - 1].folderMillis))) throw new Error("迁移兼容性未经审核或版本无序");
+  if (!migrations.length || migrations.length !== approved.length || migrations.some((m, i) => m.hash !== approved[i] || (i > 0 && m.folderMillis <= migrations[i - 1].folderMillis))) throw new Error("迁移兼容性未经审核或版本无序");
   const journal = JSON.parse(readFileSync(`${folder}/meta/_journal.json`, "utf8")) as { entries: { tag: string }[] };
   const managed = await db`select to_regclass('auth.users') as name`;
   if (!managed[0].name) throw new Error("缺少托管依赖 auth.users");

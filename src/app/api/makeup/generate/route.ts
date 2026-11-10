@@ -1,3 +1,4 @@
+import { insertLegacyGeneration } from "@/lib/platform-creations-legacy-schema";
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { generations } from "@/db/schema";
@@ -97,9 +98,7 @@ export async function POST(request: Request) {
   const intensity = Math.max(20, Math.min(100, body.intensity ?? 62));
   const { db } = await import("@/db/client");
 
-  const [{ id: generationId }] = await db
-    .insert(generations)
-    .values({
+  const [{ id: generationId }] = await insertLegacyGeneration(db, {
       userId: user.id,
       uploadKey: body.uploadKey,
       renderedUploadKey: mode === "virtual_try_on" ? body.renderedUploadKey : undefined,
@@ -110,8 +109,7 @@ export async function POST(request: Request) {
       intensity,
       locale,
       status: "queued"
-    })
-    .returning({ id: generations.id });
+    });
 
   const { InsufficientCreditsError, deductCredits } = await import("@/lib/credits");
   try {

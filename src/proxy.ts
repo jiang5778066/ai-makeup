@@ -31,7 +31,14 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!user && isProtected(pathname, PROTECTED_API_PREFIXES)) {
-    return NextResponse.json({ code: "unauthorized", message: "Sign in required." }, { status: 401 });
+    const denied = NextResponse.json({ code: "unauthorized", message: "Sign in required." }, { status: 401 });
+    if (pathname === "/api/account/session" || pathname === "/api/account/logout" || pathname === "/api/billing/checkout" || pathname === "/api/credits/balance") {
+      denied.headers.set("Cache-Control", "private, no-store");
+      const vary = (denied.headers.get("Vary") ?? "").split(",").map(value => value.trim()).filter(Boolean);
+      if (!vary.some(value => value.toLowerCase() === "cookie")) vary.push("Cookie");
+      denied.headers.set("Vary", vary.join(", "));
+    }
+    return denied;
   }
 
   return response;

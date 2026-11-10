@@ -1,0 +1,27 @@
+'use client';
+import {useCallback,useEffect,useRef,useState,useSyncExternalStore} from 'react';
+import {ImageIcon,Type,Sparkles} from 'lucide-react';
+import type {Locale} from '@/lib/i18n';
+import {imageToImageModelIds,imageToImageModel,imageToImageConfig,initializeImageToImage,selectImageToImageModel,selectImageToImageMode,imageToImageSessionStore,imageToImageKey,type ImageToImageState} from '@/lib/platform-image-to-image-state';
+import {ImageToImageUpload} from './platform-image-to-image-upload';
+import styles from './platform-image-to-image-page.module.css';
+export function ImageToImageForm({locale,query}:{locale:Locale;query:string}){
+ const zh=locale==='zh-CN',key=imageToImageKey(query),[initial]=useState(()=>initializeImageToImage(query)),owner=useRef(0);
+ const subscribe=useCallback((fn:()=>void)=>imageToImageSessionStore.subscribe(fn),[]),read=useCallback(()=>imageToImageSessionStore.read(key),[key]);
+ const session=useSyncExternalStore(subscribe,read,()=>undefined),state=session?.state??initial,released=session?.filesReleased;
+ useEffect(()=>{owner.current=imageToImageSessionStore.acquire(key,initial);const token=owner.current;return()=>imageToImageSessionStore.release(key,token)},[key,initial]);
+ const config=imageToImageConfig(state),model=imageToImageModel(state.model);
+ const update=(next:ImageToImageState)=>imageToImageSessionStore.write(key,owner.current,next);
+ const onFiles=useCallback((value:boolean)=>imageToImageSessionStore.files(key,owner.current,value),[key]);
+ const choices=(label:string,values:string[],value:string|undefined,name:'resolution'|'ratio')=>{
+  if(!values.length)return null;
+  const setValue=(next:string)=>update({...state,parameters:{...state.parameters,[name]:next}});
+  const buttons=values.map(v=><button key={v} type="button" aria-pressed={value===v} onClick={()=>setValue(v)}>{v==='Auto'&&zh?'自动':v}</button>);
+  return <fieldset className={styles.choices}><legend id={`c3h-${name}-label`}>{label}</legend>{name==='ratio'?<><select id="c3h-ratio" aria-labelledby="c3h-ratio-label" className={styles.ratioSelect} value={value} onChange={e=>setValue(e.target.value)}>{values.map(v=><option key={v} value={v}>{v==='Auto'&&zh?'自动':v}</option>)}</select><div className={styles.ratioButtons}>{buttons}</div></>:buttons}</fieldset>;
+ };
+ return <form className={styles.form} onSubmit={e=>e.preventDefault()} data-image-to-image-model={state.model} data-generation-availability="unavailable"><h2><Sparkles/>{zh?'AI 图片生成器':'AI Image Generator'}</h2><div role="tablist" aria-label={zh?'生成模式':'Generation mode'} className={styles.tabs}>{(['image','text'] as const).map((mode,i)=><button key={mode} type="button" role="tab" aria-selected={state.mode===mode} tabIndex={state.mode===mode?0:-1} onClick={()=>update(selectImageToImageMode(state,mode))} onKeyDown={e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const next=e.key==='Home'?'image':e.key==='End'?'text':state.mode==='image'?'text':'image';update(selectImageToImageMode(state,next));(e.currentTarget.parentElement?.children[next==='image'?0:1] as HTMLElement)?.focus()}}}>{i===0?<ImageIcon size={16}/>:<Type size={16}/>} {zh?(mode==='image'?'图生图':'文生图'):(mode==='image'?'Image To Image':'Text to Image')}</button>)}</div>
+ <label className={styles.label} htmlFor="c3h-model">{zh?'模型':'Model'}</label><select id="c3h-model" value={state.model} onChange={e=>update(selectImageToImageModel(state,e.target.value))}>{!(imageToImageModelIds[state.mode] as readonly string[]).includes(state.model)&&<option value={state.model}>{model?.name??state.model} — {zh?'本页不支持':'Unsupported on this page'}</option>}{imageToImageModelIds[state.mode].map(id=><option value={id} key={id}>{imageToImageModel(id)?.name??id}</option>)}</select>
+ {!!state.issues.length&&<p role="alert" className={styles.error}>{state.issues.includes('unknown-mode')?(zh?'此模式不支持，参数与文件预览未激活。请选择图生图或文生图恢复。':'Unsupported mode. Parameters and file preview are inactive. Select Image To Image or Text to Image to recover.'):(zh?'此模型不在本页当前模式的支持列表中，未借用其他模型参数。请选择列表中的支持模型恢复。':'This model is not supported in this page’s current mode. Select a supported model to restore parameters and file preview.')}</p>}
+ {config&&<>{(config.resolutions.length>0||config.ratios.length>0)&&<div className={styles.parameterRow}>{choices(zh?'分辨率':'Resolution',config.resolutions,state.parameters.resolution,'resolution')}{choices(zh?'画幅比例':'Ratio',config.ratios,state.parameters.ratio,'ratio')}</div>}<label className={styles.label} htmlFor="c3h-prompt">{zh?'提示词':'Prompt'}</label><textarea id="c3h-prompt" name="prompt" rows={5} maxLength={config.promptLimit} value={state.prompt} placeholder={zh?'请描述画面内容、风格、氛围及其他约束条件...':'Describe the subject, style, mood, and any constraints...'} onChange={e=>update({...state,prompt:e.target.value})}/>{config.reference&&state.mode==='image'&&<ImageToImageUpload key={`${state.model}:${state.mode}:${locale}`} config={config.reference} locale={locale} onFiles={onFiles}/>}</>}
+ {released&&<p className={styles.hint}>{zh?'文字和参数已恢复；参考文件已释放，请重新选择。':'Text and settings restored. Reference files were released; please select them again.'}</p>}<button type="submit" className={styles.submit} disabled><Sparkles size={17}/>{zh?'生成暂不可用':'Generation not available yet'}</button><p className={styles.hint}>{zh?'仅本地参数与文件预览，不上传、不生成、不扣额度。':'Local settings and file previews only. No upload, generation, or credits used.'}</p></form>
+}

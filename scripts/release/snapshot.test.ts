@@ -33,7 +33,7 @@ it("部署前重核云端配置，值变化与新增键均阻断", () => {
 it("拒绝非字符串或不可取得的秘密快照", () => { expect(() => snapshotRuntime({ ...cloud(), SPECIAL: null }, sha)).toThrow(); });
 
 it("仅网站和数据库模式允许第三方服务留空，核心配置仍必需", () => {
-  const env = { RELEASE_PROFILE: "website-db", DATABASE_URL: cloud().DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL: cloud().NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SITE_URL: cloud().NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY: "fixture" };
+  const env = { RELEASE_PROFILE: "website-db", DISABLE_CHECKOUT: "1", DISABLE_GENERATION: "1", DATABASE_URL: cloud().DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL: cloud().NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SITE_URL: cloud().NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY: "fixture" };
   expect(() => snapshotRuntime(env, sha)).not.toThrow();
   expect(() => snapshotRuntime({ ...env, DATABASE_URL: "" }, sha)).toThrow();
   expect(() => snapshotRuntime({ ...env, RELEASE_PROFILE: "unknown" }, sha)).toThrow();
@@ -43,4 +43,9 @@ it("平台临时OIDC令牌和部署地址不进入应用配置快照", () => {
   const second = snapshotRuntime({ ...cloud(), VERCEL_OIDC_TOKEN: "临时令牌二", VERCEL_URL: "" }, sha);
   expect(first.VERCEL_OIDC_TOKEN).toBeUndefined(); expect(first.VERCEL_URL).toBeUndefined();
   expect(() => assertSameSnapshot(first, second)).not.toThrow();
+});
+
+it.each([{MEDIA_CREATE_ENABLED:"1"},{ENABLE_CHECKOUT:"1"},{DISABLE_CHECKOUT:"0"},{DISABLE_GENERATION:"0"}])("网站数据库范围不能意外开启真实生成或收费：%j", patch => {
+  const env = {...cloud(), RELEASE_PROFILE:"website-db", DISABLE_CHECKOUT:"1", DISABLE_GENERATION:"1", ...patch};
+  expect(() => snapshotRuntime(env, sha)).toThrow("保持生成与收费关闭");
 });

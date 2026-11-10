@@ -54,3 +54,23 @@ it("环境变化、数据库探测失败均在candidate部署前阻断", async (
 it("错误项目在pull读取环境前停止", async () => { const { adapter, calls } = await fixture(); adapter.projectId = "other"; await expect(adapter.inspect()).rejects.toThrow(); expect(calls).toEqual([]); });
 
 it("本地pull链接也必须属于固定项目", async () => { const { adapter } = await fixture(true); await expect(adapter.inspect()).rejects.toThrow("链接"); });
+
+it("原生pull丢弃dotenv，完整多行快照只经受控进程env，部署文件仅公开身份", async () => {
+  const f = await fixture();
+  // 使用同一真实inspect适配流程及受控外部边界，保留全部快照验证。
+  const c = { sha: "a".repeat(40), token: "", authMode: "native-cli" } as ReleaseConfig;
+  const v = new (f.adapter.constructor as new(c: ReleaseConfig, run: import("./command").CommandRunner, root: string) => typeof f.adapter)(c, async (_b,args,env) => {
+    f.calls.push({args,env});
+    if(args.includes("pull")) await writeFile(resolve(f.root,".vercel/.env.production.local"),'SPECIAL="must-not-persist"');
+    return "https://new.vercel.app";
+  }, f.root);
+  await v.inspect();await v.build();await v.candidate();
+  expect(await readFile(resolve(f.root,".vercel/.env.production.local"),"utf8")).toBe("");
+  const raw=await readFile(resolve(f.root,".vercel/release-runtime.json"),"utf8");expect(raw).not.toContain(f.env.SPECIAL);expect(raw).not.toContain("DATABASE_URL");
+  const build=f.calls.find(call=>call.args.includes("build"))!;expect(build.env.SPECIAL).toBe(f.env.SPECIAL);
+  const json=JSON.parse(raw);expect(json.env).toEqual({RELEASE_SHA:c.sha,RELEASE_PROJECT_ID:TARGET.project});
+});
+
+it("推广前仍重核完整生产快照，新键或多行值漂移禁止切换",async()=>{
+ const {adapter,calls}=await fixture();await adapter.inspect();adapter.cloud.SPECIAL="changed\nvalue";await expect(adapter.promote({id:"dpl_new",url:"new.vercel.app"})).rejects.toThrow("变化");expect(calls.some(call=>call.args.includes("promote"))).toBe(false);
+});

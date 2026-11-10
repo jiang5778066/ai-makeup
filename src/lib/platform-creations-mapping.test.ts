@@ -1,0 +1,5 @@
+import { expect, it, vi } from "vitest";
+import { mapMakeupCreation } from "./platform-creations-mapping";
+const base = { id: "task", status: "done", styleId: "natural", mode: "full_face", resultKey: "task.png", error: null, createdAt: new Date(), updatedAt: new Date() };
+it("未知状态与待核对标记不成功，不签结果，不输出供应商私密错误", async () => { const sign = vi.fn(); const result = await mapMakeupCreation({ ...base, status: "future", error: "private" }, sign); expect(result.status).toBe("reconciling"); expect(result.result).toBeNull(); expect(sign).not.toHaveBeenCalled(); expect(JSON.stringify(result)).not.toContain("private"); });
+it("存储待核对不能移除；已完成只签已有结果并推导真实MIME", async () => { const sign = vi.fn().mockResolvedValue({ url: "https://storage.test/x", mimeType: "image/png", expiresAt: null }); expect((await mapMakeupCreation({ ...base, status: "running", error: "creative_result_pending" }, sign)).removable).toBe(false); const result = await mapMakeupCreation(base, sign); expect(result.kind).toBe("makeup"); expect(result.mediaType).toBe("image"); expect(result.result?.mimeType).toBe("image/png"); expect(sign).toHaveBeenCalledWith("task.png"); });

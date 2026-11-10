@@ -1,0 +1,14 @@
+import { beforeEach, expect, it, vi } from "vitest";
+const user = vi.fn(), own = vi.fn(), balance = vi.fn(), attempt = vi.fn();
+vi.mock("@/lib/platform-billing-attempts",()=>({readOwnBillingAttempt:(...a:unknown[])=>attempt(...a),publicBillingAttempt:(row:{id:string;status:string})=>({id:row.id,status:row.status})}));
+vi.mock("@/lib/supabase/server",()=>({getCurrentUser:()=>user()}));
+vi.mock("@/lib/platform-billing-status",()=>({readOwnBillingOrder:(...args:unknown[])=>own(...args)}));
+vi.mock("@/lib/credits",()=>({getBalance:(...args:unknown[])=>balance(...args)}));
+beforeEach(()=>{vi.resetModules();attempt.mockReset();user.mockResolvedValue({id:"user_a"});own.mockReset();balance.mockReset();balance.mockResolvedValue(103);});
+it("本人订单只返回最小状态",async()=>{own.mockResolvedValue({status:"completed",credits:100});const{GET}=await import("./route");const r=await GET(new Request("https://makeup.example/api/billing/status?order_id=order_a"));expect(await r.json()).toMatchObject({status:"completed",credits:100,userId:"user_a",balance:103});expect(own).toHaveBeenCalledWith("user_a","order_a");expect(r.headers.get("cache-control")).toBe("no-store");});
+it("跨用户或不存在订单统一404",async()=>{own.mockResolvedValue(null);const{GET}=await import("./route");expect((await GET(new Request("https://makeup.example/api/billing/status?order_id=other_order"))).status).toBe(404);});
+it("paid 参数不能确认付款",async()=>{const{GET}=await import("./route");const r=await GET(new Request("https://makeup.example/api/billing/status?paid=1"));expect(await r.json()).toMatchObject({status:"pending"});expect(own).not.toHaveBeenCalled();});
+it("访客不能读订单和余额",async()=>{user.mockResolvedValue(null);const{GET}=await import("./route");expect((await GET(new Request("https://makeup.example/api/billing/status?order_id=order_a"))).status).toBe(401);expect(balance).not.toHaveBeenCalled();});
+
+it("本人attempt只读且跨用户/缺失同404，访客401",async()=>{const id="00000000-0000-4000-8000-000000000001";attempt.mockResolvedValueOnce({id,status:"unknown"}).mockResolvedValueOnce(null);const{GET}=await import("./route");const req=()=>new Request("https://makeup.example/api/billing/status?attempt_id="+id);expect(await(await GET(req())).json()).toMatchObject({userId:"user_a",attempt:{id,status:"unknown"}});expect(attempt).toHaveBeenCalledWith("user_a",id);expect((await GET(req())).status).toBe(404);user.mockResolvedValue(null);expect((await GET(req())).status).toBe(401);});
+it("attempt缺迁移与其它数据库故障都安全503但保区别",async()=>{attempt.mockRejectedValueOnce(new Error("billing_migration_required")).mockRejectedValueOnce(new Error("private-db-error"));const{GET}=await import("./route");const req=()=>new Request("https://makeup.example/api/billing/status?attempt_id=current");expect(await(await GET(req())).json()).toEqual({code:"billing_migration_required"});expect(await(await GET(req())).json()).toEqual({code:"billing_unavailable"});});

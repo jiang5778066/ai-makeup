@@ -1,15 +1,3 @@
-import { LandingPage } from "@/components/landing-page";
-import { getLandingPage } from "@/lib/content";
-import { pageSchemas } from "@/lib/seo";
-
-export default function ChineseHomePage() {
-  const page = getLandingPage("home", "zh-CN");
-  const schemas = pageSchemas(page, "zh-CN", "/");
-
-  return (
-    <>
-      <LandingPage locale="zh-CN" currentPath="/" page={page} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }} />
-    </>
-  );
-}
+import { PlatformRoutePage, platformRouteMetadata } from "@/components/platform-route-page";
+export const metadata = platformRouteMetadata("/", "zh-CN");
+export default function HomePage() { return <PlatformRoutePage path="/" locale="zh-CN"/>; }

@@ -1,6 +1,6 @@
 # 生产发布操作手册
 
-发布采用 GitHub Actions、Vercel Production 候选及原生 Drizzle 迁移。用户已在本次交付记录中明确授权“上线”；协调者仍须把最终已评审的完整 SHA 与该授权绑定，并在全部门禁通过后触发。实现、评审或本地验证本身不构成云端执行权限；本 worker 不执行真实发布、查询或迁移。用户最新决定是先走通上线流程、后续修复依赖：high/critical 漏洞暂作为告警，不再作为发布阻断；漏洞本身尚未修复。来源、配置、数据库迁移与健康检查等门禁继续执行。
+发布采用 GitHub Actions、Vercel Production 候选及原生 Drizzle 迁移。用户已在本次交付记录中明确授权“上线”；协调者仍须把最终已评审的完整 SHA 与该授权绑定，并在全部门禁通过后触发。实现、评审或本地验证本身不构成云端执行权限；实现阶段不执行真实发布或迁移；允许按当前授权进行只读元数据与结构核对。用户最新决定是先走通上线流程、后续修复依赖：high/critical 漏洞暂作为告警，不再作为发布阻断；漏洞本身尚未修复。来源、配置、数据库迁移与健康检查等门禁继续执行。
 
 ## 目标、环境与凭据
 
@@ -57,7 +57,7 @@
 3. 正式模式必须先通过source并完成独立应用/工具审计，再进入Production环境。核对基线、运行配置、保护bypass、Git自动生产发布和用户已记录的上线授权；有效审计报告中的漏洞按告警继续；无法完成审计或证据写入失败仍停止。
 4. 正常已有READY执行`-f mode=release -f bootstrap=false`。首次模式明确使用`-f mode=release -f bootstrap=true`，不会自动启用，也不绕过任何门禁。
 5. bootstrap仅在目标项目已核、正式alias明确404，或alias归属已核且部署ERROR，并完整分页检查全部Production部署都无READY/未完成状态后才允许`previous=null`。403、网络、字段缺失、详情404或未知状态一律停；任何现有READY都记录ID、URL、完整旧提交，不能用bootstrap掩盖。结果写`rollbackUnavailable=true`，说明首次没有可回退目标。
-6. 跟进run到summary/result，不在本机绕过Environment直接执行生产入口。串行且`cancel-in-progress=false`，禁止取消进行中的迁移或盲目重跑非幂等阶段。
+6. CI渠道跟进run到summary/result；本机仅能使用下文显式原生入口及等效来源门禁。串行且`cancel-in-progress=false`，禁止取消进行中的迁移或盲目重跑非幂等阶段。
 
 顺序为预检/完整SHA信任 → 双审计（漏洞告警） → 项目/上一部署/运行配置/数据库只读核验 → 测试/typecheck/lint → Production构建 → Production候选且skip-domain → 原生兼容迁移 → 候选健康 → promote → 正式域名健康。候选不是preview。
 
@@ -94,7 +94,7 @@ node scripts/release/tools/node_modules/vercel/dist/vc.js rollback status <已�
 
 ## 锁定安装、审计与本地验证
 
-根锁保持应用基线；CLI固定65.11.0，独立位于`scripts/release/tools/package.json`及锁。应用`npm ci`，工具`npm ci --prefix scripts/release/tools`，禁止未锁定npx或全局CLI替代。适配器以`process.execPath`启动绝对`<仓库>/scripts/release/tools/node_modules/vercel/dist/vc.js`，cwd/--cwd均为仓库根；缺失或安装失败即停止。
+根锁保持应用基线；CLI固定65.11.0，独立位于`scripts/release/tools/package.json`及锁。应用`npm ci`，工具`npm ci --prefix scripts/release/tools`，禁止未锁定npx或全局CLI替代。适配器以`process.execPath`启动绝对`<仓库>/scripts/release/tools/node_modules/vercel/dist/index.js`，cwd/--cwd均为仓库根；缺失或安装失败即停止。
 
 CI与发布分别对两棵完整树执行`npm audit --audit-level=high --include=dev --registry=https://registry.npmjs.org --json`，保留dev扫描和high阈值。按用户最新决定，策略固定为`warn`：有效报告中的high/critical漏洞不会阻断CI或发布，不能据此称审计通过或漏洞已修复。安装失败、启动/网络异常、无效JSON、报告与退出码不一致及证据写失败仍停止。此调整只改变项目发布政策，不解决依赖漏洞，也不放宽其他发布检查。
 
@@ -111,3 +111,84 @@ CI与发布分别对两棵完整树执行`npm audit --audit-level=high --include
 Supabase使用官方Root 2021 CA验证证书链和主机名，不关闭TLS验证。迁移在同一物理会话和事务内持锁，连接中断整体回滚。
 
 仓库 `vercel.json` 关闭Git自动部署，避免推送main绕过候选验收直接切换生产域名；正式发布由手动触发的工作流或本机同一入口完成。
+
+## 2026-11-10 当前完整候选的审验与执行边界
+
+本轮候选将 MAIN 的 1184 项已审清单与 418 已上线发布能力合并。产品页面、素材、schema 和 sharp 0.34.5 来自准确 MAIN；health、两份工作流、严格 TLS、同物理会话迁移与固定发布工具锁继续保留。实现阶段只生成候选和证据，不提交、推送、迁移、部署或推广；随后由独立 Reviewer、Validator/ReleaseExecutor 推进既有授权。
+
+迁移顺序固定为 `0001_production_readiness` → `0002_d1_creation_visibility` → `0002_d2_checkout_attempts` → `0003_e1_media_tasks`，两个 0002 均保留。原生 journal 的首条时间和 SQL 哈希不变，后三条使用严格递增时间。结构合同包含四个准确前缀，表数分别为 9、9、10、13；线上任何未跟踪对象、历史或约束/RLS漂移均停止，禁止补假历史、清库或自动建立基线。数据库变更均为兼容增量；回退旧应用时保留新增列、表、任务和审计，不执行逆向 SQL。
+
+普通 `npm test` 不依赖历史 decoder 报告或系统 FFmpeg。所有原真实视频断言保留在 `media-video-decoder.integration.test.ts`；只有显式传入 `TEST_VIDEO_DECODER_CONFIG` 的已批准绝对路径、版本及哈希时运行，无配置则明确跳过真实集成套件。普通 decoder 单元测试仍覆盖身份、容器、帧数、参数、busy、abort、timeout、close 与恢复；runtime 单测使用注入 decoder，在显式本机配置下同套断言再走真实 decoder。本机 8.1 证据不批准 Linux 安装、生产 binary 或 RSS 上限。
+
+现有 `website-db` 范围必须保持 `MEDIA_CREATE_ENABLED` 与 `ENABLE_CHECKOUT` 非 1，`DISABLE_CHECKOUT=1`、`DISABLE_GENERATION=1`。发布适配器在读取快照时强制核对；D1 作品仍须兼容迁移、权限与独立验收，不能通过设置开关替代。完整代码发布不表示真实生成、收费或全部业务已经可用。
+
+审验执行命令（Node 24、两个固定锁、不升级依赖）：
+
+```sh
+npm ci
+npm run release:tools:install
+npm run release:verify
+npm test
+npm run typecheck
+npm run lint
+npm run release:audit
+npm run build
+node node_modules/tsx/dist/cli.mjs scripts/release/readonly-schema.ts
+```
+
+`readonly-schema.ts` 通过固定工具锁内的 Vercel CLI 使用既有登录，只读取指定项目的生产 DATABASE_URL，在内存中交给原有严格 TLS 连接工厂和只读 migration/status/catalog 工具，不打印或保存连接串，不访问业务行。其成功输出含结构、原生历史与只读身份；失败正文隐藏数据库异常。它不是迁移入口。
+
+最终经过审验的源码 SHA 在 main 可达且全部配置/凭据/健康门禁满足后，ReleaseExecutor 才能触发既有流水线：
+
+```sh
+gh workflow run release.yml --repo jiang5778066/ai-makeup --ref main -f sha=<最终已审完整SHA> -f mode=readonly -f bootstrap=false
+gh workflow run release.yml --repo jiang5778066/ai-makeup --ref main -f sha=<最终已审完整SHA> -f mode=release -f bootstrap=false
+```
+
+本次只读元数据查询尚未列出 Production 的 `VERCEL_TOKEN`，仓库级 secret 列表也为空；须由 ReleaseExecutor 核实既有 CI 凭据权限或按既有授权采用原生 CLI 登录渠道，不得把本机 OAuth 凭据导出拼入报告/argv或复制到 CI。现有工作流在凭据不齐时停止，不因此绕过身份、TLS、迁移或健康门禁。旧域名的本会话直接健康请求存在网络/DNS失败，不能将部署 READY 元数据当作健康通过；正式发布前须重新得到可信 200 和完整身份匹配。
+
+可回退的原部署为 `dpl_DQiBgLMWNBxCcfsUen6WFAzL8Z74` / `ai-makeup-pb2se2fgv-leiths-projects-c9172274.vercel.app`，SHA `41849574f4905694880d3f3b95daa6d07038eeb1`。在授权执行阶段按现有恢复手册复核其身份后，才可通过原生 `vercel promote dpl_DQiBgLMWNBxCcfsUen6WFAzL8Z74 --scope team_5KcXe4uGdZkKT9wgSugRSBly --yes` 回退域名；迁移增量保留。此次实现尚未触发上述命令。
+
+
+## 显式原生认证与本地来源渠道
+
+`npm run release`仍默认CI token渠道：必须提供真实workflow来源、既有`VERCEL_TOKEN`和`MIGRATION_DATABASE_URL`。token仅传给固定官方CLI的受控`VERCEL_TOKEN`子进程环境，不进argv或结果；该渠道仍隔离CLI配置。`npm run release:local`明确选择`native-cli`及本地来源，拒绝token、任何非空`GITHUB_*`及冲突模式，不读取或复制OAuth缓存，不自动回退CI。原生CLI复用正常默认登录；固定Node24、官方65.11.0和两份锁，不使用全局CLI或未锁定npx。
+
+本地正式入口须先有准确完整候选提交，HEAD必须等于GitHub真实远端main的40位SHA，origin必须是`jiang5778066/ai-makeup`，源码必须干净且已提交，不能以assume-unchanged/skip-worktree隐藏改动。实时核GitHub main、该SHA最新CI成功、Production唯一main分支策略，并排除release工作流queued/in_progress/waiting/pending/requested状态；读失败或未知即停。取得来源后，在candidate和promote前再次核验，审验记录、CI或Production保护规则变化均停止。
+
+两份独立审验绑定记录必须由协调者取得实际独立审查/验收结果后提供，不能由实现者自签。每份JSON含`repository`、`project`、`team`、`sha`、`sourceTree`（该提交`git rev-parse HEAD^{tree}`）、`reviewer`；审查记录还须`sourceReviewPassed=true`，验收记录须`acceptancePassed=true`，两者reviewer不同。记录应放在干净发布checkout以外，通过下列路径和准确SHA256绑定，版本或字节变化拒绝；既有未提交产品的通过结论须先由独立人员绑定最终实际提交，不能直接把旧418当完整候选。
+
+```sh
+# 所有值均为独立审验后取得的真实数据；本段不创建通过记录。
+RELEASE_SHA="$APPROVED_RELEASE_SHA" \
+RELEASE_MIGRATION_SOURCE=vercel-production-session \
+RELEASE_REVIEW_RECORD="$APPROVED_REVIEW_RECORD" \
+RELEASE_REVIEW_SHA256="$APPROVED_REVIEW_SHA256" \
+RELEASE_ACCEPTANCE_RECORD="$APPROVED_ACCEPTANCE_RECORD" \
+RELEASE_ACCEPTANCE_SHA256="$APPROVED_ACCEPTANCE_SHA256" \
+npm run release:local
+```
+
+本地目标排他锁固定为`/tmp/ai-makeup-production-prj_R5qo7SxNBBU9DAFuGnvivXasvTZj.lock`，不随TMPDIR变化。本轮创建0700目录、0600随机所有者记录，失败/异常finally仅删除自身准确文件和空目录；已有锁或所有权变化停止，绝不删除其它任务锁或终止其它任务。进程被强杀/宿主崩溃可能留下锁，须由协调者核远端和原所有者后单独处置，工具不自动抢占。GitHub托管release保留原并发配置；本机在写阶段前反复排除在途任务，不创建自托管runner或后台调度。
+
+原生迁移配置必须显式选`RELEASE_MIGRATION_SOURCE=vercel-production`、`vercel-production-session`或`environment`。`vercel-production`仅由正常CLI在内存读取固定项目production唯一DATABASE_URL，拒绝混入本机迁移URL，沿用原`purpose=migration`验证项目、角色、5432端口、verify-full、CA及主机名，并用真实只读身份探测和status准入；不能用runtime目的替代，也不改URL。`environment`要求受控环境中已有明确`MIGRATION_DATABASE_URL`，仍走同样迁移合同。GitHub secret不能读回本机，不能声称已有值；只读成功也不证明DDL/迁移写权限。
+
+单独只读诊断入口如下，不执行正式来源审验、不生成正式发布通过结果、不迁移或部署；这里的SHA仅为诊断身份参数：
+
+```sh
+RELEASE_SHA="$DIAGNOSTIC_SHA" RELEASE_MIGRATION_SOURCE=vercel-production npm run release:native-status
+```
+
+2026-11-10原`vercel-production`真实诊断从正确目标取值，但DATABASE_URL为6543事务池，在连接前被migration合同正确拒绝，该历史保持。后续明确批准的同项目同实际主机/凭据session5432一次严格只读核实成功，PG17.6、read_only=on、0001已应用且后三份pending；此事实不证明DDL/迁移写权限。
+
+显式`vercel-production-session`只接受固定项目production唯一DATABASE_URL中的官方共享池transaction6543原配置；验证`aws-[INDEX]-[REGION].pooler.supabase.com`实际主机、项目postgres用户、postgres库、协议和严格TLS后，仅替换端口为5432，其余原始字节（含编码密码/query）不变。立即复用原migration严格校验及真实只读status，失败停止，不猜其它主机/端口，也不在`vercel-production`失败后自动切换。原值与派生值仅保存在内存；首次完整runtime快照须与原值一致，candidate/promote前重核完整runtime键值及本轮派生结果，不能把5432与6543直接比较或省略快照。
+
+原生API固定官方origin、team、project和允许GET路径；20秒、2MB上限，必须有明确2xx HTTP头及成功JSON。非零、401/403/404/429/5xx、超时、非JSON、乱码、输出超限均停止；不从not found文案推断404，原生bootstrap固定false，未知previous不发布。旁路变量只由同项目API在内存取值，并在写阶段前比较；响应、连接串和原始stderr不写报告。
+
+完整生产JSON快照仍在内存保留，含多行值，构建和部署前验证原有运行配置/关闭开关，candidate与promote前重核云端键和值。原生pull通过固定官方CLI运行，dotenv输出路径为本轮自有`.vercel/.env.production.local`到`/dev/null`的符号链接，正常pull结果直接丢弃，不chmod目标设备；构建仅经受控env取得完整快照。原生local-config文件仅含公开RELEASE_SHA/RELEASE_PROJECT_ID；Production服务使用同一固定项目的production配置，文件、argv和报告中不复制生产秘密。CI token模式沿用既有0600完整快照文件与finally清理。
+
+正式执行继续唯一`release()`/`finishRelease()`，保preflight→trust→audit→inspect/status→validate→build→candidate→原生迁移→candidate-health→promote→production-health、检查点、结果脱敏和错误清理。原生入口拒绝已有`.vercel`目录，只清理本轮产物；不变更SQL、journal、迁移器、TLS、业务开关或付费许可。此适配完成仍须独立审查工具delta和必要验收，不能把渠道自检当生产更新。
+
+初次来源核验仍拒绝任何已跟踪缓存脏状态。只有本轮严格入场及全部真实来源门禁通过后，正式validate/build均成功，candidate/promote前guard才可精确允许根`tsconfig.tsbuildinfo`的内容变化；基线index原字节、缓存普通文件类型和模式必须不变。staged/index、隐藏标志、任何其它源码/配置/锁或嵌套近似路径变化一律拒绝，不reset缓存、不改索引、不关闭增量来掩盖行为。
+
+开发树中的未跟踪交付报告仍会阻塞正式来源门禁，这是预期行为。正式ReleaseExecutor须由Orca另行准备最终已审commit的干净独立执行工作树；审查/验收记录用绝对外部文件引用，交付报告保存于执行树外。不要将docs目录加入忽略或来源放行范围来迁就报告。

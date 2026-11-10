@@ -72,3 +72,20 @@ export function buildUploadKey(userId: string, ext: string): string {
 
 export const ALLOWED_UPLOAD_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 export const UPLOAD_MAX_BYTES = 12 * 1024 * 1024;
+
+// 新媒体只用服务端对象读取与条件写入，不改变旧上传与美妆12MiB政策。
+export async function privateObjectStream(bucket:string,key:string):Promise<AsyncIterable<Uint8Array>> {
+  const result=await getClient().send(new GetObjectCommand({Bucket:bucket,Key:key}),{abortSignal:AbortSignal.timeout(30000)});
+  if(!result.Body||!(Symbol.asyncIterator in result.Body))throw new Error('media_object_unavailable');
+  return result.Body as AsyncIterable<Uint8Array>;
+}
+export async function putPrivateObjectOnce(bucket:string,key:string,bytes:Buffer,mime:string):Promise<void> {
+  try{await getClient().send(new PutObjectCommand({Bucket:bucket,Key:key,Body:bytes,ContentType:mime,IfNoneMatch:'*'}),{abortSignal:AbortSignal.timeout(30000)})}
+  catch(error){
+    if((error as {$metadata?:{httpStatusCode?:number}})?.$metadata?.httpStatusCode!==412)throw error;
+    // 同一内容地址的重放只接受逐字节一致，不能覆写旧结果。
+    const chunks:Buffer[]=[];let size=0;
+    for await(const chunk of await privateObjectStream(bucket,key)){size+=chunk.length;if(size>bytes.length)throw new Error('media_object_conflict');chunks.push(Buffer.from(chunk))}
+    if(!Buffer.concat(chunks).equals(bytes))throw new Error('media_object_conflict');
+  }
+}

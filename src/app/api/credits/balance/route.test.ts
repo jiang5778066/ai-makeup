@@ -25,6 +25,6 @@ describe("GET /api/credits/balance", () => {
     mockGetBalance.mockResolvedValue(103);
     const { GET } = await import("./route");
     const response = await GET();
-    await expect(response.json()).resolves.toEqual({ balance: 103 });
+    await expect(response.json()).resolves.toEqual({ userId: "user_1", balance: 103 });
   });
 });

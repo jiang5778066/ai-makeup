@@ -6,6 +6,7 @@ import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import compatibility from "./compatibility.json";
 const url = process.env.TEST_DATABASE_URL;
 if (url) {
   const fixture = new URL(url);
@@ -30,12 +31,32 @@ describe.skipIf(!url)("隔离 Postgres17 原生 Drizzle 迁移", () => {
     await db`insert into auth.users(id) values ('11111111-1111-4111-8111-111111111111') on conflict do nothing`;
     await db`insert into public.projects(user_id,name) values ('11111111-1111-4111-8111-111111111111', '保留数据')`;
     const second = await migrateDatabase(url!);
-    expect(first.applied).toHaveLength(1); expect(second.applied).toHaveLength(1); expect(second.pending).toEqual([]);
+    expect(first.applied).toHaveLength(4); expect(second.applied).toHaveLength(4); expect(second.pending).toEqual([]);
     expect((await db`select name from public.projects`)[0].name).toBe("保留数据");
     expect(await db`select oid from pg_class where oid='auth.users'::regclass`).toEqual(before);
-    expect((await db`select count(*) from drizzle.__drizzle_migrations`)[0].count).toBe("1");
-    expect((await db`select count(*) from pg_constraint where connamespace='public'::regnamespace and contype='c'`)[0].count).toBe("14");
-    expect((await db`select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relrowsecurity`)[0].count).toBe("9");
+    expect((await db`select count(*) from drizzle.__drizzle_migrations`)[0].count).toBe("4");
+    expect((await db`select count(*) from pg_constraint where connamespace='public'::regnamespace and contype='c'`)[0].count).toBe("26");
+    expect((await db`select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relrowsecurity`)[0].count).toBe("13");
+  });
+  it.each([1, 2, 3])("原生历史前缀%d逐步升级保留已有行与托管表", async prefix => {
+    const root = mkdtempSync(join(tmpdir(), "release-db-prefix-"));
+    try {
+      mkdirSync(join(root, "meta"));
+      const journal = JSON.parse(readFileSync("drizzle/meta/_journal.json", "utf8"));
+      journal.entries = journal.entries.slice(0, prefix);
+      writeFileSync(join(root, "meta/_journal.json"), JSON.stringify(journal));
+      for (const { tag } of journal.entries) writeFileSync(join(root, tag + ".sql"), readFileSync("drizzle/" + tag + ".sql"));
+      expect((await migrateDatabase(url!, root, compatibility.approvedHashes.slice(0, prefix))).applied).toHaveLength(prefix);
+      await db`insert into auth.users(id) values ('22222222-2222-4222-8222-222222222222') on conflict do nothing`;
+      await db`insert into public.projects(user_id,name) values ('22222222-2222-4222-8222-222222222222', '前缀已有数据')`;
+      const managed = await db`select oid from pg_class where oid='auth.users'::regclass`;
+      const before = await databaseStatus(url!);
+      expect(before.applied).toHaveLength(prefix); expect(before.pending).toHaveLength(4-prefix);
+      expect((await migrateDatabase(url!)).applied).toHaveLength(4);
+      expect((await db`select name from public.projects`)[0].name).toBe("前缀已有数据");
+      expect(await db`select oid from pg_class where oid='auth.users'::regclass`).toEqual(managed);
+      expect((await migrateDatabase(url!)).pending).toEqual([]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
   it("已有未跟踪业务表在写历史前阻塞", async () => {
     await db`create table public.existing_data(id int)`;
@@ -47,6 +68,7 @@ describe.skipIf(!url)("隔离 Postgres17 原生 Drizzle 迁移", () => {
     try {
       mkdirSync(join(root, "meta"));
       const journal = JSON.parse(readFileSync("drizzle/meta/_journal.json", "utf8"));
+      journal.entries = journal.entries.slice(0, 1);
       writeFileSync(join(root, "meta/_journal.json"), JSON.stringify(journal));
       const sql = readFileSync("drizzle/0001_production_readiness.sql", "utf8") + '\nSELECT 1/0;';
       writeFileSync(join(root, "0001_production_readiness.sql"), sql);
@@ -82,7 +104,7 @@ describe.skipIf(!url)("隔离 Postgres17 原生 Drizzle 迁移", () => {
   ])("合法历史但结构漂移阻塞：%s", async sql => {
     await migrateDatabase(url!); await db.unsafe(sql);
     await expect(databaseStatus(url!)).rejects.toThrow("结构");
-    expect((await db`select count(*) from drizzle.__drizzle_migrations`)[0].count).toBe("1");
+    expect((await db`select count(*) from drizzle.__drizzle_migrations`)[0].count).toBe("4");
   });
   it("并发迁移锁阻止第二个执行者", async () => {
     await db`select pg_advisory_lock(784520261105)`;
@@ -94,7 +116,9 @@ describe.skipIf(!url)("隔离 Postgres17 原生 Drizzle 迁移", () => {
     const root = mkdtempSync(join(tmpdir(), "release-db-disconnect-"));
     try {
       mkdirSync(join(root, "meta"));
-      writeFileSync(join(root, "meta/_journal.json"), readFileSync("drizzle/meta/_journal.json"));
+      const journal = JSON.parse(readFileSync("drizzle/meta/_journal.json", "utf8"));
+      journal.entries = journal.entries.slice(0, 1);
+      writeFileSync(join(root, "meta/_journal.json"), JSON.stringify(journal));
       const original = readFileSync("drizzle/0001_production_readiness.sql", "utf8");
       const sql = point === "before-ddl" ? "SELECT pg_sleep(20);\n" + original : original.replace('CREATE INDEX "projects_user_idx"', 'SELECT pg_sleep(20);\nCREATE INDEX "projects_user_idx"');
       writeFileSync(join(root, "0001_production_readiness.sql"), sql);
@@ -111,7 +135,7 @@ describe.skipIf(!url)("隔离 Postgres17 原生 Drizzle 迁移", () => {
       await rejected;
       expect((await db`select to_regclass('public.projects') as name`)[0].name).toBeNull();
       expect((await db`select to_regclass('drizzle.__drizzle_migrations') as name`)[0].name).toBeNull();
-      expect((await migrateDatabase(url!)).applied).toHaveLength(1);
+      expect((await migrateDatabase(url!)).applied).toHaveLength(4);
     } finally { await client.end({ timeout: 1 }); rmSync(root, { recursive: true, force: true }); }
   });
   it("缺少托管依赖不创建 auth.users", async () => {

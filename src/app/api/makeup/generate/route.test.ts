@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { PgDialect } from "drizzle-orm/pg-core";
 
 const mockGetCurrentUser = vi.fn();
 const mockDeductCredits = vi.fn();
 const mockInngestSend = vi.fn();
-const mockInsertReturning = vi.fn();
-const mockInsertValues = vi.fn();
+const mockExecute = vi.fn();
 const mockUpdate = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -27,12 +27,7 @@ vi.mock("@/inngest/client", () => ({
 
 vi.mock("@/db/client", () => ({
   db: {
-    insert: () => ({
-      values: (...args: unknown[]) => {
-        mockInsertValues(...args);
-        return { returning: () => mockInsertReturning() };
-      }
-    }),
+    execute: (...args: unknown[]) => mockExecute(...args),
     update: () => ({ set: () => ({ where: () => mockUpdate() }) })
   }
 }));
@@ -45,14 +40,28 @@ function jsonRequest(body: unknown) {
   });
 }
 
+function insertedValues() {
+  expect(mockExecute).toHaveBeenCalledOnce();
+  // 编译真实helper交给数据库的SQL，按列与占位符对应关系核验绑定值。
+  const query = new PgDialect().sqlToQuery(mockExecute.mock.calls[0][0]);
+  expect(query.sql).not.toContain("deleted_at");
+  const insert = /^insert into "generations" \((.+)\) values \((.+)\) returning "generations"\."id"$/.exec(query.sql);
+  expect(insert).not.toBeNull();
+  const columns = insert![1].split(", ").map(name => name.replaceAll('"', ""));
+  const placeholders = insert![2].split(", ");
+  expect(placeholders).toEqual(query.params.map((_, index) => `$${index + 1}`));
+  expect(columns).toHaveLength(query.params.length);
+  expect(query.sql).not.toContain("'");
+  return Object.fromEntries(columns.map((column, index) => [column, query.params[index]]));
+}
+
 beforeEach(() => {
   mockGetCurrentUser.mockReset();
   mockDeductCredits.mockReset();
   mockInngestSend.mockReset();
-  mockInsertReturning.mockReset();
-  mockInsertValues.mockReset();
+  mockExecute.mockReset();
   mockUpdate.mockReset();
-  mockInsertReturning.mockResolvedValue([{ id: "gen_test" }]);
+  mockExecute.mockResolvedValue([{ id: "gen_test" }]);
 });
 
 afterEach(() => {
@@ -109,6 +118,7 @@ describe("POST /api/makeup/generate", () => {
 
     expect(response.status).toBe(402);
     expect(payload.code).toBe("insufficient_credits");
+    expect(insertedValues()).toMatchObject({ user_id: "user_test", upload_key: "user_test/x.jpg" });
     expect(mockInngestSend).not.toHaveBeenCalled();
   });
 
@@ -131,6 +141,10 @@ describe("POST /api/makeup/generate", () => {
     expect(response.status).toBe(202);
     expect(payload.generationId).toBe("gen_test");
     expect(payload.status).toBe("queued");
+    expect(insertedValues()).toMatchObject({
+      user_id: "user_test", upload_key: "user_test/x.jpg", style_id: "douyin",
+      intensity: 72, locale: "zh-CN", status: "queued"
+    });
     expect(mockInngestSend).toHaveBeenCalledWith({
       name: "makeup/generate.requested",
       data: { generationId: "gen_test" }
@@ -161,22 +175,21 @@ describe("POST /api/makeup/generate", () => {
     );
 
     expect(response.status).toBe(202);
-    expect(mockInsertValues).toHaveBeenCalledWith(
-      expect.objectContaining({
-        mode: "virtual_try_on",
-        sourceMode: "camera",
-        styleId: "virtual-custom",
-        renderedUploadKey: "user_test/camera-rendered.png",
-        makeupConfig: {
-          lipstick: {
-            enabled: true,
-            presetId: "classic-red",
-            color: "#c93445",
-            intensity: 75
-          }
-        }
-      })
-    );
+    const values = insertedValues();
+    expect(values).toMatchObject({
+      mode: "virtual_try_on",
+      source_mode: "camera",
+      style_id: "virtual-custom",
+      rendered_upload_key: "user_test/camera-rendered.png"
+    });
+    expect(JSON.parse(values.makeup_config as string)).toEqual({
+      lipstick: {
+        enabled: true,
+        presetId: "classic-red",
+        color: "#c93445",
+        intensity: 75
+      }
+    });
   });
 
   it("rejects a virtual export without a rendered upload", async () => {
