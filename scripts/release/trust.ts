@@ -13,7 +13,7 @@ const gitAt = (root: string) => (...args: string[]) => command("git", args, { ..
 const cacheMode = async (root: string) => {
   try {
     const file = await lstat(resolve(root, "tsconfig.tsbuildinfo"));
-    if (!file.isFile() || file.isSymbolicLink()) throw new Error("根构建缓存必须是普通文件");
+    if (!file.isFile() || file.isSymbolicLink()) throw new Error("发布根构建缓存类型/模式发生变化");
     return file.mode & 0o7777;
   } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined; throw error; }
 };
@@ -37,11 +37,18 @@ export const trustBuiltSource = async (sha: string, root = REPOSITORY_ROOT) => {
   await trustSource(sha, root);
   const git = gitAt(root);
   const index = resolve(root, await git("rev-parse", "--git-path", "index"));
-  const indexHash = async () => createHash("sha256").update(await readFile(index)).digest("hex");
-  const initialIndex = await indexHash(), mode = await cacheMode(root);
+  // 完整条目保留路径、OID、mode与stage，标志保留隐藏变化；合法stat刷新不改变这些索引语义。
+  const indexHash = async () => createHash("sha256").update(JSON.stringify([
+    await git("ls-files", "--stage", "-z"), await git("ls-files", "-v", "-z")
+  ])).digest("hex");
+  // 固定签名与格式版本仍须保持，不比较会随合法刷新变化的条目stat数据。
+  const indexFormat = async () => (await readFile(index)).subarray(0, 8).toString("hex");
+  const initialIndex = await indexHash(), format = await indexFormat(), mode = await cacheMode(root);
   return async () => {
     const unchanged = async () => {
-      if (await indexHash() !== initialIndex || await cacheMode(root) !== mode) throw new Error("发布索引或根构建缓存类型/模式发生变化");
+      if (await indexHash() !== initialIndex) throw new Error("发布索引语义发生变化");
+      if (await indexFormat() !== format) throw new Error("发布索引格式发生变化");
+      if (await cacheMode(root) !== mode) throw new Error("发布根构建缓存类型/模式发生变化");
     };
     await unchanged(); await checkSource(sha, root, true); await unchanged();
   };

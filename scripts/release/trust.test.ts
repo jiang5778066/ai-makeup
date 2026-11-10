@@ -1,11 +1,13 @@
 // @vitest-environment node
 import { afterEach, expect, it, vi } from "vitest";
-import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readFile, rm, stat, utimes, chmod, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { command } from "./command";
-import { trustSource } from "./trust";
+import { trustSource, trustBuiltSource } from "./trust";
 import { REPOSITORY_ROOT } from "./paths";
+import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 const roots: string[] = [];
 afterEach(async () => { vi.unstubAllEnvs(); for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true }); }, 60_000);
 const fixture = async () => {
@@ -91,3 +93,70 @@ it("超过16MB仍有界拒绝并确认枚举子进程已回收", async () => {
   const pid = Number(await readFile(pidFile, "utf8")); expect(pid).toBeGreaterThan(0);
   expect(() => process.kill(pid, 0)).toThrowError(expect.objectContaining({ code: "ESRCH" }));
 }, 90_000);
+
+
+const builtFixture = async () => {
+  const f = await fixture();
+  await writeFile(join(f.root, "tsconfig.tsbuildinfo"), "original cache");
+  await writeFile(join(f.root, "empty.txt"), "");
+  await writeFile(join(f.root, " 空白\t索引\n路径 "), "special path");
+  await f.git("add", "."); await f.git("commit", "-m", "测试：构建来源夹具");
+  const sha = await f.git("rev-parse", "HEAD"); await f.git("update-ref", "refs/remotes/origin/main", sha);
+  return { ...f, sha };
+};
+const rawIndexHash = async (root: string) => createHash("sha256").update(await readFile(join(root, ".git/index"))).digest("hex");
+it("合法stat刷新只改索引字节而条目标志及全部diff不变时允许构建后复核", async () => {
+  const f = await builtFixture(); const guard = await trustBuiltSource(f.sha, f.root);
+  const raw = await rawIndexHash(f.root), stage = await f.git("ls-files", "--stage", "-z"), flags = await f.git("ls-files", "-v", "-z");
+  const path = join(f.root, "package.json"), info = await stat(path);
+  await utimes(path, info.atime, new Date(info.mtimeMs + 5_000)); await f.git("update-index", "--refresh");
+  expect(await rawIndexHash(f.root)).not.toBe(raw);
+  expect(await f.git("ls-files", "--stage", "-z")).toBe(stage); expect(await f.git("ls-files", "-v", "-z")).toBe(flags);
+  for (const args of [["diff", "--name-status", "HEAD"], ["diff", "--name-status"], ["diff", "--cached", "--name-status"]]) expect(await f.git(...args)).toBe("");
+  await expect(guard()).resolves.toBeUndefined();
+});
+it("合法根缓存内容变化仍允许且不放宽严格入场", async () => {
+  const f = await builtFixture(); const guard = await trustBuiltSource(f.sha, f.root);
+  await writeFile(join(f.root, "tsconfig.tsbuildinfo"), "new generated content");
+  await expect(guard()).resolves.toBeUndefined(); await expect(trustSource(f.sha, f.root)).rejects.toThrow("发布工作树存在已跟踪改动");
+});
+it.each(["content", "path", "mode", "conflict", "index-format", "--skip-worktree", "--assume-unchanged", "intent-to-add"])("构建后索引语义变化%s仍拒绝", async change => {
+  const f = await builtFixture(); const guard = await trustBuiltSource(f.sha, f.root);
+  if (change === "content") { await writeFile(join(f.root, "package.json"), '{"staged":true}'); await f.git("add", "package.json"); }
+  else if (change === "path") await f.git("mv", "package.json", "renamed.json");
+  else if (change === "mode") await f.git("update-index", "--chmod=+x", "package.json");
+  else if (change === "index-format") await f.git("update-index", "--index-version", "4");
+  else if (change === "conflict") {
+    const oid = await f.git("rev-parse", "HEAD:package.json");
+    const input = `0 ${"0".repeat(40)}\tpackage.json\n` + [1, 2, 3].map(stage => `100644 ${oid} ${stage}\tpackage.json\n`).join("");
+    const result = spawnSync("git", ["update-index", "--index-info"], { cwd: f.root, env: process.env, input, encoding: "utf8" }); expect(result.status).toBe(0);
+  } else if (change === "intent-to-add") { await writeFile(join(f.root, "intent.txt"), "pending"); await f.git("add", "-N", "intent.txt"); }
+  else await f.git("update-index", change, "package.json");
+  await expect(guard()).rejects.toThrow(change === "index-format" ? "发布索引格式发生变化" : "发布索引语义发生变化");
+});
+it("已有空文件转为intent-to-add即使stage条目及标志相同仍由暂存保护拒绝", async () => {
+  const f = await builtFixture(); await f.git("update-index", "--index-version", "4");
+  const guard = await trustBuiltSource(f.sha, f.root);
+  const stage = await f.git("ls-files", "--stage", "-z"), flags = await f.git("ls-files", "-v", "-z");
+  await f.git("rm", "--cached", "empty.txt"); await f.git("add", "-N", "empty.txt");
+  expect(await f.git("ls-files", "--stage", "-z")).toBe(stage); expect(await f.git("ls-files", "-v", "-z")).toBe(flags);
+  expect(await f.git("diff", "--cached", "--name-only", "-z")).toBe("empty.txt\0");
+  await expect(guard()).rejects.toThrow("发布工作树存在已跟踪改动");
+});
+it.each(["symlink", "mode"])("构建后根缓存%s变化给出独立固定错误", async change => {
+  const f = await builtFixture(); const guard = await trustBuiltSource(f.sha, f.root); const cache = join(f.root, "tsconfig.tsbuildinfo");
+  if (change === "symlink") { await rm(cache); await symlink(join(f.root, "package.json"), cache); } else await chmod(cache, 0o600);
+  await expect(guard()).rejects.toThrow("发布根构建缓存类型/模式发生变化");
+});
+it("构建后补建原先不存在的根缓存仍拒绝模式漂移", async () => {
+  const f = await fixture(); const guard = await trustBuiltSource(f.sha, f.root); await writeFile(join(f.root, "tsconfig.tsbuildinfo"), "new");
+  await expect(guard()).rejects.toThrow("发布根构建缓存类型/模式发生变化");
+});
+it("复核期间后半段索引变化仍由第二次语义检查拒绝", async () => {
+  const f = await builtFixture(); const guard = await trustBuiltSource(f.sha, f.root);
+  const realGit = await command("which", ["git"]); const bin = await mkdtemp(join(tmpdir(), "release-index-race-")); roots.push(bin);
+  const quote = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
+  await writeFile(join(bin, "git"), `#!/bin/sh\n${quote(realGit)} "$@"\nresult=$?\nif [ "$#" -eq 4 ] && [ "$1" = ls-files ] && [ "$2" = --others ] && [ "$3" = -t ] && [ "$4" = -z ]; then\n ${quote(realGit)} update-index --chmod=+x package.json || exit 1\nfi\nexit "$result"\n`, { mode: 0o755 });
+  vi.stubEnv("PATH", bin + ":" + process.env.PATH);
+  await expect(guard()).rejects.toThrow("发布索引语义发生变化");
+});
