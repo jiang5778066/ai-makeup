@@ -1599,7 +1599,7 @@ export const animalGraffitiContent:Record<AnimalGraffitiTool,Record<Locale,Anima
         },
         {
           "q": "AI 涂鸦生成器可以免费开始吗？",
-          "a": "参照页说明可从有限免费积分开始，再按生成量与工作流需求升级；这不代表 Makeup AI 的额度或订阅。",
+          "a": "参照页说明可从有限免费积分开始，再按生成量与工作流需求升级；这不代表 PictoWink 的额度或订阅。",
           "observed": false
         },
         {

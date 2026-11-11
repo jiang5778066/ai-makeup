@@ -37,7 +37,7 @@ export function PlatformAccountEntry({ locale, returnPath }: { locale: Locale; r
   const zh = locale === "zh-CN";
   if (busy) return <span role="status">{zh ? "正在退出…" : "Signing out…"}</span>;
   return <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-    {account.status === "signed_in" ? <><Link className="platform-login" href={localizePath("/my-creations", locale)}>{zh ? "我的作品" : "My Creations"}</Link><button type="button" className="platform-language-trigger" onClick={() => { void logout(); }}>{zh ? "退出" : "Sign out"}</button></> : <Link className="platform-login" href={loginHref(returnPath)}>{zh ? "登录即可获得3积分" : "Login to get 3 credits"}</Link>}
+    {account.status === "signed_in" ? <><Link className="platform-login" href={localizePath("/my-creations", locale)}>{zh ? "我的作品" : "My Creations"}</Link><button type="button" className="platform-language-trigger" onClick={() => { void logout(); }}>{zh ? "退出" : "Sign out"}</button></> : <Link className="platform-login" href={loginHref(returnPath)}>{zh ? "登录" : "Sign in"}</Link>}
     {error && <span role="alert">{zh ? "退出失败，请重试。" : "Sign out failed. Please retry."}<button type="button" onClick={() => { void logout(); }}>{zh ? "重试退出" : "Retry sign out"}</button></span>}
   </div>;
 }

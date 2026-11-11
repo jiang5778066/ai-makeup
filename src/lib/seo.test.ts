@@ -25,11 +25,7 @@ describe("SEO helpers", () => {
       "HowTo",
       "BreadcrumbList"
     ]);
-    expect(schemas[0]).toMatchObject({
-      offers: [
-        { price: "0", priceCurrency: "USD" },
-        { price: "8", priceCurrency: "USD" }
-      ]
-    });
+    expect(schemas[0]).not.toHaveProperty("offers");
+    expect(schemas[0]).not.toHaveProperty("isAccessibleForFree");
   });
 });

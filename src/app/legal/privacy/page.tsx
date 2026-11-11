@@ -4,7 +4,7 @@ import { LegalShell } from "@/components/legal-shell";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How AI Makeup Studio collects, uses, stores, and deletes your data.",
+  description: "How PictoWink collects, uses, stores, and deletes your data.",
   robots: { index: true, follow: true }
 };
 
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
   return (
     <LegalShell title="Privacy Policy" lastUpdated={LAST_UPDATED} currentPath="/legal/privacy">
       <p>
-        This Privacy Policy explains how AI Makeup Studio (&ldquo;we&rdquo;, &ldquo;us&rdquo;)
+        This Privacy Policy explains how PictoWink (&ldquo;we&rdquo;, &ldquo;us&rdquo;)
         processes personal information when you use our website and AI makeup tools.
       </p>
 

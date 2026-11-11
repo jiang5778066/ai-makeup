@@ -4,7 +4,7 @@ import { LegalShell } from "@/components/legal-shell";
 
 export const metadata: Metadata = {
   title: "DMCA Notice",
-  description: "How to report content on AI Makeup Studio that infringes your copyright.",
+  description: "How to report content on PictoWink that infringes your copyright.",
   robots: { index: true, follow: true }
 };
 
@@ -15,7 +15,7 @@ export default function DmcaPage() {
   return (
     <LegalShell title="DMCA Notice" lastUpdated={LAST_UPDATED} currentPath="/legal/dmca">
       <p>
-        AI Makeup Studio respects intellectual property rights. If you believe a user has uploaded
+        PictoWink respects intellectual property rights. If you believe a user has uploaded
         or generated content that infringes your copyright, follow the takedown process below.
       </p>
 

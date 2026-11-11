@@ -4,7 +4,7 @@ import { LegalShell } from "@/components/legal-shell";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "The rules for using AI Makeup Studio, including credits, refunds, and acceptable use.",
+  description: "The rules for using PictoWink, including credits, refunds, and acceptable use.",
   robots: { index: true, follow: true }
 };
 
@@ -15,7 +15,7 @@ export default function TermsPage() {
   return (
     <LegalShell title="Terms of Service" lastUpdated={LAST_UPDATED} currentPath="/legal/terms">
       <p>
-        These Terms govern your use of AI Makeup Studio. By creating an account or using any part
+        These Terms govern your use of PictoWink. By creating an account or using any part
         of the service you agree to them.
       </p>
 

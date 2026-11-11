@@ -528,8 +528,8 @@ export const wanContent:Record<WanPath,WanContent>={
           "zh-CN": "使用 Wan 2.2 安全吗？"
         },
         "answer": {
-          "en": "The Lanta AI reference page stated at capture time that uploads were encrypted and stored securely during processing, with privacy protections built into its workflow. These external safeguards are not verified by this project; they are not a security guarantee from Makeup AI. Wan generation is not connected here.",
-          "zh-CN": "Lanta AI 参照页面在采集时称，其上传内容会在处理期间加密存储，并内置隐私保护机制。本项目未验证这些外部措施，这不是 Makeup AI 对加密、存储或安全性的保证；Wan 生成尚未接入。"
+          "en": "The Lanta AI reference page stated at capture time that uploads were encrypted and stored securely during processing, with privacy protections built into its workflow. These external safeguards are not verified by this project; they are not a security guarantee from PictoWink. Wan generation is not connected here.",
+          "zh-CN": "Lanta AI 参照页面在采集时称，其上传内容会在处理期间加密存储，并内置隐私保护机制。本项目未验证这些外部措施，这不是 PictoWink 对加密、存储或安全性的保证；Wan 生成尚未接入。"
         }
       }
     ]
@@ -2865,7 +2865,7 @@ export const wanContent:Record<WanPath,WanContent>={
         },
         "answer": {
           "en": "The Lanta AI reference page stated at capture time: Yes. New users on Lanta AI receive 40 free credits to try the Wan 3.0 AI video model. Each generation uses credits based on settings such as video length and quality, so the free credits are designed for testing the model rather than unlimited generation. This project has not verified these service claims and does not provide this generation service.",
-          "zh-CN": "Lanta AI 参照页面在采集时称：其新用户可获得 40 个免费积分，用于试用 Wan 3.0 AI 视频模型，每次生成按时长和质量等设置消耗积分；这不代表无限生成。本项目未验证该外部积分政策，也不提供该生成服务；Makeup AI 原有的 3 次美妆体验与之无关。"
+          "zh-CN": "Lanta AI 参照页面在采集时称：其新用户可获得 40 个免费积分，用于试用 Wan 3.0 AI 视频模型，每次生成按时长和质量等设置消耗积分；这不代表无限生成。本项目未验证该外部积分政策，也不提供该生成服务；PictoWink 原有的 3 次美妆体验与之无关。"
         }
       },
       {

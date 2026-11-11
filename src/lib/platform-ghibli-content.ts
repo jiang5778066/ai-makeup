@@ -1,4 +1,4 @@
-// 文案依据本批英中原件保存；品牌适配为 Makeup AI，保留原件拼写。
+// 文案依据本批英中原件保存；品牌适配为 PictoWink，保留原件拼写。
 export const ghibliContent = {
   "en": {
     "hero": {
@@ -38,7 +38,7 @@ export const ghibliContent = {
       ]
     },
     "features": {
-      "title": "Key Features of Makeup AI Ghibli Style Converter",
+      "title": "Key Features of PictoWink Ghibli Style Converter",
       "description": "Our advanced AI technology brings the magic of Studio Ghibli and Hayao Miyazaki's artistic vision to your photos",
       "cards": [
         {
@@ -212,7 +212,7 @@ export const ghibliContent = {
       ]
     },
     "features": {
-      "title": "Makeup AI吉卜力转换器核心功能",
+      "title": "PictoWink吉卜力转换器核心功能",
       "description": "我们的先进AI技术将吉卜力工作室和宫崎骏的艺术风格注入您的照片",
       "cards": [
         {
