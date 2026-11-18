@@ -10,16 +10,16 @@ import type {TaskRecord,MediaRequest} from './media-contracts';
 import type {MediaStore} from './media-persistence';
 const id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',user='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const economics={tariffVersion:'offline-v1',credits:2,providerUpperCents:5,dailyCapCents:10,budgetApprovalRef:'offline-budget',providerAccountRef:'offline-account'};
-const config:MediaRuntimeConfig={creationEnabled:true,schemaApproved:true,approvalRef:'offline-only',environmentRef:'offline',storageApprovalRef:'offline',decoderApprovalRef:'offline',transportApprovalRef:'offline',providerKey:'offline-key',providerAccountRef:'offline-account',quoteKey:Buffer.alloc(32,3),inputHosts:['inputs.example.com'],resultHosts:['results.example.com'],consentVersion:'media-v1',modes:{text_to_image:{approvalRef:'offline-mode',validUntil:new Date(Date.now()+300000).toISOString(),economics}}};
+const config:MediaRuntimeConfig={storageBackend:'r2',executionBackend:'inngest',executionApprovalRef:'offline-execution',executionValidUntil:'2099-01-01T00:00:00Z',creationEnabled:true,schemaApproved:true,approvalRef:'offline-only',environmentRef:'offline',storageApprovalRef:'offline',decoderApprovalRef:'offline',transportApprovalRef:'offline',providerKey:'offline-key',providerAccountRef:'offline-account',quoteKey:Buffer.alloc(32,3),inputHosts:['inputs.example.com'],resultHosts:['results.example.com'],consentVersion:'media-v1',modes:{text_to_image:{approvalRef:'offline-mode',validUntil:new Date(Date.now()+300000).toISOString(),economics}}};
 const payload:MediaRequest={clientIntentId:id,mediaType:'image',model:'gpt-image-2',mode:'text_to_image',prompt:'测试',parameters:{quality:'1k',size:'2:3',n:1},inputIds:[],locale:'zh-CN',consent:true,consentVersion:'media-v1'};
 const req=(path:string,b?:unknown)=>new Request(`https://app.example/api/media/${path}`,{method:b?'POST':'GET',headers:{origin:'https://app.example','Content-Type':'application/json','Idempotency-Key':'offline-idempotency-key'},...(b?{body:JSON.stringify(b)}:{})});
 const resources=()=>{
  let task:TaskRecord|null=null;
- const store={ready:async()=>true,inputHashes:async()=>[],identities:async()=>task?[task]:[],replay:async()=>task,create:async(_u:string,key:string,r:MediaRequest,hash:string,quote:TaskRecord['quote'])=>{task={id,user_id:user,model:r.model,mode:r.mode,media_type:'image',request:r,request_hash:hash,quote,provider_account_ref:economics.providerAccountRef,client_idempotency_key:key,input_id:null,status:'reserved',credit_state:'reserved',state_version:1,created_at:new Date().toISOString(),updated_at:new Date().toISOString()} as TaskRecord;return {task,replayed:false}},recovery:async()=>task?.credit_state==='reserved'?task:null,claim:async()=>{const submit=task?.status==='reserved';if(submit)task={...task!,status:'submitting',submission:{prompt:payload.prompt,payloadHash:'offline'}};return {task,submit}},transition:async(_t:TaskRecord,next:{status:TaskRecord['status'];taskId?:string;locator?:string;error?:string})=>{task={...task!,status:next.status,error_code:next.error??null,provider_task_id:next.taskId??task!.provider_task_id,result_locator:next.locator??task!.result_locator};return task},complete:async(_t:TaskRecord,result:{key:string;mime:string})=>{task={...task!,status:'done',credit_state:'settled',result_key:result.key,result_mime:result.mime};return task},read:async()=>task} as unknown as MediaStore;
+ const store={release:async()=>null,ready:async()=>true,inputHashes:async()=>[],identities:async()=>task?[task]:[],replay:async()=>task,create:async(_u:string,key:string,r:MediaRequest,hash:string,quote:TaskRecord['quote'])=>{task={id,user_id:user,model:r.model,mode:r.mode,media_type:'image',request:r,request_hash:hash,quote,provider_account_ref:economics.providerAccountRef,client_idempotency_key:key,input_id:null,status:'reserved',credit_state:'reserved',state_version:1,created_at:new Date().toISOString(),updated_at:new Date().toISOString()} as TaskRecord;return {task,replayed:false}},recovery:async()=>task?.credit_state==='reserved'?task:null,claim:async()=>{const submit=task?.status==='reserved';if(submit)task={...task!,status:'submitting',submission:{prompt:payload.prompt,payloadHash:'offline'}};return {task,submit}},transition:async(_t:TaskRecord,next:{status:TaskRecord['status'];taskId?:string;locator?:string;error?:string})=>{task={...task!,status:next.status,error_code:next.error??null,provider_task_id:next.taskId??task!.provider_task_id,result_locator:next.locator??task!.result_locator};return task},complete:async(_t:TaskRecord,result:{key:string;mime:string})=>{task={...task!,status:'done',credit_state:'settled',result_key:result.key,result_mime:result.mime};return task},read:async()=>task} as unknown as MediaStore;
  const http=vi.fn(async(r:{method:string})=>({status:r.method==='POST'?202:200,body:Buffer.from(JSON.stringify({task_id:'provider-original',status:r.method==='POST'?'submitted':'completed',result_urls:['https://results.example.com/a.png']}))}));
  const objects={read:async()=> (async function*(){yield Buffer.alloc(0)})(),putImmutable:vi.fn(async()=>{}),signPut:async()=>'',signGet:vi.fn(async()=> 'https://inputs.example.com/fresh?synthetic=1')};
  const transport={resolve:vi.fn(async()=>[{address:'8.8.8.8',family:4 as const}]),request:vi.fn(async()=>({status:200,contentType:'image/png',body:(async function*(){yield Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),Buffer.alloc(4),Buffer.from('IHDR'),Buffer.alloc(8)])})()}))};
- return {store,http,objects,transport,decoder:vi.fn(async()=>({mime:'image/png',width:1,height:1,frames:1}))};
+ return {executionReady:true,store,http,objects,transport,decoder:vi.fn(async()=>({mime:'image/png',width:1,height:1,frames:1}))};
 };
 it('完整runtime贯通报价→创建→同worker原ID处理→D1签名；单独API依赖不足',async()=>{
  const deps=resources();const bytes=await sharp({create:{width:24,height:36,channels:3,background:'white'}}).png().toBuffer();deps.transport.request.mockImplementation(async()=>({status:200,contentType:'image/png',body:(async function*(){yield Buffer.from(bytes)})()}));const runtime=createMediaRuntime({config,...deps,decoder:createSharpMediaDecoder()});const handlers=createMediaHandlers({...runtime,currentUser:async()=>({id:user}),limit:()=>true,emit:async()=>{}});
@@ -70,7 +70,7 @@ it('缺新建decoder/下载依赖不拆除已有对象签名与原账户查询ad
 import {runtimeVideoConfig as videoConfig,normalVideo,runtimeVideoDecoder as createVideoMediaDecoder} from './test-fixtures/media-video';
 it('视频完整本机注入原ID→完整解码→条件写→done→D1签名，不拆图片装配',async()=>{
  const deps=resources(),bytes=normalVideo();
- const videoPayload:MediaRequest={...payload,mediaType:'video',model:'grok-imagine-video-1.5',mode:'text_to_video',parameters:{durationSeconds:5,resolution:'480p'}};
+ const videoPayload:MediaRequest={...payload,mediaType:'video',model:'grok-imagine-video-1.5',mode:'text_to_video',parameters:{durationSeconds:1,resolution:'480p'}};
  const create=deps.store.create.bind(deps.store);deps.store.create=async(...args)=>{const result=await create(...args);result.task.media_type='video';return result};
  deps.http.mockImplementation(async r=>({status:r.method==='POST'?202:200,body:Buffer.from(JSON.stringify({task_id:'video-original',status:r.method==='POST'?'submitted':'completed',model:'grok-imagine-video-1.5',type:'video',output_url:'https://results.example.com/result.mp4'}))}));
  deps.transport.request.mockImplementation(async()=>({status:200,contentType:'video/mp4',body:(async function*(){yield bytes})()}));
@@ -102,7 +102,7 @@ it('默认部署配置读取视频可信binary与独立模式；key本身不开�
 it('单sealed首帧视频复用上传身份与原任务processor，签名失败保reserved且不POST',async()=>{
  for(const signingFails of [false,true]){
   const deps=resources(),input='dddddddd-dddd-4ddd-8ddd-dddddddddddd',bytes=normalVideo();
-  const request:MediaRequest={...payload,mediaType:'video',model:'grok-imagine-video-1.5',mode:'image_to_video',parameters:{durationSeconds:5,resolution:'480p'},inputIds:[input]};
+  const request:MediaRequest={...payload,mediaType:'video',model:'grok-imagine-video-1.5',mode:'image_to_video',parameters:{durationSeconds:1,resolution:'480p'},inputIds:[input]};
   deps.store.input=async(u,i)=>{if(u!==user||i!==input)throw Error('synthetic input not found');return {id:input,user_id:user,status:'ready',sealed_key:'media/inputs/'+user+'/sealed',verified_sha256:'f'.repeat(64)} as InputRecord};deps.store.inputHashes=async()=>['f'.repeat(64)];
   const create=deps.store.create.bind(deps.store);deps.store.create=async(...args)=>{const result=await create(...args);result.task.media_type='video';result.task.input_id=input;return result};
   if(signingFails)deps.objects.signGet.mockRejectedValueOnce(Error('synthetic signing failure'));
@@ -121,7 +121,7 @@ it('E3-002：真实解析路径中坏视频只关闭自身，图片及原图/视
  const deps=resources();deps.http.mockImplementation(async request=>{const image=(request as {method:string;url:string}).url.includes('/images/');return {status:200,body:Buffer.from(JSON.stringify({task_id:image?'image-original':'video-original',status:'processing',model:image?'gpt-image-2':'grok-imagine-video-1.5'}))}});
  const runtime=createMediaRuntime({config:parsed,...deps});expect(runtime.catalog.adapterModes).toEqual(['text_to_image']);expect(runtime.signer).toBeDefined();
  const imageRow={model:'gpt-image-2',request:payload,media_type:'image',mode:'text_to_image',input_id:null,provider_account_ref:economics.providerAccountRef,provider_task_id:'image-original'} as TaskRecord;
- const videoRow={...imageRow,model:'grok-imagine-video-1.5',media_type:'video',mode:'text_to_video',provider_task_id:'video-original',request:{...payload,model:'grok-imagine-video-1.5',mediaType:'video',mode:'text_to_video',parameters:{durationSeconds:5,resolution:'480p'}}} as TaskRecord;
+ const videoRow={...imageRow,model:'grok-imagine-video-1.5',media_type:'video',mode:'text_to_video',provider_task_id:'video-original',request:{...payload,model:'grok-imagine-video-1.5',mediaType:'video',mode:'text_to_video',parameters:{durationSeconds:1,resolution:'480p'}}} as TaskRecord;
  for(const current of [runtime,createMediaRuntime({config:{...parsed,creationEnabled:false},...deps})]){
   expect(await current.providers.get('gpt-image-2')!.query('image-original',imageRow)).toEqual({kind:'accepted',taskId:'image-original'});
   expect(await current.providers.get('grok-imagine-video-1.5')!.query('video-original',videoRow)).toEqual({kind:'accepted',taskId:'video-original'});
@@ -145,4 +145,27 @@ it('E3-002：每mode结构/经济错误局部关闭，坏顶层JSON仍整体关�
  }
  for(const raw of [null,[],17,'bad']){const parsed=parsedConfig(raw);expect(parsed.creationEnabled).toBe(false);expect(parsed.providerKey).toBe('');expect(parsed.modes).toEqual({})}
  const malformed=readMediaRuntimeConfig({NODE_ENV:'test',MEDIA_RUNTIME_CONFIG:'{',MEDIA_ROUTER_API_KEY:'synthetic-key',MEDIA_CREATE_ENABLED:'1'});expect(malformed.creationEnabled).toBe(false);expect(malformed.providerKey).toBe('');
+});
+
+it('新增执行证明缺失或未实现database-step时关闭所有新建，签名恢复独立保留',async()=>{
+ for(const patch of [{storageBackend:undefined},{executionBackend:undefined},{executionApprovalRef:''},{executionBackend:'database-step'}]){
+  const deps=resources();const r=createMediaRuntime({config:{...config,storageBackend:'r2',executionBackend:'inngest',executionApprovalRef:'offline-execution',...patch} as MediaRuntimeConfig,...deps});
+  expect(r.catalog.enabled).toBe(false);await expect(r.storage.sign('media/results/a','image/png')).resolves.toHaveProperty('url');
+ }
+});
+
+it('Supabase作品签名沿相同adapter，database-step即使注入ready也不能提前新建',async()=>{
+ const deps=resources(),c={...config,storageBackend:'supabase' as const,executionBackend:'database-step' as const};
+ const runtime=createMediaRuntime({config:c,...deps,executionReady:true});expect(runtime.catalog.enabled).toBe(false);
+ await runtime.storage.sign('media/results/original','image/png');expect(deps.objects.signGet).toHaveBeenCalledWith('media/results/original',900);
+ const input=createMediaRuntime({config:{...config,executionApprovalRef:'offline'},...deps,executionReady:false});expect(input.catalog.enabled).toBe(false);expect(deps.http).not.toHaveBeenCalled();
+});
+it('执行批准到期会即时关闭新建，不撤销已有结果签名',async()=>{
+ let now=1000;const deps=resources(),runtime=createMediaRuntime({config:{...config,executionValidUntil:new Date(2000).toISOString()},...deps,now:()=>now});expect(runtime.catalog.enabled).toBe(true);now=2000;expect(runtime.catalog.enabled).toBe(false);await expect(runtime.storage.sign('media/results/original','image/png')).resolves.toHaveProperty('url');
+});
+
+it('database-step需要独立secret/调度/资源批准与期限，源码存在或任意executionReady不能替代',()=>{
+ const deps=resources(),c={...config,storageBackend:'supabase' as const,executionBackend:'database-step' as const,databaseStep:{scheduleApprovalRef:'fixture-schedule',resourceApprovalRef:'fixture-resources',validUntil:'2099-01-01T00:00:00Z'}};
+ expect(createMediaRuntime({config:c,...deps,stepSecret:'ab'.repeat(32)}).catalog.enabled).toBe(true);
+ for(const patch of [{stepSecret:undefined},{stepSecret:'short'},{executionReady:false},{config:{...c,databaseStep:undefined}},{config:{...c,databaseStep:{...c.databaseStep,scheduleApprovalRef:''}}},{config:{...c,databaseStep:{...c.databaseStep,resourceApprovalRef:''}}},{config:{...c,databaseStep:{...c.databaseStep,validUntil:'2000-01-01'}}}])expect(createMediaRuntime({config:c,...deps,stepSecret:'ab'.repeat(32),...patch}).catalog.enabled).toBe(false);
 });

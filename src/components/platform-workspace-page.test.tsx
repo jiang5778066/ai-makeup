@@ -19,7 +19,9 @@ describe("工作台展示入口", () => {
   });
   it("模型卡仍明确不可用并保留具体模型参数，四入口分别映射到本地工具", () => {
     const { container } = render(<PlatformWorkspacePage locale="en" currentPath="/home"/>);
-    expect(screen.getByRole("link", { name: "Seedream 5.0 Pro" })).toHaveAttribute("href", "/ai-image-generator?model=seedream-5-0-pro#generator");
+    const seedream = screen.getByRole("link", { name: "Seedream 5.0 Pro" });
+    expect(seedream).toHaveAttribute("href", "/ai-image-generator?model=seedream-5-0-pro#generator");
+    expect(seedream.closest("[data-preview-card]")).toHaveTextContent("Showcase · Unavailable");
     expect(screen.getAllByText("Showcase · Unavailable").length).toBeGreaterThan(0);
     const primary = container.querySelector(".platform-workspace-primary")!;
     expect([...primary.querySelectorAll("a")].map(a => a.getAttribute("href"))).toEqual(["/ai-video-generator", "/ai-image-generator", "/video-effects", "/video-to-video"]);

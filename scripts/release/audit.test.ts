@@ -97,3 +97,8 @@ it.each([
   const parsed = JSON.parse(report(high, critical)); parsed.vulnerabilities = vulnerabilities;
   await expect(auditDependencies(async () => ({ stdout: JSON.stringify(parsed), exitCode: high + critical ? 1 : 0 }))).rejects.toThrow("依赖审计无法完成");
 });
+
+it('新增媒体与Supabase服务秘密不进入审计子进程',async()=>{
+ const names=['MEDIA_ROUTER_API_KEY','MEDIA_QUOTE_HMAC_HEX','MEDIA_STEP_SECRET','SUPABASE_SECRET_KEY','MEDIA_SUPABASE_SERVICE_KEY'];
+ await auditDependencies(async(_b,_a,env)=>{for(const name of names)expect(env[name]).toBeUndefined();return {stdout:report(),exitCode:0}},{NODE_ENV:'test',...Object.fromEntries(names.map(k=>[k,'synthetic-private']))});
+});

@@ -9,8 +9,7 @@ import {type MediaStore} from './media-persistence';
 import {InsufficientCreditsError} from './credits';
 import type {MediaInputs} from './media-inputs';
 import {unavailableMediaStorage,type MediaResultStorage} from './media-storage';
-import {inngest} from '@/inngest/client';
-import {getMediaRuntime} from './media-runtime';
+import {getMediaRuntime,readMediaRuntimeConfig} from './media-runtime';
 const fields=['clientIntentId','mediaType','model','mode','prompt','parameters','inputIds','locale','consent','consentVersion'];
 export type MediaDependencies={currentUser:()=>Promise<{id:string}|null>;catalog:MediaCatalog;store:MediaStore;signer?:QuoteSigner;inputs?:MediaInputs;storage?:MediaResultStorage;limit:(user:string)=>boolean;emit:(taskId:string)=>Promise<void>};
 export async function mediaBody(request:Request){
@@ -62,4 +61,6 @@ export function createMediaHandlers(deps:MediaDependencies){
  inputSign:(request:Request,id:string)=>execute(request,true,async user=>{if(!mediaUuid.test(id))throw new MediaFault('not_found',404);if(!await deps.store.input(user,id))throw new MediaFault('not_found',404);if(!deps.inputs)throw new MediaFault('media_inputs_unconfigured',503);strictObject(await mediaBody(request),[]);return privateJson(await deps.inputs.sign(user,id))})
  };
 }
-export const mediaHandlers=createMediaHandlers({currentUser:async()=>accountConfigured()?getCurrentUser():null,get catalog(){return getMediaRuntime().catalog},get store(){return getMediaRuntime().store},get signer(){return getMediaRuntime().signer},get inputs(){return getMediaRuntime().inputs},get storage(){return getMediaRuntime().storage},limit:user=>rateLimit(`media:${user}`,60,60000).ok,emit:async taskId=>{await inngest.send({name:'media/generate.requested',data:{taskId,operationId:randomUUID()}})}});
+export const mediaHandlers=createMediaHandlers({currentUser:async()=>accountConfigured()?getCurrentUser():null,get catalog(){return getMediaRuntime().catalog},get store(){return getMediaRuntime().store},get signer(){return getMediaRuntime().signer},get inputs(){return getMediaRuntime().inputs},get storage(){return getMediaRuntime().storage},limit:user=>rateLimit(`media:${user}`,60,60000).ok,emit:notifyMediaTask});
+
+export async function notifyMediaTask(taskId:string){if(readMediaRuntimeConfig(process.env).executionBackend==='database-step')return;const {inngest}=await import('@/inngest/client');await inngest.send({name:'media/generate.requested',data:{taskId,operationId:randomUUID()}})}

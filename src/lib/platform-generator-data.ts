@@ -1680,8 +1680,8 @@ export const generatorModels: GeneratorModel[] = [
 
 export const generatorPages = {
  "/ai-video-models/dreamface-ai": {kind:"video",family:"video",title:{en:"DreamFace AI Video Generator","zh-CN":"DreamFace AI 视频生成器"},defaultModel:"lanta-2-1"},
- "/ai-image-generator": { kind:"image", family:"image", title:{en:"AI Image Generator", "zh-CN":"AI 图片生成器"}, defaultModel:"seedream-5-0-pro" },
- "/ai-video-generator": { kind:"video", family:"video", title:{en:"AI Video Generator", "zh-CN":"AI 视频生成器"}, defaultModel:"wan-2-5" },
+ "/ai-image-generator": { kind:"image", family:"image", title:{en:"AI Image Generator", "zh-CN":"AI 图片生成器"}, defaultModel:"gpt-image-2" },
+ "/ai-video-generator": { kind:"video", family:"video", title:{en:"AI Video Generator", "zh-CN":"AI 视频生成器"}, defaultModel:"grok-imagine" },
  "/ai-image-models/gpt-image-2": { kind:"image", family:"gpt", title:{en:"GPT Image 2 AI Image Generator", "zh-CN":"GPT Image 2 AI 图像生成器"}, defaultModel:"gpt-image-2" },
  "/ai-image-models/nano-banana-pro": { kind:"image", family:"nano", title:{en:"Nano Banana Pro: AI Image Generator & Photo Editor", "zh-CN":"Nano Banana Pro：AI 图像生成器与照片编辑器"}, defaultModel:"nano-banana-pro" },
  "/ai-video-models/wan-2-2": {kind:"video",family:"wan",title:{en:"Wan 2.2 AI Video Generator","zh-CN":"Wan 2.2 AI 视频生成器"},defaultModel:"wan-2-2"},

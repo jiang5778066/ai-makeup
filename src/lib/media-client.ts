@@ -1,3 +1,5 @@
+import {MEDIA_VIDEO_SECONDS} from './media-video-contract';
+import {validMediaUpload,type MediaInputUploadDTO} from './media-upload';
 import type {MediaRequest,MediaStatus} from './media-contracts';
 import type {Locale} from './i18n';
 export type MediaDraft={model:string;mode:'text_to_image'|'image_to_image'|'text_to_video'|'image_to_video';prompt:string;locale:Locale;files:File[];selectionVersion:number;sourceSelection?:string};
@@ -11,7 +13,7 @@ type Intent={key:string;request:MediaRequest;quote:ClientQuote};
 type Recovery={version:1;userId:string;savedAt:number;taskId?:string;key?:string;request?:MediaRequest};
 const imageMode=(mode:string)=>mode.endsWith('_image');
 const inputMode=(mode:string)=>mode.startsWith('image_to_');
-const siteParameters=(mode:string):Record<string,string|number>=>imageMode(mode)?{quality:'1k',size:'2:3',n:1}:{durationSeconds:5,resolution:'480p'};
+const siteParameters=(mode:string):Record<string,string|number>=>imageMode(mode)?{quality:'1k',size:'2:3',n:1}:{durationSeconds:MEDIA_VIDEO_SECONDS,resolution:'480p'};
 const validTuple=(model:string,mode:string)=>imageMode(mode)?model==='gpt-image-2'&&['text_to_image','image_to_image'].includes(mode):model==='grok-imagine-video-1.5'&&['text_to_video','image_to_video'].includes(mode);
 const normalizePrompt=(v:string)=>v.normalize('NFC').replace(/\r\n?/g,'\n').trim();
 export function readMediaRecovery(storage:Storage|undefined,user:string):Recovery|null{
@@ -21,11 +23,12 @@ export function readMediaRecovery(storage:Storage|undefined,user:string):Recover
   if(!r||Object.keys(r).some(k=>!['version','userId','savedAt','taskId','key','request'].includes(k))||r.version!==1||r.userId!==user||!Number.isSafeInteger(r.savedAt)||r.savedAt>Date.now()||Date.now()-r.savedAt>=86400000)throw Error();
   if(r.taskId){if(!uuid.test(r.taskId)||r.key||r.request)throw Error();return r}
   const p=r.request;
-  if(!p||!r.key||!uuid.test(r.key)||!uuid.test(p.clientIntentId)||!validTuple(p.model,p.mode)||p.mediaType!==(imageMode(p.mode)?'image':'video')||typeof p.prompt!=='string'||!p.prompt||p.prompt.length>3800||p.consent!==true||typeof p.consentVersion!=='string'||p.consentVersion.length>100||!['en','zh-CN'].includes(p.locale)||JSON.stringify(p.parameters)!==JSON.stringify(siteParameters(p.mode))||!Array.isArray(p.inputIds)||p.inputIds.length!==(inputMode(p.mode)?1:0)||p.inputIds.some(i=>!uuid.test(i))||Object.keys(p).some(k=>!['clientIntentId','mediaType','model','mode','prompt','parameters','inputIds','locale','consent','consentVersion'].includes(k)))throw Error();
+  if(!p||!r.key||!uuid.test(r.key)||!uuid.test(p.clientIntentId)||!validTuple(p.model,p.mode)||p.mediaType!==(imageMode(p.mode)?'image':'video')||typeof p.prompt!=='string'||!p.prompt||p.prompt.length>3800||p.consent!==true||typeof p.consentVersion!=='string'||p.consentVersion.length>100||!['en','zh-CN'].includes(p.locale)||!(JSON.stringify(p.parameters)===JSON.stringify(siteParameters(p.mode))||!imageMode(p.mode)&&JSON.stringify(p.parameters)===JSON.stringify({durationSeconds:5,resolution:'480p'}))||!Array.isArray(p.inputIds)||p.inputIds.length!==(inputMode(p.mode)?1:0)||p.inputIds.some(i=>!uuid.test(i))||Object.keys(p).some(k=>!['clientIntentId','mediaType','model','mode','prompt','parameters','inputIds','locale','consent','consentVersion'].includes(k)))throw Error();
   return r;
  }catch{try{storage?.removeItem(recoveryKey)}catch{/* 存储可能被浏览器禁用。 */}return null}
 }
-export function createMediaClient(fetcher:typeof fetch=fetch){
+const configuredUploadHosts=()=>{try{return [new URL(process.env.NEXT_PUBLIC_SUPABASE_URL??'').hostname,...(process.env.NEXT_PUBLIC_MEDIA_UPLOAD_HOST?[process.env.NEXT_PUBLIC_MEDIA_UPLOAD_HOST]:[])]}catch{return process.env.NEXT_PUBLIC_MEDIA_UPLOAD_HOST?[process.env.NEXT_PUBLIC_MEDIA_UPLOAD_HOST]:[]}};
+export function createMediaClient(fetcher:typeof fetch=fetch,uploadHosts:readonly string[]=configuredUploadHosts()){
  const json=async<T>(path:string,signal:AbortSignal,body?:unknown,key?:string,allowDisabled=false):Promise<T>=>{
   const r=await fetcher(`/api/media/${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',credentials:'same-origin',redirect:'error',signal,headers:{...(body===undefined?{}:{'Content-Type':'application/json'}),...(key?{'Idempotency-Key':key}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})});
   const b=await r.json();if(!r.ok&&!(allowDisabled&&r.status===503&&Array.isArray(b.capabilities)))throw new MediaClientError(typeof b.code==='string'?b.code:'media_unavailable');return b;
@@ -39,10 +42,11 @@ export function createMediaClient(fetcher:typeof fetch=fetch){
   if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size<1||file.size>8388608)throw new MediaClientError('invalid_input');
   const bytes=await (typeof file.arrayBuffer==='function'?file.arrayBuffer():new Promise<ArrayBuffer>((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result as ArrayBuffer);r.onerror=()=>reject(new MediaClientError('invalid_input'));r.readAsArrayBuffer(file)}));
   const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes)))).map(v=>v.toString(16).padStart(2,'0')).join('');if(s.aborted)throw new MediaClientError('cancelled');
-  const signed=await json<{inputId:string;uploadUrl:string;requiredHeaders:Record<string,string>}>('inputs/sign',s,{contentType:file.type,contentLength:file.size,sha256:hash,purpose:'reference_image'});
-  const url=new URL(signed.uploadUrl);if(url.protocol!=='https:'||url.username||url.password||Object.keys(signed.requiredHeaders).some(k=>k.toLowerCase()!=='content-type')||!uuid.test(signed.inputId))throw new MediaClientError('invalid_input');
+  const signed=await json<MediaInputUploadDTO>('inputs/sign',s,{contentType:file.type,contentLength:file.size,sha256:hash,purpose:'reference_image'});
+  if(!validMediaUpload(signed,file.type,file.size,uploadHosts))throw new MediaClientError('invalid_input');
+  const url=new URL(signed.uploadUrl);
   if(s.aborted)throw new MediaClientError('cancelled');
-  const put=await fetcher(url.href,{method:'PUT',body:file,headers:signed.requiredHeaders,credentials:'omit',redirect:'error',signal:s});if(!put.ok)throw new MediaClientError('input_not_ready');
+  const put=await fetcher(url.href,{method:signed.method,body:bytes,headers:signed.requiredHeaders,credentials:'omit',redirect:'error',signal:s});if(!put.ok)throw new MediaClientError('input_not_ready');
   const ready=await json<{inputId:string;status:string}>(`inputs/${signed.inputId}/complete`,s,{});if(ready.status!=='ready'||ready.inputId!==signed.inputId)throw new MediaClientError('input_not_ready');return ready.inputId;
  }
  };
@@ -53,6 +57,8 @@ export class MediaGenerationController{
  private state=initial();private listeners=new Set<()=>void>();private user:string|null=null;private epoch=-1;private version=0;private draftValue:MediaDraft|null=null;private controller?:AbortController;private capabilityController?:AbortController;private intent?:Intent;private lock=false;private timer?:ReturnType<typeof setTimeout>;private pollStart=0;private pollDelay=5000;private live=true;
  constructor(private api:MediaClient,private storage?:Storage){}
  snapshot=()=>this.state;
+ snapshotFor(user:string|null,epoch:number){return this.user===user&&this.epoch===epoch?this.state:initial()}
+ matchesAccount(user:string|null,epoch:number){return this.user===user&&this.epoch===epoch}
  subscribe=(listener:()=>void)=>{this.listeners.add(listener);return()=>{this.listeners.delete(listener)}};
  private set(patch:Partial<MediaClientState>){this.state={...this.state,...patch};this.listeners.forEach(f=>f())}
  private invalidate(){this.version++;this.controller?.abort();clearTimeout(this.timer);this.timer=undefined;this.lock=false}
@@ -74,7 +80,7 @@ export class MediaGenerationController{
   if(!this.user)return;this.capabilityController?.abort();const controller=new AbortController();this.capabilityController=controller;const epoch=this.epoch,user=this.user;const valid=()=>this.live&&!controller.signal.aborted&&this.epoch===epoch&&this.user===user;
   try{const r=await this.api.capabilities(controller.signal);if(valid())this.set({capabilities:r.capabilities,error:null})}catch(e){if(valid())this.set({error:e instanceof MediaClientError?e.code:'media_unavailable'})}
  }
- available(){const d=this.draftValue;return Boolean(d&&validTuple(d.model,d.mode)&&this.state.capabilities.some(c=>c.model===d.model&&c.mode===d.mode&&c.enabled&&(imageMode(d.mode)?c.parameters?.quality?.includes('1k')&&c.parameters?.size?.includes('2:3')&&c.parameters?.n?.includes(1):c.parameters?.durationSeconds?.includes(5)&&c.parameters?.resolution?.includes('480p'))))}
+ available(){const d=this.draftValue;return Boolean(d&&validTuple(d.model,d.mode)&&this.state.capabilities.some(c=>c.model===d.model&&c.mode===d.mode&&c.enabled&&(imageMode(d.mode)?c.parameters?.quality?.includes('1k')&&c.parameters?.size?.includes('2:3')&&c.parameters?.n?.includes(1):c.parameters?.durationSeconds?.includes(MEDIA_VIDEO_SECONDS)&&c.parameters?.resolution?.includes('480p'))))}
  async quote(){
   const d=this.draftValue;if(!d||!this.user||this.lock||this.intent||this.state.task||this.state.refreshUnknown||!this.available()||!this.state.selected||!this.state.consent)return;
   const prompt=normalizePrompt(d.prompt);if(!prompt||prompt.length>3800||d.files.length!==(inputMode(d.mode)?1:0)){this.set({error:'invalid_input'});return}

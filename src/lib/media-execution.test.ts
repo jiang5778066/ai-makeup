@@ -1,0 +1,5 @@
+// @vitest-environment node
+import {expect,it,vi} from 'vitest';
+import {withMediaExecution,mediaExecutionSignal,boundedMediaFetch} from './media-execution';
+it('并发请求context隔离；fetch合并原信号且abort后await原fetch清理',async()=>{const a=new AbortController(),b=new AbortController();let cleaned=false;const fetcher=vi.fn(async(_url:RequestInfo|URL,init?:RequestInit)=>{await new Promise<void>(resolve=>init!.signal!.addEventListener('abort',()=>{cleaned=true;resolve()},{once:true}));throw Error('aborted')});const pending=withMediaExecution(a.signal,async()=>{expect(mediaExecutionSignal()).toBe(a.signal);await expect(boundedMediaFetch(fetcher)('https://synthetic.invalid',{signal:b.signal})).rejects.toThrow()});await Promise.resolve();b.abort();await pending;expect(cleaned).toBe(true);expect(mediaExecutionSignal()).toBeUndefined()});
+it('已abort的step不开始fetch',async()=>{const c=new AbortController();c.abort();const f=vi.fn();await expect(withMediaExecution(c.signal,()=>boundedMediaFetch(f)('https://synthetic.invalid'))).rejects.toThrow();expect(f).not.toHaveBeenCalled()});
