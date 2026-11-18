@@ -16,7 +16,7 @@ it("四根双语介绍独立分发与canonical，不把ready介绍说成已接�
     const view = render(<PlatformRoutePage path={path} locale={locale} searchParams={{ model: ["102", "other"] }}/>);
     expect(screen.getByRole("heading")).toHaveTextContent(`${locale}:${path}:RootIntroduction`);
     const metadata = platformRouteMetadata(path, locale);
-    expect(metadata.title).toContain("Makeup AI");
+    expect(metadata.title).not.toMatch(/Makeup AI|AI Makeup Studio/);
     expect(metadata.description).toMatch(/不代表该型号已接入|does not imply model availability/);
     expect(metadata.alternates?.canonical).toBe(`${locale === "zh-CN" ? "/zh-CN" : ""}${path}`);
     view.unmount();
@@ -39,7 +39,7 @@ describe("页面实际分发和SEO身份", () => {
       const view = render(<PlatformRoutePage path={path} locale={locale}/>);
       expect(screen.getByRole("heading", { name: `${locale}:${path}目录正文` })).toBeInTheDocument();
       const metadata = platformRouteMetadata(path, locale);
-      expect(metadata.title).toContain("Makeup AI");
+      expect(metadata.title).not.toMatch(/Makeup AI|AI Makeup Studio/);
       expect(metadata.title).not.toMatch(/Currently unavailable|当前不可用/);
       expect(metadata.alternates?.canonical).toBe(`${locale === "zh-CN" ? "/zh-CN" : ""}${path}`);
       view.unmount();
@@ -48,14 +48,14 @@ describe("页面实际分发和SEO身份", () => {
   it("首页SEO体现图片视频与真实可用边界，不继承自拍步骤", () => {
     const landing = platformRouteMetadata("/", "zh-CN");
     const home = platformRouteMetadata("/home", "en");
-    expect(landing.title).toBe("图片与视频创作平台");
+    expect(landing.title).toBe("AI 图片与视频创作");
     expect(landing.alternates?.canonical).toMatch(/\/zh-CN$/);
     expect(home.title).toBe("Creative workspace");
     expect(home.alternates?.canonical).toMatch(/\/home$/);
   });
 });
 
-it("四专用页面双语分发与SEO准确并传递重复查询",()=>{for(const locale of ["en","zh-CN"]as const)for(const path of ["/ai-image-generator","/ai-video-generator","/ai-image-models/gpt-image-2","/ai-image-models/nano-banana-pro"]){const view=render(<PlatformRoutePage path={path} locale={locale} searchParams={{model:["gpt-image-2","other"]}}/>);expect(screen.getByRole("heading")).toHaveTextContent(`${path}:生成器:model=gpt-image-2&model=other`);const metadata=platformRouteMetadata(path,locale);expect(metadata.title).not.toMatch(/当前不可用|Currently unavailable/);expect(metadata.description).toMatch(path==='/ai-image-generator'||path==='/ai-image-models/gpt-image-2'?/本站图片能力以生成面板为准|Site image availability/:path==='/ai-video-generator'?/本站视频能力以生成面板为准|Site video availability/:/生成服务尚未开放|Generation is not available/);view.unmount();}});
+it("四专用页面双语分发与SEO准确并传递重复查询",()=>{for(const locale of ["en","zh-CN"]as const)for(const path of ["/ai-image-generator","/ai-video-generator","/ai-image-models/gpt-image-2","/ai-image-models/nano-banana-pro"]){const view=render(<PlatformRoutePage path={path} locale={locale} searchParams={{model:["gpt-image-2","other"]}}/>);expect(screen.getByRole("heading")).toHaveTextContent(`${path}:生成器:model=gpt-image-2&model=other`);const metadata=platformRouteMetadata(path,locale);expect(metadata.title).not.toMatch(/当前不可用|Currently unavailable/);expect(metadata.description).toMatch(path==='/ai-image-generator'||path==='/ai-video-generator'?/生成尚未开放|Generation is not open/:path==='/ai-image-models/gpt-image-2'?/本站图片能力以生成面板为准|Site image availability/:/生成服务尚未开放|Generation is not available/);view.unmount();}});
 
 it("Wan五路双语分发身份与URL首值原样交接，未实现模型仍scaffold",()=>{for(const locale of ["en","zh-CN"]as const)for(const slug of ["wan-2-2","wan-2-5","wan-2-6","wan-3-0","wan-fusionX"]){const path="/ai-video-models/"+slug,view=render(<PlatformRoutePage path={path} locale={locale} searchParams={{duration:["10","30"]}}/>);expect(screen.getByRole("heading")).toHaveTextContent(`${locale}:${path}:Wan:duration=10&duration=30`);expect(platformRouteMetadata(path,locale).description).toMatch(/生成暂不可用|generation is not available/);view.unmount();}});
 

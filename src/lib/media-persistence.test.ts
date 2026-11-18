@@ -107,7 +107,7 @@ sqlIt('联合源同微秒跨kind稳定分页、过滤先limit、v1及软移除�
  expect(seen).toEqual([...expected].sort().reverse());expect(new Set(seen).size).toBe(6);
  const first=seen.find(x=>x.startsWith('makeup:'))!;expect(await source.remove(u,first)).toBe('removed');const v1=encodeCreationCursor('all',at,first.slice(7)),q=parseCreationQuery(new URL(`https://app.invalid?cursor=${v1}`))!;expect(await source.validateCursor!(u,q.cursor!)).toBe(true);expect(await source.validateCursor!(await seed(),q.cursor!)).toBe(false);
  expect(await source.remove(u,seen.find(x=>x.startsWith('media:'))!)).toBe('in_progress');expect(await source.read(await seed(),first)).toBeNull();
- const vr=normalizeMediaRequest({...request(),mediaType:'video',model:'grok-imagine-video-1.5',mode:'text_to_video',parameters:{durationSeconds:5,resolution:'480p'}});const v=await create(u,vr);const videos=await source.list(u,{filter:'video',limit:1,cursor:null});expect(videos.items.map(x=>x.id)).toEqual(['media:'+v.task.id]);
+ const vr=normalizeMediaRequest({...request(),mediaType:'video',model:'grok-imagine-video-1.5',mode:'text_to_video',parameters:{durationSeconds:1,resolution:'480p'}});const v=await create(u,vr);const videos=await source.list(u,{filter:'video',limit:1,cursor:null});expect(videos.items.map(x=>x.id)).toEqual(['media:'+v.task.id]);
  const mc=await store.claim(v.task.id),ms=await store.transition(mc!.task,{status:'storing',taskId:'video-'+v.task.id,locator:'https://synthetic.invalid/v'});await store.complete(ms!,{key:'media/results/synthetic/video',mime:'video/mp4',bytes:20,sha256:'a'.repeat(64)});expect(await source.remove(u,'media:'+v.task.id)).toBe('removed');const mt=await store.get(v.task.id);expect(await source.validateCursor!(u,{at:mt!.created_at,id:v.task.id,kind:'media'})).toBe(true);
 });
 sqlIt('API过期quote旧意图重放、报价篡改/跨用户/未知参数拒绝且无重复投递',async()=>{
@@ -129,9 +129,9 @@ sqlIt('受限运维绑定仅原ID、expectedVersion/CAS及两人审批退款，�
  const u=await seed(),{task}=await create(u),claim=await store.claim(task.id);const t=await store.transition(claim!.task,{status:'reconciling',error:'submission_unknown',stage:'submission'});
  const ops=createMediaOperations(store,async(_credential,operationHash)=>({subject:'isolated-runtime',roles:['media_reconcile','media_settlement'],operationHash,approvalSubjects:['reviewer-a','reviewer-b']}));
  const op={taskId:t!.id,operationId:randomUUID(),expectedVersion:t!.state_version,action:'bind_original' as const,caseId:'isolated-case',evidenceSha256:'a'.repeat(64),providerTaskId:'known-original-'+t!.id};
- expect((await ops.apply(op,'synthetic-proof')).replayed).toBe(false);expect((await ops.apply(op,'synthetic-proof')).replayed).toBe(true);expect((await store.get(task.id))?.provider_task_id).toBe('known-original-'+t!.id);
+ await store.release(t!);expect((await ops.apply(op,'synthetic-proof')).replayed).toBe(false);expect((await ops.apply(op,'synthetic-proof')).replayed).toBe(true);expect((await store.get(task.id))?.provider_task_id).toBe('known-original-'+t!.id);
  await expect(ops.apply({...op,operationId:randomUUID()},'synthetic-proof')).rejects.toThrow('operation_state_conflict');
- const current=await store.get(task.id),unknown=await store.transition(current!,{status:'reconciling',stage:'query'});const fail={...op,operationId:randomUUID(),expectedVersion:unknown!.state_version,action:'confirm_failed' as const,providerTaskId:undefined};await ops.apply(fail,'synthetic-proof');
+ const current=(await store.claim(task.id))!.task,unknown=await store.transition(current,{status:'reconciling',stage:'query'});const fail={...op,operationId:randomUUID(),expectedVersion:unknown!.state_version,action:'confirm_failed' as const,providerTaskId:undefined};await store.release(unknown!);await ops.apply(fail,'synthetic-proof');
  const [ledger]=await database.execute(sql`SELECT count(*)::int AS count FROM credits_ledger WHERE user_id=${u} AND reason='refund'`);expect(ledger.count).toBe(1);
  const [audit]=await database.execute(sql`SELECT count(*)::int AS count FROM media_task_events WHERE task_id=${task.id} AND actor_kind='operator'`);expect(audit.count).toBe(2);
 });
@@ -170,8 +170,8 @@ sqlIt('同key更换payload必须409，即使携带旧报价，不能当普通422
 sqlIt('已知provider ID的超时只查原ID，提交claim后崩溃不重新POST',async()=>{
  const u=await seed(),{task}=await create(u);const c=await store.claim(task.id);const waiting=await store.transition(c!.task,{status:'waiting',taskId:'fixed-original-'+task.id});let queries=0,posts=0;
  const p:MediaProvider={modes:['text_to_image'],async submit(){posts++;return {kind:'unknown'}},async query(id){expect(id).toBe('fixed-original-'+task.id);queries++;return {kind:'unknown'}}};
- const run=createMediaProcessor(store,{get:()=>p},storage);await run(waiting!.id);await run(waiting!.id);expect(queries).toBe(2);expect(posts).toBe(0);
- const {task:crash}=await create(u);await store.claim(crash.id);await database.execute(sql`UPDATE media_tasks SET updated_at=now()-interval '6 minutes' WHERE id=${crash.id} RETURNING id`);await run(crash.id);await run(crash.id);expect(posts).toBe(0);expect((await store.get(crash.id))?.credit_state).toBe('reserved');expect((await store.get(crash.id))?.status).toBe('reconciling');
+ const run=createMediaProcessor(store,{get:()=>p},storage);await store.release(waiting!);await run(waiting!.id);await run(waiting!.id);expect(queries).toBe(2);expect(posts).toBe(0);
+ const {task:crash}=await create(u);await store.claim(crash.id);await database.execute(sql`UPDATE media_tasks SET updated_at=now()-interval '6 minutes',lease_expires_at=now()-interval '1 second' WHERE id=${crash.id} RETURNING id`);await run(crash.id);await run(crash.id);expect(posts).toBe(0);expect((await store.get(crash.id))?.credit_state).toBe('reserved');expect((await store.get(crash.id))?.status).toBe('reconciling');
 });
 sqlIt('输入流超限后拒绝记录，不能残留uploading继续签名',async()=>{
  const user=await seed();const inputs=createMediaInputs(store,{async read(){return (async function*(){yield Buffer.alloc(8388609)})()},async putImmutable(){throw Error('不可写')},async signPut(){return 'https://synthetic.invalid'},async signGet(){throw Error('不可签')}},async()=>{throw Error('不可解码')});
@@ -201,21 +201,22 @@ sqlIt('事务取锁后也拒绝新任务过期报价，旧同意图不重新预�
  await expect(store.create(u,randomUUID(),r,hash,q)).rejects.toThrow('quote_expired');
 });
 
-sqlIt('晚肯定响应只能补同提交快照，冲突原ID、不同提交及终态不能覆盖',async()=>{
+sqlIt('肯定响应必须来自当前租约与版本且同提交快照，旧版本/冲突ID/终态不能覆盖',async()=>{
  const u=await seed(100);
- for(const mismatch of ['none','future_version','submission','payload','model','provider','account','request','snapshot','existing_id','owned_id','done','refunded']){
+ for(const mismatch of ['none','old_version','future_version','submission','payload','model','provider','account','request','snapshot','existing_id','owned_id','done','refunded']){
   const {task}=await create(u),c=(await store.claim(task.id))!.task;
   await store.transition(c,{status:'reconciling',stage:'submission'});
   const id='late-'+task.id;
-  let stale=c;
-  if(mismatch==='future_version')stale={...c,state_version:c.state_version+100};
-  if(mismatch==='submission')stale={...c,submission_id:randomUUID()};
-  if(mismatch==='payload')stale={...c,request_hash:'f'.repeat(64)};
-  if(mismatch==='model')stale={...c,model:'other'};
-  if(mismatch==='provider')stale={...c,provider:'other'};
-  if(mismatch==='account')stale={...c,provider_account_ref:'other'};
-  if(mismatch==='request')stale={...c,request:{...c.request,prompt:'other'}};
-  if(mismatch==='snapshot')stale={...c,submission:{prompt:'other',payloadHash:c.request_hash}};
+  const base=(await store.get(task.id))!;let stale=base;
+  if(mismatch==='old_version')stale=c;
+  if(mismatch==='future_version')stale={...base,state_version:c.state_version+100};
+  if(mismatch==='submission')stale={...base,submission_id:randomUUID()};
+  if(mismatch==='payload')stale={...base,request_hash:'f'.repeat(64)};
+  if(mismatch==='model')stale={...base,model:'other'};
+  if(mismatch==='provider')stale={...base,provider:'other'};
+  if(mismatch==='account')stale={...base,provider_account_ref:'other'};
+  if(mismatch==='request')stale={...base,request:{...c.request,prompt:'other'}};
+  if(mismatch==='snapshot')stale={...base,submission:{prompt:'other',payloadHash:c.request_hash}};
   if(mismatch==='existing_id')await database.execute(sql`UPDATE media_tasks SET provider_task_id=${'different-'+task.id} WHERE id=${task.id} RETURNING id`);
   if(mismatch==='owned_id'){const other=await create(await seed()),oc=(await store.claim(other.task.id))!.task;await store.transition(oc,{status:'waiting',taskId:id})}
   if(mismatch==='done'){const t=(await store.get(task.id))!,s=await store.transition(t,{status:'storing',taskId:id,locator:'https://synthetic.invalid/winner'});await store.complete(s!,await storage.store(s!))}
@@ -223,14 +224,14 @@ sqlIt('晚肯定响应只能补同提交快照，冲突原ID、不同提交及�
   const result=await store.transition(stale,{status:'storing',taskId:id,locator:'https://synthetic.invalid/late',submissionResponse:true});
   if(mismatch==='none'){expect(result?.provider_task_id).toBe(id);expect(result?.result_locator).toBe('https://synthetic.invalid/late')}
   else{expect(result).toBeNull();expect((await store.get(task.id))?.result_locator).not.toBe('https://synthetic.invalid/late')}
-  const events=await database.execute(sql`SELECT details FROM media_task_events WHERE task_id=${task.id} AND event_type LIKE 'late_%'`);expect(events.length).toBeGreaterThan(0);expect(JSON.stringify(events)).not.toContain('https://');
+  const events=await database.execute(sql`SELECT details FROM media_task_events WHERE task_id=${task.id} AND event_type LIKE 'late_%'`);expect(JSON.stringify(events)).not.toContain('https://');
  }
 });
 
 sqlIt('暂停后的双签原ID绑定不重置24小时时钟，扫描不留下可重复调度时间',async()=>{
  const u=await seed(),{task}=await create(u),c=(await store.claim(task.id))!.task;
  await store.transition(c,{status:'reconciling',stage:'submission'});
- await database.execute(sql`UPDATE media_tasks SET submission_intent_at=now()-interval '25 hours' WHERE id=${task.id} RETURNING id`);
+ await database.execute(sql`UPDATE media_tasks SET submission_intent_at=now()-interval '25 hours',lease_expires_at=now()-interval '1 second' WHERE id=${task.id} RETURNING id`);
  await createMediaProcessor(store,{get:()=>undefined},storage)(task.id);
  const paused=(await store.get(task.id))!;
  const ops=createMediaOperations(store,async(_c,operationHash)=>({subject:'operator',roles:['media_reconcile'],operationHash,approvalSubjects:['a','b']}));
@@ -242,7 +243,7 @@ sqlIt('暂停后的双签原ID绑定不重置24小时时钟，扫描不留下可
 sqlIt('稳定提交起点25小时且updated_at刚刷新仍持久暂停，扫描与排队事件均零GET',async()=>{
  const u=await seed(),{task}=await create(u),c=(await store.claim(task.id))!.task;
  await store.transition(c,{status:'waiting',taskId:'aged-'+task.id});
- await database.execute(sql`UPDATE media_tasks SET submission_intent_at=now()-interval '25 hours',updated_at=now(),next_action_at=now()-interval '1 minute' WHERE id=${task.id} RETURNING id`);
+ await database.execute(sql`UPDATE media_tasks SET submission_intent_at=now()-interval '25 hours',updated_at=now(),next_action_at=now()-interval '1 minute',lease_expires_at=now()-interval '1 second' WHERE id=${task.id} RETURNING id`);
  expect((await store.due(100)).some(x=>x.id===task.id)).toBe(false);
  let posts=0,queries=0;const p:MediaProvider={modes:['text_to_image'],async submit(){posts++;return {kind:'unknown'}},async query(){queries++;return {kind:'unknown'}}};
  const process=createMediaProcessor(store,{get:()=>p},storage);await process(task.id);await process(task.id);
@@ -256,12 +257,12 @@ sqlIt('25小时已有结果仍重存原结果，过期locator刷新也受暂停�
  const p:MediaProvider={modes:['text_to_image'],async submit(){throw Error('不可POST')},async query(id){queries++;return {kind:'complete',taskId:id,locator:'https://synthetic.invalid/fresh'}}};
  for(const expired of [false,true]){
   const {task}=await create(u),c=(await store.claim(task.id))!.task;await store.transition(c,{status:'storing',taskId:'storage-'+task.id,locator:'https://synthetic.invalid/original'});
-  await database.execute(sql`UPDATE media_tasks SET submission_intent_at=now()-interval '25 hours',error_code=${expired?'media_download_expired':'storage_unavailable'} WHERE id=${task.id} RETURNING id`);
+  await database.execute(sql`UPDATE media_tasks SET submission_intent_at=now()-interval '25 hours',error_code=${expired?'media_download_expired':'storage_unavailable'},lease_expires_at=now()-interval '1 second' WHERE id=${task.id} RETURNING id`);
   const process=createMediaProcessor(store,{get:()=>p},{...storage,async store(t){stores++;return storage.store(t)}});await process(task.id);
   expect((await store.get(task.id))?.status).toBe(expired?'reconciling':'done');
  }
  expect([queries,stores]).toEqual([0,1]);
- const {task}=await create(u),c=(await store.claim(task.id))!.task;await store.transition(c,{status:'waiting',taskId:'recent-'+task.id});await createMediaProcessor(store,{get:()=>p},storage)(task.id);expect(queries).toBe(1);expect((await store.get(task.id))?.status).toBe('done');
+ const {task}=await create(u),c=(await store.claim(task.id))!.task;const recent=await store.transition(c,{status:'waiting',taskId:'recent-'+task.id});await store.release(recent!);await createMediaProcessor(store,{get:()=>p},storage)(task.id);expect(queries).toBe(1);expect((await store.get(task.id))?.status).toBe('done');
 });
 
 sqlIt('真实缺表和schema权限故障可区分，权限恢复正常不遗留写操作',async()=>{

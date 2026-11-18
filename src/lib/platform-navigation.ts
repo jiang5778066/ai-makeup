@@ -92,7 +92,7 @@ export const footerCandidateEntries: readonly PlatformEntry[] = [
   { id: "image-video-guide", pathname: "/guides/ai-image-to-video", label: { en: "AI Image to Video Guide", "zh-CN": "AI 图像转视频指南" }, status: "pending" },
   { id: "image-guide", pathname: "/guides/ai-image-creation", label: { en: "AI Image Creation Guide", "zh-CN": "AI 图像创作指南" }, status: "pending" },
   { id: "blog", pathname: "/blog", label: { en: "Blog", "zh-CN": "博客" }, status: "pending" },
-  { id: "about", pathname: "/about", label: { en: "About Makeup AI", "zh-CN": "关于 Makeup AI" }, status: "pending" },
+  { id: "about", pathname: "/about", label: { en: "About PictoWink", "zh-CN": "关于 PictoWink" }, status: "pending" },
   { id: "refund", pathname: "/refund", label: { en: "Refund Policy", "zh-CN": "退款政策" }, status: "pending" },
   { id: "moderation-policy", pathname: "/content-moderation-policy", label: { en: "Content Moderation Policy", "zh-CN": "内容审核政策" }, status: "pending" }
 ];

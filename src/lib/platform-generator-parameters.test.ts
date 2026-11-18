@@ -48,3 +48,8 @@ describe('生成器URL身份与参数归属', () => {
 });
 
 it('DreamFace显式已知与未知及unsupported只保真实请求不静默替代',()=>{const path='/ai-video-models/dreamface-ai';expect(initializeGenerator(path,'model=805&tab=text')).toMatchObject({model:'wan-3-0',mode:'text'});for(const id of ['dreamface-ai','unknown']){const state=initializeGenerator(path,`model=${id}`);expect(state.model).toBe(id);expect(state.parameters).toEqual({});expect(state.issues).toContain('unknown-model');}expect(initializeGenerator(path,'model=112&tab=text')).toMatchObject({model:'lanta-2-1',parameters:{},issues:expect.arrayContaining(['unsupported-mode'])});});
+
+it('通用英中入口默认进入真实受能力控制的文生图片/视频模型',()=>{
+ expect(initializeGenerator('/ai-image-generator','')).toMatchObject({model:'gpt-image-2',mode:'text'});
+ expect(initializeGenerator('/ai-video-generator','')).toMatchObject({model:'grok-imagine',mode:'text'});
+});

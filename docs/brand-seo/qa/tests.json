@@ -1,0 +1,5 @@
+{
+  "command": "vitest run",
+  "exitCode": 0,
+  "output": "\n RUN  v4.1.7 /Users/jiangliulei/orca/workspaces/ai-makeup/pictowink-brand-seo-01\n\n\n Test Files  160 passed | 3 skipped (163)\n      Tests  1153 passed | 57 skipped (1210)\n   Start at  11:19:43\n   Duration  33.29s (transform 11.33s, setup 9.35s, import 38.40s, tests 96.18s, environment 49.46s)\n\n"
+}

@@ -1,3 +1,4 @@
+import {MEDIA_VIDEO_SECONDS} from '../media-video-contract';
 import type {MediaProvider,ProviderOutcome} from '../media-provider';
 import type {TaskRecord} from '../media-contracts';
 import {assertMediaUrl} from '../media-security';
@@ -9,7 +10,7 @@ const unknown:ProviderOutcome={kind:'unknown'};
 type Config={key:string;accountRef:string;inputHosts:readonly string[];resultHosts:readonly string[];http?:ImageHttp;allowSubmit?:boolean};
 function validTask(t:TaskRecord){
  const p=t.request?.parameters;
- return t.model===model&&t.request?.model===model&&t.media_type==='video'&&t.request.mediaType==='video'&&t.request.mode===t.mode&&['text_to_video','image_to_video'].includes(t.mode)&&p&&Object.keys(p).length===2&&p.durationSeconds===5&&p.resolution==='480p'&&Array.isArray(t.request.inputIds)&&t.request.inputIds.length===(t.mode==='image_to_video'?1:0)&&t.input_id===(t.request.inputIds[0]??null);
+ return t.model===model&&t.request?.model===model&&t.media_type==='video'&&t.request.mediaType==='video'&&t.request.mode===t.mode&&['text_to_video','image_to_video'].includes(t.mode)&&p&&Object.keys(p).length===2&&[MEDIA_VIDEO_SECONDS,5].includes(Number(p.durationSeconds))&&typeof p.durationSeconds==='number'&&p.resolution==='480p'&&Array.isArray(t.request.inputIds)&&t.request.inputIds.length===(t.mode==='image_to_video'?1:0)&&t.input_id===(t.request.inputIds[0]??null);
 }
 export function createRouterVideoProvider(config:Config):MediaProvider{
  const http=config.http??createPinnedVideoHttp();
@@ -36,10 +37,10 @@ export function createRouterVideoProvider(config:Config):MediaProvider{
   }catch{return unknown}
  };
  return {modes:['text_to_video','image_to_video'],async submit(task,inputUrl){
-  if(config.allowSubmit===false||!validTask(task)||!task.submission||typeof task.submission.prompt!=='string'||!task.submission.prompt.trim()||task.submission.prompt.length>3800||task.submission.prompt!==task.request.prompt)return unknown;
+  if(config.allowSubmit===false||!validTask(task)||task.request.parameters.durationSeconds!==MEDIA_VIDEO_SECONDS||!task.submission||typeof task.submission.prompt!=='string'||!task.submission.prompt.trim()||task.submission.prompt.length>3800||task.submission.prompt!==task.request.prompt)return unknown;
   try{
    if(task.mode==='image_to_video'){if(!inputUrl||!task.input_id)return unknown;assertMediaUrl(inputUrl,config.inputHosts)}else if(inputUrl!==null)return unknown;
-   const body={model,prompt:task.submission.prompt,duration:5,resolution:'480p',...(task.mode==='image_to_video'?{image:inputUrl}:{})};
+   const body={model,prompt:task.submission.prompt,duration:MEDIA_VIDEO_SECONDS,resolution:'480p',...(task.mode==='image_to_video'?{image:inputUrl}:{})};
    return call('POST',base,task,JSON.stringify(body));
   }catch{return unknown}
  },async query(id,task){

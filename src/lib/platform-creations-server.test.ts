@@ -3,10 +3,10 @@ import {it,expect,vi} from 'vitest';
 const fixture=vi.hoisted(()=>{
  const task={id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',model:'gpt-image-2',mode:'text_to_image',credit_state:'reserved',status:'reserved',input_id:null};
  const submit=vi.fn(async()=>({kind:'unknown'}));
- const runtime={catalog:{enabled:true,consentVersion:'media-v1',tariffs:{text_to_image:{credits:2}},adapterModes:['text_to_image']},signer:{},inputs:{},store:{ready:async()=>true,recovery:async()=>task,claim:async()=>({task,submit:true}),transition:vi.fn(async()=>null)},providers:{get:()=>({modes:['text_to_image'],submit})},storage:{sign:vi.fn(async()=>({url:'https://results.example.com/fresh',mimeType:'image/png',expiresAt:'synthetic'}))}};
+ const runtime={catalog:{enabled:true,consentVersion:'media-v1',tariffs:{text_to_image:{credits:2}},adapterModes:['text_to_image']},signer:{},inputs:{},store:{release:async()=>null,ready:async()=>true,recovery:async()=>task,claim:async()=>({task,submit:true}),transition:vi.fn(async()=>null)},providers:{get:()=>({modes:['text_to_image'],submit})},storage:{sign:vi.fn(async()=>({url:'https://results.example.com/fresh',mimeType:'image/png',expiresAt:'synthetic'}))}};
  return {runtime,submit,source:vi.fn((..._args:unknown[])=>({}))};
 });
-vi.mock('./media-runtime',()=>({getMediaRuntime:()=>fixture.runtime}));
+vi.mock('./media-runtime',()=>({getMediaRuntime:()=>fixture.runtime,readMediaRuntimeConfig:()=>({executionBackend:'inngest'})}));
 vi.mock('./supabase/server',()=>({getCurrentUser:async()=>({id:'synthetic'})}));
 vi.mock('./platform-account-http',async importOriginal=>({...await importOriginal<typeof import('./platform-account-http')>(),accountConfigured:()=>true}));
 vi.mock('./media-creations-source',()=>({createUnifiedCreationSource:fixture.source}));

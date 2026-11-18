@@ -2716,7 +2716,7 @@ input[type="range"] {
 .platform-header-workspace { background: #080a0c; }
 .platform-header-brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .platform-brand { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; height: 32px; }
-.platform-brand strong { font-size: 24px; line-height: 32px; font-weight: 700; background: linear-gradient(90deg,#60a5fa,#a855f7); background-clip: text; -webkit-text-fill-color: transparent; }
+.platform-brand strong { font-size: 24px; line-height: 32px; font-weight: 700; color: #6d4aff; letter-spacing: -0.8px; }
 .platform-brand-mark { display: grid; place-items: center; width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; color: #fff; font-size: 18px; font-family: Georgia,serif; font-style: italic; background: radial-gradient(at 28% 20%,#f5d0fe,#a855f7 45%,#4620df 80%); }
 .platform-top-nav { display: flex; align-items: center; gap: 4px; position: absolute; left: 50%; transform: translateX(-50%); }
 .platform-top-nav > :is(a,button) { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 8px 16px; border: 0; border-radius: 6px; background: #080713; color: #fff; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; }
@@ -5200,3 +5200,8 @@ input[type="range"] {
 
 .platform-dreamface .platform-dreamface-related-grid .platform-dreamface-related-arrow{color:rgba(226,232,240,.7)}
 .platform-dreamface .platform-dreamface-history h2{letter-spacing:normal}
+
+/* 品牌图形保持单色轮廓，小尺寸与减少动态模式均清晰。 */
+svg.platform-brand-mark { background: none; border-radius: 0; display: block; }
+.platform-home-brand-line { display: inline-block; margin-bottom: 18px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.platform-brand-tagline { margin: 8px 0 0; font-size: 14px; line-height: 1.6; opacity: 0.8; }
