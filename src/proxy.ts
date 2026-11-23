@@ -22,6 +22,8 @@ export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-page-locale", pathname === "/zh/ai-makeup" || pathname === "/zh-CN" || pathname.startsWith("/zh-CN/") ? "zh-CN" : "en");
+  // 固定服务路由自行校验专用凭据，避免用户cookie刷新引入外部认证请求。
+  if (pathname === "/api/internal/media/step") return NextResponse.next({ request: { headers: requestHeaders } });
   const { response, user } = await updateSession(request, requestHeaders);
 
   if (!user && isProtected(pathname, PROTECTED_PAGE_PREFIXES)) {

@@ -1,0 +1,448 @@
+{
+  "environment": "本地Next生产构建，数据库为本机不可用占位地址，未验生产或付费生成",
+  "pages": [
+    {
+      "path": "/",
+      "status": 200,
+      "resolvedPath": "/",
+      "title": "PictoWink | AI Image & Video Creation",
+      "h1": [
+        "Your ideas.A wink away."
+      ],
+      "description": "Explore AI image and video tools on PictoWink. Browse examples, plan a prompt, and preview local files. Generation is not open yet.",
+      "robots": null,
+      "canonical": [
+        "https://ai-makeup-rosy.vercel.app"
+      ],
+      "alternates": [
+        {
+          "rel": "alternate",
+          "hreflang": "en",
+          "href": "https://ai-makeup-rosy.vercel.app"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "zh-CN",
+          "href": "https://ai-makeup-rosy.vercel.app/zh-CN"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "x-default",
+          "href": "https://ai-makeup-rosy.vercel.app"
+        }
+      ],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/zh-CN",
+      "status": 200,
+      "resolvedPath": "/zh-CN",
+      "title": "AI 图片与视频创作 | PictoWink",
+      "h1": [
+        "你的灵感。眨眼成画。"
+      ],
+      "description": "在 PictoWink 浏览 AI 图片和视频工具，了解提示词、参考图与镜头设置。生成尚未开放；你可以先浏览示例和预览本地文件。",
+      "robots": null,
+      "canonical": [
+        "https://ai-makeup-rosy.vercel.app/zh-CN"
+      ],
+      "alternates": [
+        {
+          "rel": "alternate",
+          "hreflang": "en",
+          "href": "https://ai-makeup-rosy.vercel.app"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "zh-CN",
+          "href": "https://ai-makeup-rosy.vercel.app/zh-CN"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "x-default",
+          "href": "https://ai-makeup-rosy.vercel.app"
+        }
+      ],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/ai-image-generator",
+      "status": 200,
+      "resolvedPath": "/ai-image-generator",
+      "title": "AI Image Generator: Text & Reference Images | PictoWink",
+      "h1": [
+        "Online AI Image Generator",
+        "Online AI Image Generator"
+      ],
+      "description": "Plan an image from a text prompt or reference photo. Explore settings and preview local files on PictoWink. Generation is not open yet.",
+      "robots": null,
+      "canonical": [
+        "https://ai-makeup-rosy.vercel.app/ai-image-generator"
+      ],
+      "alternates": [
+        {
+          "rel": "alternate",
+          "hreflang": "en",
+          "href": "https://ai-makeup-rosy.vercel.app/ai-image-generator"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "zh-CN",
+          "href": "https://ai-makeup-rosy.vercel.app/zh-CN/ai-image-generator"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "x-default",
+          "href": "https://ai-makeup-rosy.vercel.app/ai-image-generator"
+        }
+      ],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/zh-CN/ai-image-generator",
+      "status": 200,
+      "resolvedPath": "/zh-CN/ai-image-generator",
+      "title": "AI 图片生成器：文字与参考图 | PictoWink",
+      "h1": [
+        "在线 AI 图片生成器",
+        "在线 AI 图片生成器"
+      ],
+      "description": "从提示词或参考照片开始，了解图片设置并预览本地文件。PictoWink 图片生成尚未开放。",
+      "robots": null,
+      "canonical": [
+        "https://ai-makeup-rosy.vercel.app/zh-CN/ai-image-generator"
+      ],
+      "alternates": [
+        {
+          "rel": "alternate",
+          "hreflang": "en",
+          "href": "https://ai-makeup-rosy.vercel.app/ai-image-generator"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "zh-CN",
+          "href": "https://ai-makeup-rosy.vercel.app/zh-CN/ai-image-generator"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "x-default",
+          "href": "https://ai-makeup-rosy.vercel.app/ai-image-generator"
+        }
+      ],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/ai-video-generator",
+      "status": 200,
+      "resolvedPath": "/ai-video-generator",
+      "title": "AI Video Generator: Text & Image to Video | PictoWink",
+      "h1": [
+        "AI Video Generator: Explore Videos from Text & Images"
+      ],
+      "description": "Explore text-to-video and photo-to-video settings. Plan subject movement and camera motion with PictoWink. Generation is not open yet.",
+      "robots": null,
+      "canonical": [
+        "https://ai-makeup-rosy.vercel.app/ai-video-generator"
+      ],
+      "alternates": [
+        {
+          "rel": "alternate",
+          "hreflang": "en",
+          "href": "https://ai-makeup-rosy.vercel.app/ai-video-generator"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "zh-CN",
+          "href": "https://ai-makeup-rosy.vercel.app/zh-CN/ai-video-generator"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "x-default",
+          "href": "https://ai-makeup-rosy.vercel.app/ai-video-generator"
+        }
+      ],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/zh-CN/ai-video-generator",
+      "status": 200,
+      "resolvedPath": "/zh-CN/ai-video-generator",
+      "title": "AI 视频生成器：文生视频与图生视频 | PictoWink",
+      "h1": [
+        "AI 视频生成器：从文字与图片探索视频创意"
+      ],
+      "description": "了解文生视频和照片转视频的设置，规划主体动作与镜头运动。PictoWink 视频生成尚未开放。",
+      "robots": null,
+      "canonical": [
+        "https://ai-makeup-rosy.vercel.app/zh-CN/ai-video-generator"
+      ],
+      "alternates": [
+        {
+          "rel": "alternate",
+          "hreflang": "en",
+          "href": "https://ai-makeup-rosy.vercel.app/ai-video-generator"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "zh-CN",
+          "href": "https://ai-makeup-rosy.vercel.app/zh-CN/ai-video-generator"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "x-default",
+          "href": "https://ai-makeup-rosy.vercel.app/ai-video-generator"
+        }
+      ],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/tools/image-to-image-ai",
+      "status": 200,
+      "resolvedPath": "/tools/image-to-image-ai",
+      "title": "Image to Image AI: Reference Photos & Prompts | PictoWink",
+      "h1": [
+        "Free Online Image To Image AI Generator"
+      ],
+      "description": "Choose a reference photo and describe what you want to change. Explore image-to-image settings on PictoWink. Generation is not open yet.",
+      "robots": null,
+      "canonical": [
+        "https://ai-makeup-rosy.vercel.app/tools/image-to-image-ai"
+      ],
+      "alternates": [
+        {
+          "rel": "alternate",
+          "hreflang": "en",
+          "href": "https://ai-makeup-rosy.vercel.app/tools/image-to-image-ai"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "zh-CN",
+          "href": "https://ai-makeup-rosy.vercel.app/zh-CN/tools/image-to-image-ai"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "x-default",
+          "href": "https://ai-makeup-rosy.vercel.app/tools/image-to-image-ai"
+        }
+      ],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/zh-CN/tools/image-to-image-ai",
+      "status": 200,
+      "resolvedPath": "/zh-CN/tools/image-to-image-ai",
+      "title": "AI 图生图：参考照片与提示词 | PictoWink",
+      "h1": [
+        "免费在线 AI 图生图生成器"
+      ],
+      "description": "选择参考照片，描述需要保留或改变的部分，了解 PictoWink 图生图设置。生成尚未开放。",
+      "robots": null,
+      "canonical": [
+        "https://ai-makeup-rosy.vercel.app/zh-CN/tools/image-to-image-ai"
+      ],
+      "alternates": [
+        {
+          "rel": "alternate",
+          "hreflang": "en",
+          "href": "https://ai-makeup-rosy.vercel.app/tools/image-to-image-ai"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "zh-CN",
+          "href": "https://ai-makeup-rosy.vercel.app/zh-CN/tools/image-to-image-ai"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "x-default",
+          "href": "https://ai-makeup-rosy.vercel.app/tools/image-to-image-ai"
+        }
+      ],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/home",
+      "status": 200,
+      "resolvedPath": "/home",
+      "title": "Creative workspace | PictoWink",
+      "h1": [
+        "PictoWink creative workspace"
+      ],
+      "description": "Explore AI image and video tools on PictoWink. Browse examples, plan a prompt, and preview local files. Generation is not open yet.",
+      "robots": "noindex, follow",
+      "canonical": [
+        "https://ai-makeup-rosy.vercel.app/home"
+      ],
+      "alternates": [
+        {
+          "rel": "alternate",
+          "hreflang": "en",
+          "href": "https://ai-makeup-rosy.vercel.app/home"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "zh-CN",
+          "href": "https://ai-makeup-rosy.vercel.app/zh-CN/home"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "x-default",
+          "href": "https://ai-makeup-rosy.vercel.app/home"
+        }
+      ],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/zh-CN/home",
+      "status": 200,
+      "resolvedPath": "/zh-CN/home",
+      "title": "创作工作台 | PictoWink",
+      "h1": [
+        "PictoWink 创作工作台"
+      ],
+      "description": "在 PictoWink 浏览 AI 图片和视频工具，了解提示词、参考图与镜头设置。生成尚未开放；你可以先浏览示例和预览本地文件。",
+      "robots": "noindex, follow",
+      "canonical": [
+        "https://ai-makeup-rosy.vercel.app/zh-CN/home"
+      ],
+      "alternates": [
+        {
+          "rel": "alternate",
+          "hreflang": "en",
+          "href": "https://ai-makeup-rosy.vercel.app/home"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "zh-CN",
+          "href": "https://ai-makeup-rosy.vercel.app/zh-CN/home"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "x-default",
+          "href": "https://ai-makeup-rosy.vercel.app/home"
+        }
+      ],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/tools/ai-image-to-video",
+      "status": 200,
+      "resolvedPath": "/tools/ai-image-to-video",
+      "title": "Image to Video · Currently unavailable | PictoWink",
+      "h1": [
+        "Image to Video",
+        "Image to Video"
+      ],
+      "description": "Explore AI image and video tools, compare settings, and plan your next visual. Generation availability is shown in each tool.",
+      "robots": "noindex, follow",
+      "canonical": [],
+      "alternates": [],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image?1675defde9bf60e7",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "resolvedPath": "/login",
+      "title": "PictoWink | AI Image & Video Creation",
+      "h1": [
+        "Log in to PictoWink"
+      ],
+      "description": "Explore AI image and video tools, compare settings, and plan your next visual. Generation availability is shown in each tool.",
+      "robots": "noindex, follow",
+      "canonical": [],
+      "alternates": [],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image?1675defde9bf60e7",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/dashboard",
+      "status": 200,
+      "resolvedPath": "/login?next=%2Fdashboard",
+      "title": "PictoWink | AI Image & Video Creation",
+      "h1": [
+        "Log in to PictoWink"
+      ],
+      "description": "Explore AI image and video tools, compare settings, and plan your next visual. Generation availability is shown in each tool.",
+      "robots": "noindex, follow",
+      "canonical": [],
+      "alternates": [],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image?1675defde9bf60e7",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    },
+    {
+      "path": "/my-creations",
+      "status": 200,
+      "resolvedPath": "/my-creations",
+      "title": "My Creations | PictoWink",
+      "h1": [
+        "My Creations"
+      ],
+      "description": "View your private makeup creations, task status and saved results.",
+      "robots": "noindex, follow",
+      "canonical": [
+        "https://ai-makeup-rosy.vercel.app/my-creations"
+      ],
+      "alternates": [
+        {
+          "rel": "alternate",
+          "hreflang": "en",
+          "href": "https://ai-makeup-rosy.vercel.app/my-creations"
+        },
+        {
+          "rel": "alternate",
+          "hreflang": "zh-CN",
+          "href": "https://ai-makeup-rosy.vercel.app/zh-CN/my-creations"
+        }
+      ],
+      "ogImage": "https://ai-makeup-rosy.vercel.app/opengraph-image?1675defde9bf60e7",
+      "oldBrand": false,
+      "proposedDomainInCanonical": false
+    }
+  ],
+  "sitemapValid": true,
+  "limitations": [
+    "未接Supabase配置，/billing/return本地500；原noindex metadata保持，未进行支付或身份回跳验收。",
+    "流式原始HTML含Suspense后备节点，H1唯一性按完成水合后的浏览器DOM另核。"
+  ],
+  "robots": "User-Agent: *\nAllow: /\nDisallow: /api/\nDisallow: /auth/\n\nSitemap: https://ai-makeup-rosy.vercel.app/sitemap.xml\n",
+  "assets": [
+    {
+      "url": "/icon",
+      "status": 200,
+      "bytes": 655
+    },
+    {
+      "url": "/apple-icon",
+      "status": 200,
+      "bytes": 4430
+    },
+    {
+      "url": "/opengraph-image",
+      "status": 200,
+      "bytes": 43315
+    }
+  ]
+}

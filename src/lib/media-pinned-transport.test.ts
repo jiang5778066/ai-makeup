@@ -17,10 +17,10 @@ const fixture=(chunks:Buffer[]=[Buffer.from('ok')],headers:Record<string,string>
  const calls:Record<string,unknown>[]=[];
  const wire=vi.fn((opts:Record<string,unknown>,done:(r:Readable)=>void)=>{
   calls.push(opts);
-  return Object.assign(new EventEmitter(),{destroy:vi.fn(),end:()=>{
+  const req=Object.assign(new EventEmitter(),{destroy:vi.fn(()=>queueMicrotask(()=>req.emit('close'))),end:()=>{
    const r=Object.assign(Readable.from(chunks),{statusCode:status,headers:{'content-type':'image/png',...headers}});
    queueMicrotask(()=>done(r));
-  }});
+  }});return req;
  });
  return {wire:wire as unknown as typeof httpsRequest,calls};
 };
@@ -156,6 +156,16 @@ it('视频HTTP固定POST/原ID带唯一model查询；拒额外query且仍用同�
 });
 it('视频wire实际放行超过16MiB且64MiB仍封顶，图片默认16MiB不变',async()=>{
  const chunks=[Buffer.alloc(17*1024*1024)],f=fixture(chunks,{'content-type':'video/mp4'}),t=createPinnedMediaTransport({hosts:[host],resolver:resolverFor([{address:'8.8.8.8',family:4}]),request:f.wire});const [pin]=await t.resolve(host);
- const result=await t.request(url,pin,64*1024*1024);let size=0;for await(const b of result.body)size+=b.length;expect(size).toBe(17*1024*1024);await expect(t.request(url,pin)).rejects.toThrow();await expect(t.request(url,pin,64*1024*1024+1)).rejects.toThrow();
- const tooLarge=fixture([],{ 'content-length':String(64*1024*1024+1)}),limited=createPinnedMediaTransport({hosts:[host],resolver:resolverFor([{address:'8.8.8.8',family:4}]),request:tooLarge.wire});const [p]=await limited.resolve(host);await expect(limited.request(url,p,64*1024*1024)).rejects.toThrow();
+ const result=await t.request(url,pin,45*1024*1024);let size=0;for await(const b of result.body)size+=b.length;expect(size).toBe(17*1024*1024);await expect(t.request(url,pin)).rejects.toThrow();await expect(t.request(url,pin,45*1024*1024+1)).rejects.toThrow();
+ const tooLarge=fixture([],{ 'content-length':String(45*1024*1024+1)}),limited=createPinnedMediaTransport({hosts:[host],resolver:resolverFor([{address:'8.8.8.8',family:4}]),request:tooLarge.wire});const [p]=await limited.resolve(host);await expect(limited.request(url,p,45*1024*1024)).rejects.toThrow();
+});
+
+import {withMediaExecution} from './media-execution';
+it('step abort取消独占DNS并等原查询settled；网络请求销毁且等待close',async()=>{
+ const c=new AbortController(),d=controlled();const t=createPinnedMediaTransport({hosts:[host],resolver:d.factory});const pending=withMediaExecution(c.signal,()=>t.resolve(host));const rejected=expect(pending).rejects.toThrow('media_transport_rejected');c.abort();await rejected;expect(d.sessions[0].cancel).toHaveBeenCalled();expect(d.sessions[0].active()).toBe(0);
+ const a=new AbortController();let destroyed=false,closed=false;const req=Object.assign(new EventEmitter(),{end:()=>{},destroy:()=>{destroyed=true;queueMicrotask(()=>{closed=true;req.emit('close')})}});const wire=vi.fn(()=>req) as unknown as typeof httpsRequest;
+ const transport=createPinnedMediaTransport({hosts:[host],resolver:resolverFor([{address:'8.8.8.8',family:4}]),request:wire});const [pin]=await transport.resolve(host);const send=withMediaExecution(a.signal,()=>transport.request(url,pin));const failed=expect(send).rejects.toThrow();a.abort();await failed;expect(destroyed).toBe(true);expect(closed).toBe(true);
+});
+it('网络阶段自身超时也等待请求close再返回，不留下在途socket',async()=>{
+ vi.useFakeTimers();let closed=false;const req=Object.assign(new EventEmitter(),{end:()=>{},destroy:()=>{setTimeout(()=>{closed=true;req.emit('close')},1)}});const t=createPinnedMediaTransport({hosts:[host],resolver:resolverFor([{address:'8.8.8.8',family:4}]),request:(()=>req) as unknown as typeof httpsRequest});const [pin]=await t.resolve(host);let settled=false;const promise=t.request(url,pin).catch(()=>{settled=true});await vi.advanceTimersByTimeAsync(5000);expect(settled).toBe(false);await vi.advanceTimersByTimeAsync(1);await promise;expect(closed).toBe(true);
 });

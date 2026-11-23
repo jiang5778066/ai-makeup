@@ -19,5 +19,5 @@ export const runtimeVideoDecoder = (config: VideoDecoderConfig): MediaDecoder =>
   ? createVideoMediaDecoder(config)
   : async (_bytes, mime) => {
     if (mime !== 'video/mp4') throw new Error('media_decode_rejected');
-    return { mime, width: 480, height: 640, frames: 125, durationMs: 5000, codec: 'h264', container: 'mp4', streams: 1 };
+    return { mime, width: 480, height: 640, frames: 25, durationMs: 1000, codec: 'h264', container: 'mp4', streams: 1 };
   };

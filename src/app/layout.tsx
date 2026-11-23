@@ -3,16 +3,17 @@ import { headers } from "next/headers";
 import "./globals.css";
 import { PlatformNavigationProvider } from "@/components/platform-navigation-link";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+import { siteUrl } from "@/lib/brand";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Makeup AI | Live Virtual Try-On and AI Makeup",
-    template: "%s | Makeup AI"
+    default: "PictoWink | AI Image & Video Creation",
+    template: "%s | PictoWink"
   },
-  description: "Try full-face AI makeup and nine live virtual makeup effects on your photo or camera. Three free HD results, then $8 for 100.",
-  applicationName: "Makeup AI"
+  description: "Explore AI image and video tools, compare settings, and plan your next visual. Generation availability is shown in each tool.",
+  verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
+  applicationName: "PictoWink"
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

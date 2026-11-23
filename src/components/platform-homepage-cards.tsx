@@ -17,7 +17,9 @@ export function HomepagePreview({ src, locale, trigger = "visible", enabled = tr
 
 export function HomepageModelCard({ card, locale, compact = false }: { card: HomepageCard; locale: Locale; compact?: boolean }) {
   const imageModel = ["image-generator", "gpt-image", "nano-banana"].includes(card.id);
-  const entry = homepageEntry(card.id, card.id === "image-generator" ? { model: "seedream-5-0-pro", hash: "generator" } : {});
+  const seedreamPreview = card.id === "image-generator";
+  const availableModes = ["gpt-image", "grok-imagine", "video-generator"].includes(card.id);
+  const entry = homepageEntry(card.id, seedreamPreview ? { model: "seedream-5-0-pro", hash: "generator" } : {});
   return <div data-preview-card className={`platform-home-model ${compact ? "platform-home-model-compact" : ""}`}>
     <PlatformLink entry={entry} locale={locale} className="platform-home-card-link"><span className="platform-home-sr-only">{card.label[locale]}</span></PlatformLink>
     <HomepagePreview src={card.image} locale={locale} trigger="visible" />
@@ -27,9 +29,9 @@ export function HomepageModelCard({ card, locale, compact = false }: { card: Hom
       {!compact && <p>{imageModel ? <ImageIcon size={14} /> : <Clapperboard size={14} />}{locale === "zh-CN" ? (imageModel ? "图片模型" : "视频模型") : (imageModel ? "Image model" : "Video model")}</p>}
       <div>{card.icon && !compact && <HomepageCardImage src={card.icon} />}<h3>{card.label[locale]}</h3></div>
       {compact && <p className="platform-home-model-description">{card.description[locale] || (locale === "zh-CN" ? "探索电影感画面与动态创作的公开示例。" : "Explore public examples of cinematic visuals and motion.")}</p>}
-      {!compact && <small className="platform-home-unavailable">{locale === "zh-CN" ? "展示入口 · 尚不可用" : "Showcase · Unavailable"}</small>}
+      {!compact && <small className="platform-home-unavailable">{availableModes ? (locale === "zh-CN" ? "查看可用模式" : "View available modes") : (locale === "zh-CN" ? "展示入口 · 尚不可用" : "Showcase · Unavailable")}</small>}
     </div>
-    {compact && <small className="platform-home-unavailable">{locale === "zh-CN" ? "展示入口 · 尚不可用" : "Showcase · Unavailable"}</small>}
+    {compact && <small className="platform-home-unavailable">{availableModes ? (locale === "zh-CN" ? "查看可用模式" : "View available modes") : (locale === "zh-CN" ? "展示入口 · 尚不可用" : "Showcase · Unavailable")}</small>}
   </div>;
 }
 

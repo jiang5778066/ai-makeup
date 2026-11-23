@@ -4,12 +4,12 @@ import type {TaskRecord} from '../media-contracts';
 import type {ImageHttpRequest} from '../media-pinned-transport';
 import {createRouterVideoProvider} from './media-router-video';
 const input='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-const task=(mode='text_to_video')=>({model:'grok-imagine-video-1.5',media_type:'video',mode,input_id:mode==='image_to_video'?input:null,provider_account_ref:'offline-account',request:{model:'grok-imagine-video-1.5',mediaType:'video',mode,prompt:'离线合成',parameters:{durationSeconds:5,resolution:'480p'},inputIds:mode==='image_to_video'?[input]:[]},submission:{prompt:'离线合成'}} as unknown as TaskRecord);
+const task=(mode='text_to_video')=>({model:'grok-imagine-video-1.5',media_type:'video',mode,input_id:mode==='image_to_video'?input:null,provider_account_ref:'offline-account',request:{model:'grok-imagine-video-1.5',mediaType:'video',mode,prompt:'离线合成',parameters:{durationSeconds:1,resolution:'480p'},inputIds:mode==='image_to_video'?[input]:[]},submission:{prompt:'离线合成'}} as unknown as TaskRecord);
 const setup=(data:unknown,status=200)=>{const http=vi.fn(async(_r:ImageHttpRequest)=>({status,body:Buffer.from(typeof data==='string'?data:JSON.stringify(data))}));return {http,provider:createRouterVideoProvider({key:'offline-key',accountRef:'offline-account',inputHosts:['inputs.example.com'],resultHosts:['results.example.com'],http})}};
 it('视频固定tuple映射且只一次POST，文生无image、图生单sealed URL',async()=>{
  const {provider,http}=setup({task_id:'原始 /?ID',status:'submitted'},202);
  expect(await provider.submit(task(),null)).toEqual({kind:'accepted',taskId:'原始 /?ID'});
- expect(JSON.parse(http.mock.calls[0][0].body!)).toEqual({model:'grok-imagine-video-1.5',prompt:'离线合成',duration:5,resolution:'480p'});
+ expect(JSON.parse(http.mock.calls[0][0].body!)).toEqual({model:'grok-imagine-video-1.5',prompt:'离线合成',duration:1,resolution:'480p'});
  expect(http.mock.calls[0][0].url).toBe('https://api.router.team/api/public/creative-center/videos');
  await provider.submit(task('image_to_video'),'https://inputs.example.com/sealed?synthetic=1');
  expect(JSON.parse(http.mock.calls[1][0].body!).image).toBe('https://inputs.example.com/sealed?synthetic=1');
@@ -29,7 +29,7 @@ it('completed仅output_url或url，cover与图片结果不能冒充视频；优�
 });
 it('额外参数、错误输入、账户或封存prompt不一致拒绝且零外呼',async()=>{
  const {provider,http}=setup({task_id:'a',status:'submitted'});
- for(const parameters of [{durationSeconds:6,resolution:'480p'},{durationSeconds:5,resolution:'480p',audio:1},{durationSeconds:5,resolution:'480p',ratio:'1:1'}] as Record<string,string|number>[])expect(await provider.submit({...task(),request:{...task().request,parameters}},null)).toEqual({kind:'unknown'});
+ for(const parameters of [{durationSeconds:6,resolution:'480p'},{durationSeconds:1,resolution:'480p',audio:1},{durationSeconds:1,resolution:'480p',ratio:'1:1'}] as Record<string,string|number>[])expect(await provider.submit({...task(),request:{...task().request,parameters}},null)).toEqual({kind:'unknown'});
  expect(await provider.submit(task('image_to_video'),null)).toEqual({kind:'unknown'});expect(await provider.submit(task(),'https://inputs.example.com/a')).toEqual({kind:'unknown'});expect(await provider.submit({...task(),provider_account_ref:'other'},null)).toEqual({kind:'unknown'});expect(http).not.toHaveBeenCalled();
 });
 
@@ -56,10 +56,16 @@ it('E3-001：缺model原ID失败走既有processor后仍reserved且不调用fail
  let row={...task(),id,provider_task_id:'original',status:'waiting',credit_state:'reserved'} as TaskRecord;
  const fail=vi.fn(async()=>{throw Error('不允许退款入口')});
  const transition=vi.fn(async(_task:TaskRecord,next:{status:TaskRecord['status'];error?:string})=>{row={...row,status:next.status,error_code:next.error??null};return row});
- const store={recovery:async()=>row,claim:async()=>({task:row,submit:false}),transition,fail} as unknown as MediaStore;
+ const store={release:async()=>null,recovery:async()=>row,claim:async()=>({task:row,submit:false}),transition,fail} as unknown as MediaStore;
  const {provider,http}=setup({task_id:'original',status:'failed'});
  const storage={store:vi.fn(async()=>{throw Error('不应存储')})} as unknown as MediaResultStorage;
  await createMediaProcessor(store,{get:()=>provider},storage)(id);
  expect(row.credit_state).toBe('reserved');expect(row.status).toBe('reconciling');expect(row.error_code).toBe('provider_unknown');
  expect(fail).not.toHaveBeenCalled();expect(storage.store).not.toHaveBeenCalled();expect(http.mock.calls.map(c=>c[0].method)).toEqual(['GET']);
+});
+
+it('旧5秒任务保留原参数查询，但不得按新1秒规格重新POST',async()=>{
+ const {provider,http}=setup({task_id:'legacy',status:'processing'});const old=task();old.request.parameters={durationSeconds:5,resolution:'480p'};old.provider_task_id='legacy';
+ expect(await provider.submit(old,null)).toEqual({kind:'unknown'});expect(http).not.toHaveBeenCalled();
+ expect(await provider.query('legacy',old)).toEqual({kind:'accepted',taskId:'legacy'});expect(http.mock.calls.map(c=>c[0].method)).toEqual(['GET']);expect(old.request.parameters.durationSeconds).toBe(5);
 });

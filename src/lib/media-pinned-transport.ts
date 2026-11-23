@@ -1,3 +1,5 @@
+import {MEDIA_VIDEO_MAX_BYTES} from './media-video-contract';
+import {mediaExecutionSignal,checkMediaExecution} from './media-execution';
 import {Resolver} from 'node:dns/promises';
 import {request as httpsRequest} from 'node:https';
 import {checkServerIdentity} from 'node:tls';
@@ -24,14 +26,17 @@ function createWire(options:Options){
  const pins=new WeakMap<Address,Readonly<{host:string;address:string;family:4|6}>>();
  let active=0;
  const resolve=async(host:string)=>{
+  checkMediaExecution();const signal=mediaExecutionSignal();
   if(!hosts.includes(host)||active>=limit||activeDns>=GLOBAL_DNS_LIMIT)throw fault();
   active++;activeDns++;
   let resolver:MediaDnsResolver|undefined,timer:ReturnType<typeof setTimeout>|undefined;
   let expired=false,cancelled=false;
+  const abort=()=>{expired=true;cancel()};
   const cancel=()=>{if(cancelled||!resolver)return;cancelled=true;try{resolver.cancel()}catch{/* 注入句柄失败也必须等待原查询settled，不能释放在途名额。 */}};
   try{
    resolver=(options.resolver??(()=>new Resolver({timeout:1000,tries:1})))();
    const start=(query:()=>Promise<string[]>)=>{try{return Promise.resolve(query())}catch(error){return Promise.reject(error)}};
+   signal?.addEventListener('abort',abort,{once:true});
    const queries=[start(()=>resolver!.resolve4(host)),start(()=>resolver!.resolve6(host))];
    timer=setTimeout(()=>{expired=true;cancel()},timeout);
    // 不用外层race冒充取消：cancel后仍等待两个原生查询的完成通知。
@@ -50,9 +55,10 @@ function createWire(options:Options){
     pins.set(pin,Object.freeze({host,...address}));
     return pin;
    });
-  }catch{throw fault()}finally{clearTimeout(timer);cancel();active--;activeDns--}
+  }catch{throw fault()}finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);cancel();active--;activeDns--}
  };
  const send=async(url:URL,pin:Address,max:number,method:'GET'|'POST'='GET',headers:Record<string,string>={},body?:string)=>{
+  checkMediaExecution();const signal=mediaExecutionSignal();
   assertMediaUrl(url.href,hosts);
   const evidence=pins.get(pin);
   if(!evidence||evidence.host!==url.hostname||pin.address!==evidence.address||pin.family!==evidence.family||pin.family!==4||!publicMediaAddress(pin.address))throw fault();
@@ -60,9 +66,11 @@ function createWire(options:Options){
    let finished=false;let response:import('node:http').IncomingMessage|undefined;
    let req:import('node:http').ClientRequest|undefined;
    const timers:ReturnType<typeof setTimeout>[]=[];
-   const clear=()=>timers.forEach(clearTimeout);
-   const fail=()=>{if(finished)return;finished=true;clear();response?.destroy();req?.destroy();reject(fault())};
-   const timer=(ms:number)=>{const id=setTimeout(fail,ms);timers.push(id);return id};
+   const abort=()=>fail();
+   const clear=()=>{timers.forEach(clearTimeout);signal?.removeEventListener('abort',abort)};
+   const fail=()=>{if(finished)return;finished=true;clear();if(req){req.once('close',()=>reject(fault()));response?.destroy();req.destroy()}else{response?.destroy();reject(fault())}};
+   const timer=(ms:number)=>{const id=setTimeout(()=>fail(),ms);timers.push(id);return id};
+   signal?.addEventListener('abort',abort,{once:true});
    timer(30000);const connection=timer(5000),firstByte=timer(10000);
    try{
     req=(options.request??httpsRequest)({protocol:'https:',hostname:pin.address,family:4,port:443,servername:url.hostname,rejectUnauthorized:true,checkServerIdentity:(_host,cert)=>checkServerIdentity(url.hostname,cert),method,path:url.pathname+url.search,agent:false,maxHeaderSize:16384,headers:{Host:url.hostname,Accept:'*/*','Accept-Encoding':'identity',...headers}},r=>{
@@ -71,12 +79,12 @@ function createWire(options:Options){
      if((r.statusCode??0)>=300&&(r.statusCode??0)<400||encoding&&encoding!=='identity'||length&&(!/^\d+$/.test(length)||Number(length)>max)){fail();return}
      const chunks:Buffer[]=[];let size=0;
      r.on('data',(chunk:Buffer)=>{size+=chunk.length;if(size>max){fail();return}chunks.push(Buffer.from(chunk))});
-     r.on('error',fail);r.on('aborted',fail);
+     r.on('error',()=>fail());r.on('aborted',()=>fail());
      r.on('end',()=>{if(finished)return;if(length&&size!==Number(length)){fail();return}finished=true;clear();resolve({status:r.statusCode??0,contentType:String(r.headers['content-type']??''),bytes:Buffer.concat(chunks)})});
     });
     req.maxHeadersCount=64;
     req.on('socket',socket=>socket.once('secureConnect',()=>clearTimeout(connection)));
-    req.on('error',fail);req.end(body);
+    req.on('error',()=>fail());req.end(body);
    }catch{fail()}
   });
  };
@@ -84,7 +92,7 @@ function createWire(options:Options){
 }
 export function createPinnedMediaTransport(options:Options):PinnedTransport{
  const wire=createWire(options);
- return {resolve:wire.resolve,async request(url,pin,max=16*1024*1024){if(!Number.isSafeInteger(max)||max<1||max>64*1024*1024)throw fault();const r=await wire.send(url,pin,max);return {status:r.status,contentType:r.contentType,body:(async function*(){yield r.bytes})()}}};
+ return {resolve:wire.resolve,async request(url,pin,max=16*1024*1024){if(!Number.isSafeInteger(max)||max<1||max>MEDIA_VIDEO_MAX_BYTES)throw fault();const r=await wire.send(url,pin,max);return {status:r.status,contentType:r.contentType,body:(async function*(){yield r.bytes})()}}};
 }
 export function createPinnedImageHttp(options:Omit<Options,'hosts'>={}):ImageHttp{
  return createPinnedProviderHttp('images',options);

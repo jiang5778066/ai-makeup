@@ -1,23 +1,23 @@
 import type { Locale } from "./i18n";
 export const homepageFaqs: Record<Locale, { question: string; answer: string }[]> = {
-  "zh-CN": [
-    { question: "什么是 Makeup AI 创作平台？", answer: "这是图片、视频与美妆创作工具的展示入口。美妆和本地实时试妆已提供；通用图片、视频及模型入口尚未开放生成。展示媒体来自公开参照，并非本项目用户作品。" },
-    { question: "如何开始创作？", answer: "选择图片、视频或美妆入口。已开放的美妆工具支持上传自拍、选择风格并登录生成；其他入口会说明对应工具及当前不可用状态。" },
-    { question: "如何从图片创建 AI 视频？", answer: "图生视频入口已可浏览，但通用视频生成尚未接通。当前不会提交视频任务，也不会消耗额度。" },
-    { question: "如何写出更好的 AI 视频文本提示词？", answer: "可按镜头类型、主体、动作、场景、风格、镜头运动和节奏描述你的想法。首页公开示例用于展示创作方向，不代表本项目当前已支持相关能力。" },
-    { question: "Makeup AI 可以免费使用吗？", answer: "本地实时试妆免费。新账户获得 3 次免费高清或全脸美妆结果，之后可按现有价格购买额度；通用图片与视频尚未开放生成。" },
-    { question: "生成一个 AI 视频需要多长时间？", answer: "本项目尚未接通视频生成，因此没有可承诺的生成时间。请以工具页面公布的实际可用状态为准。" },
-    { question: "我可以商用展示的视频吗？", answer: "首页媒体是公开参照展示，不授予素材的商用许可。使用任何人物、图片、音频、品牌或角色前，请确认你拥有所需权利。" },
-    { question: "上传内容和生成结果如何处理？", answer: "实时试妆预览在设备本地运行。美妆高清及全脸生成仅在你确认后上传；登录草稿和原任务续查不会自动重新生成或扣费。详情见隐私政策。" }
-  ],
   en: [
-    { question: "What is the Makeup AI creative platform?", answer: "Explore image, video and makeup creation tools. Makeup and local live try-on are available; general image, video and model generation are not connected yet. Media shown here are public reference examples, not our users' creations." },
-    { question: "How do I start creating?", answer: "Choose an image, video or makeup tool. Available makeup tools let you upload a selfie, choose a style and sign in to generate. Other destinations show their identity and unavailable status." },
-    { question: "How can I create a video from an image?", answer: "The image-to-video destination is available to browse, but video generation is not connected. It does not submit tasks or spend credits." },
-    { question: "How do I write a better video prompt?", answer: "Describe framing, subject, action, setting, style, camera motion and pacing. Public examples illustrate creative ideas; they do not imply these capabilities are available here." },
-    { question: "Is Makeup AI free to use?", answer: "Local live try-on is free. New accounts receive 3 free HD or full-face makeup results, followed by the existing credit packs. General image and video generation are not available yet." },
-    { question: "How long does video generation take?", answer: "Video generation is not connected here, so there is no promised generation time. Check the tool's actual availability." },
-    { question: "Can I use the showcase videos commercially?", answer: "These are public reference examples and do not grant commercial rights. Ensure you have permission for any people, images, audio, brands and characters you use." },
-    { question: "How are uploads and results handled?", answer: "Live try-on previews run locally on your device. HD and full-face makeup upload only after confirmation. Restoring drafts and checking an existing task do not automatically generate again or spend credits. See the privacy policy." }
+    { question: "What can I do on PictoWink?", answer: "Browse image and video tools, read about their settings, and preview local files where supported. The generation panel shows which modes are available. The examples are reference media, not results made by PictoWink users." },
+    { question: "Where should I start?", answer: "Choose an image tool for a still picture or a video tool for a moving shot. Start with a short description of the subject and what you want to happen. Each tool shows its current availability." },
+    { question: "Can I turn a photo into a video?", answer: "You can explore image-to-video settings in the video generator. Availability is shown separately for text and image input. Previewing a file does not start a task." },
+    { question: "What should I put in a video prompt?", answer: "Say what is in the frame, what moves, and how the camera moves. For example: a person standing still while the camera slowly moves closer. This is a writing example, not a tested PictoWink result." },
+    { question: "Is PictoWink free to use?", answer: "You can browse the site and preview supported local files without buying credits. Checkout remains closed. Generation requires an available mode and confirmation of the quoted credits. Existing account credits do not mean every listed tool is available." },
+    { question: "How long does generation take?", answer: "Timing varies by request. You can check the original task or find it in My Creations after leaving the page." },
+    { question: "Can I use the examples commercially?", answer: "Viewing or downloading an example does not give you commercial rights. Check the rights for the original media, including any people, brands, music, or characters shown." },
+    { question: "Does selecting a file upload it?", answer: "A local preview does not submit a generation task. Check the tool's upload notice before confirming any operation. The privacy policy explains how uploads and account data are handled." }
+  ],
+  "zh-CN": [
+    { question: "PictoWink 可以做什么？", answer: "浏览图片与视频工具，了解参数，并在支持的页面预览本地文件。可用模式以生成面板为准。展示素材是参考资料，不是本站用户的生成作品。" },
+    { question: "从哪里开始？", answer: "想做静态画面就选图片工具，想表现动作就选视频工具。先用一句话描述主体和动作，再查看工具的实际开放状态。" },
+    { question: "可以把照片变成视频吗？", answer: "可以在视频生成器里了解图生视频设置。文生和图生模式分别显示开放状态；预览文件不会开始任务。" },
+    { question: "视频提示词怎么写？", answer: "写清画面里有什么、什么在动、镜头怎么动。例如：人物站在原地，镜头缓慢拉近。这是写作示例，不是经过本站生成验证的效果。" },
+    { question: "PictoWink 可以免费使用吗？", answer: "浏览网站和预览支持的本地文件不需要购买额度。购买尚未开放；生成需使用已开放模式，并确认报价积分。账户已有额度不代表所有工具都已可用。" },
+    { question: "生成需要多久？", answer: "耗时因请求而异。离开页面后可在我的作品查询原任务；请勿重复提交。" },
+    { question: "展示素材可以商用吗？", answer: "浏览或下载素材不等于获得商用许可。请核对原素材的权利，尤其是人物、品牌、音乐和角色。" },
+    { question: "选择文件会上传吗？", answer: "本地预览不会提交生成任务。确认操作前请查看工具的上传说明；上传内容和账户数据的处理方式见隐私政策。" }
   ]
 };

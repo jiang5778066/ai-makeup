@@ -1,0 +1,27 @@
+{
+  "status": "local_verified_not_deployed",
+  "baseCommit": "2ceb018583dd4df95bacca87ee7e57cdbbe60e8c",
+  "tests": {
+    "passed": 1153,
+    "skipped": 57,
+    "failed": 0
+  },
+  "typecheck": {
+    "command": "tsc --noEmit --incremental false",
+    "exitCode": 0
+  },
+  "lint": {
+    "exitCode": 0,
+    "errors": 0,
+    "existingWarnings": 1
+  },
+  "build": {
+    "exitCode": 0,
+    "nextVersion": "16.2.9",
+    "productionDatabaseUsed": false
+  },
+  "httpPages": 14,
+  "productionUpdated": false,
+  "domainConfigured": false,
+  "searchConsoleConnected": false
+}

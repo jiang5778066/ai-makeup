@@ -1,6 +1,9 @@
+import {MEDIA_VIDEO_MAX_BYTES,MEDIA_VIDEO_MIN_MS,MEDIA_VIDEO_MAX_MS,MEDIA_VIDEO_MAX_FRAMES} from './media-video-contract';
+import type {MediaUploadAuthorization} from './media-upload';
 import {MediaFault,type TaskRecord} from './media-contracts';
 import type {StoredResult} from './media-persistence';
 export interface MediaObjectStorage {
+ signUpload?(key:string,mime:string,owner:string):Promise<MediaUploadAuthorization>;
  read(key:string):Promise<AsyncIterable<Uint8Array>>;
  putImmutable(key:string,bytes:Buffer,mime:string):Promise<void>;
  signPut(key:string,mime:string,expiresSeconds:number):Promise<string>;
@@ -22,11 +25,12 @@ import {verifyDecoded,type MediaDecoder} from './media-security';
 export function createMediaResultStorage(objects:MediaObjectStorage,download:(url:string,max:number)=>Promise<{bytes:Buffer;mime:string}>,decode:MediaDecoder):MediaResultStorage{
  return {
  async store(task){
+  if(task.media_type==='video'&&task.request?.parameters.durationSeconds===5)throw new MediaFault('media_legacy_video_requires_review',409);
   if(!task.result_locator)throw new MediaFault('media_result_missing',409);
-  const result=await download(task.result_locator,task.media_type==='image'?16*1024*1024:64*1024*1024);
-  if(result.bytes.length>(task.media_type==='image'?16*1024*1024:64*1024*1024)||!(task.media_type==='image'?['image/png','image/jpeg','image/webp']:['video/mp4']).includes(result.mime))throw new MediaFault('media_result_mime');
+  const result=await download(task.result_locator,task.media_type==='image'?16*1024*1024:MEDIA_VIDEO_MAX_BYTES);
+  if(result.bytes.length>(task.media_type==='image'?16*1024*1024:MEDIA_VIDEO_MAX_BYTES)||!(task.media_type==='image'?['image/png','image/jpeg','image/webp']:['video/mp4']).includes(result.mime))throw new MediaFault('media_result_mime');
   const verified=await verifyDecoded(result.bytes,result.mime,decode);
-  if(task.media_type==='video'&&(verified.container!=='mp4'||verified.codec!=='h264'||verified.streams!==1||!Number.isFinite(verified.durationMs)||verified.durationMs!<4750||verified.durationMs!>5250||Math.min(verified.width,verified.height)!==480||Math.max(verified.width,verified.height)>864||verified.frames>315))throw new MediaFault('media_decode_rejected');
+  if(task.media_type==='video'&&(verified.container!=='mp4'||verified.codec!=='h264'||(!Number.isSafeInteger(verified.streams)||verified.streams!<1||verified.streams!>3)||!Number.isFinite(verified.durationMs)||verified.durationMs!<MEDIA_VIDEO_MIN_MS||verified.durationMs!>MEDIA_VIDEO_MAX_MS||Math.min(verified.width,verified.height)!==480||Math.max(verified.width,verified.height)>864||verified.frames>MEDIA_VIDEO_MAX_FRAMES))throw new MediaFault('media_decode_rejected');
   const sha256=createHash('sha256').update(result.bytes).digest('hex'),key=`media/results/${task.user_id}/${task.id}/${sha256}.${result.mime.split('/')[1]}`;
   await objects.putImmutable(key,result.bytes,result.mime);return {key,mime:result.mime,bytes:result.bytes.length,sha256};
  },

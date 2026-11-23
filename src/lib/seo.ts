@@ -3,7 +3,7 @@ import type { LandingPage } from "./content";
 import type { Locale } from "./i18n";
 import { alternateLanguagesForPath, localizePath } from "./i18n";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+import { brandShareImage, siteUrl } from "@/lib/brand";
 
 export function metadataForPage(page: LandingPage, locale: Locale, path: string): Metadata {
   const alternates = alternateLanguagesForPath(path);
@@ -24,12 +24,14 @@ export function metadataForPage(page: LandingPage, locale: Locale, path: string)
       title: page.seoTitle,
       description: page.seoDescription,
       url: `${siteUrl}${localizePath(path, locale)}`,
-      siteName: "AI Makeup Studio",
-      locale,
+      siteName: "PictoWink",
+      images: [brandShareImage],
+      locale: locale === "zh-CN" ? "zh_CN" : "en_US",
       type: "website"
     },
     twitter: {
       card: "summary_large_image",
+      images: [brandShareImage.url],
       title: page.seoTitle,
       description: page.seoDescription
     }
@@ -46,12 +48,7 @@ export function pageSchemas(page: LandingPage, locale: Locale, path: string) {
       applicationCategory: "MultimediaApplication",
       operatingSystem: "Web",
       browserRequirements: "Requires JavaScript and a modern browser",
-      isAccessibleForFree: true,
       featureList: page.sections,
-      offers: [
-        { "@type": "Offer", name: "Free signup results", price: "0", priceCurrency: "USD" },
-        { "@type": "Offer", name: "100 generation credit pack", price: "8", priceCurrency: "USD" }
-      ],
       url
     },
     {
@@ -83,7 +80,7 @@ export function pageSchemas(page: LandingPage, locale: Locale, path: string) {
         {
           "@type": "ListItem",
           position: 1,
-          name: "AI Makeup Studio",
+          name: "PictoWink",
           item: `${siteUrl}${localizePath("/", locale)}`
         },
         {
