@@ -46,13 +46,13 @@ it("退出超时后不导航，错误可重试且保留未知服务端结果", a
   expect(screen.getByRole("alert")).toHaveTextContent("Sign out failed"); await act(async () => { settle(json({})); }); expect(navigate).not.toHaveBeenCalled();
 });
 
-it("访客中文按积分说明且英文本意与完整安全next不变", async () => {
+it("访客双语登录入口保留完整安全next且不承诺未开放生成", async () => {
   vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(json({}, 401))));
   const path = "/zh-CN/my-creations?tag=a&tag=b#作品";
   const expectedNext = "/zh-CN/my-creations?tag=a&tag=b#%E4%BD%9C%E5%93%81";
   const view = render(<PlatformAccountEntry locale="zh-CN" returnPath={path}/>);
   await act(async () => { await refreshPlatformAccount(); });
-  expect(screen.getByRole("link", { name: "登录即可获得3积分" })).toHaveAttribute("href", `/login?next=${encodeURIComponent(expectedNext)}`);
+  expect(screen.getByRole("link", { name: "登录" })).toHaveAttribute("href", `/login?next=${encodeURIComponent(expectedNext)}`);
   view.rerender(<PlatformAccountEntry locale="en" returnPath={path}/>);
-  expect(screen.getByRole("link", { name: "Login to get 3 credits" })).toHaveAttribute("href", `/login?next=${encodeURIComponent(expectedNext)}`);
+  expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", `/login?next=${encodeURIComponent(expectedNext)}`);
 });

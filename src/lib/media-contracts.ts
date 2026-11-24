@@ -15,7 +15,7 @@ export type TaskRecord = {
  status:MediaStatus; credit_state:'none'|'reserved'|'settled'|'refunded'; credits_quoted:number; state_version:number; error_code:string|null; reconcile_stage:MediaStage|null;
  submission_id:string|null; submission: {prompt:string; payloadHash:string; historyBaseline?:string[]}|null; provider_task_id:string|null;
  result_locator:string|null; result_key:string|null; result_mime:string|null; result_bytes:number|null; result_sha256:string|null;
- lease_token:string|null; created_at:string; updated_at:string; next_action_at:string|null; deleted_at:string|null;
+ lease_token:string|null; lease_expires_at?:string|null; created_at:string; updated_at:string; next_action_at:string|null; deleted_at:string|null;
 };
 export type InputRecord = { id:string; user_id:string; staging_key:string; sealed_key:string|null; status:'uploading'|'ready'|'rejected'|'expired'; expected_mime:string; expected_bytes:number; expected_sha256:string; verified_mime:string|null; verified_bytes:number|null; verified_sha256:string|null; expires_at:string };
 export interface MediaExecutor { execute(query:SQL):Promise<Record<string,unknown>[]> }

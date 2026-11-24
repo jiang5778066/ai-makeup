@@ -61,7 +61,8 @@ describe("严格健康验收", () => {
   const identity = { sha, project: TARGET.project, deployment: "candidate.vercel.app" };
   const fetcher = (body: unknown, status = 200, contentType = "application/json") => async () => new Response(JSON.stringify(body), { status, headers: { "content-type": contentType } });
   it("接受预期身份", async () => { await expect(checkHealth("candidate.vercel.app", identity, fetcher({ status: "ready", ...identity }))).resolves.toBeUndefined(); });
-  it.each(["evil.test", "candidate.vercel.app.evil.test", "https://candidate.vercel.app/path", "user@candidate.vercel.app"])("请求前拒绝不可信 URL %s", async (host) => { let called = false; await expect(checkHealth(host, identity, async () => { called = true; return new Response(); })).rejects.toThrow(); expect(called).toBe(false); });
+  it("正式FrameKoi域名按同一部署身份验收", async () => { expect(TARGET.domain).toBe("www.framekoi.com"); await expect(checkHealth("www.framekoi.com", identity, fetcher({ status: "ready", ...identity }))).resolves.toBeUndefined(); });
+  it.each(["evil.test", "candidate.vercel.app.evil.test", "https://candidate.vercel.app/path", "user@candidate.vercel.app", "www.framekoi.com.evil.test", "other.framekoi.com"])("请求前拒绝不可信 URL %s", async (host) => { let called = false; await expect(checkHealth(host, identity, async () => { called = true; return new Response(); })).rejects.toThrow(); expect(called).toBe(false); });
   it.each([[{}, 302, "application/json"], [{}, 200, "text/html"], [{ status: "ready", ...identity, sha: "b".repeat(40) }, 200, "application/json"], [{ status: "ready", ...identity, deployment: "other.vercel.app" }, 200, "application/json"]] as const)("拒绝登录页/重定向/错误身份", async (body, status, type) => { await expect(checkHealth("candidate.vercel.app", identity, fetcher(body, status, type))).rejects.toThrow(); });
 });
 

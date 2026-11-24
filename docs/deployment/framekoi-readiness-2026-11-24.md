@@ -30,3 +30,13 @@
 - Vercel API 返回 403 `invalidToken`，浏览器同样要求重新登录。已打开登录页交给用户进行本人验证。本轮没有发布，线上仍为原 SHA。
 - 本机预览使用占位 Supabase 和数据库地址，不连接生产数据库。未开通付费邮箱、未修改 DNS、未启用生产收款。
 - 部署时须把生产构建和运行时 `NEXT_PUBLIC_SITE_URL` 同步为 `https://www.framekoi.com`，保留原项目其他凭据及功能门禁，并将健康路由 `RELEASE_SHA` 设置为实际部署提交。
+
+## 凭据恢复后的整合与发布
+
+用户已提供并授权本次发布凭据，已核验固定项目与团队身份，并补入 GitHub Production 的 `VERCEL_TOKEN`。凭据未写入源码或报告。
+
+远端 main 已从原基线前进到 `0a60e2f4d3b3ada58d86d0cf3341f36630f7d881`，含生成能力与 PictoWink 品牌改动。本分支合入这些实现后，按用户已购买的 FrameKoi 品牌统一文字，保留其媒体运行实现、SEO 去重与索引策略。发布目标及健康检查增加准确的 `www.framekoi.com`，拒绝相似域名或任意子域。
+
+Node 24 下全量 1,266 项测试通过，60 项按既有集成条件跳过；生产构建通过，lint 无错误、两条原有 img 性能告警。Node 20 不满足仓库发布工具及新版 Supabase SDK 的要求，本次明确使用临时 Node 24 与锁定 Vercel CLI 65.11.0。
+
+已将 Vercel 生产 `NEXT_PUBLIC_SITE_URL` 和 GitHub Production 的 `RELEASE_DOMAIN` 更新为正式域名，其余应用配置逐项核对保持一致。实际生产仍为 website-db 关闭态。本次只部署网站代码，不调用数据库迁移、不启用收费或生成；先建立 production 候选，验收后 promote。候选与正式部署实际结果以 `release-result` 的发布证据为准。

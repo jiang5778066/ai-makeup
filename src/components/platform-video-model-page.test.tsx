@@ -105,7 +105,7 @@ describe("C2c视频模型专页本地表单边界", () => {
     expect(text).toContain("会员条件");
   });
   it("未传本批policy的通用Wan2.5保留10s◇及原门槛，取消仍5s",()=>{
-    const state=initializeGenerator("/ai-video-generator","");
+    const state=initializeGenerator("/ai-video-generator","model=wan-2-5");
     render(<PlatformVideoGeneratorForm state={state} onChange={vi.fn()} onFiles={vi.fn()} locale="en"/>);
     const group=screen.getByRole("group",{name:"Duration"});
     const ten=within(group).getByRole("button",{name:/^10s/});

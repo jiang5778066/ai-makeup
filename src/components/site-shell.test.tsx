@@ -7,7 +7,7 @@ afterEach(() => { document.body.style.overflow = ""; window.history.replaceState
 describe("两套平台外壳", () => {
   it("宣传页提供横向导航及可键盘展开的分组功能菜单", () => {
     render(<SiteShell locale="zh-CN" currentPath="/"><main>页面内容</main></SiteShell>);
-    expect(screen.getAllByRole("link", { name: "FrameKoi home" })[0]).toHaveAttribute("href", "/zh-CN");
+    expect(screen.getAllByRole("link", { name: "FrameKoi 首页" })[0]).toHaveAttribute("href", "/zh-CN");
     const nav = screen.getByRole("navigation", { name: "主导航" });
     expect(within(nav).getByRole("link", { name: "首页" })).toHaveAttribute("href", "/zh-CN/home");
     expect(screen.queryByRole("complementary", { name: "工作台导航" })).not.toBeInTheDocument();
@@ -26,7 +26,7 @@ describe("两套平台外壳", () => {
     const nav = screen.getByRole("complementary", { name: "工作台导航" });
     expect(within(nav).getByRole("link", { name: "AI美妆" })).toHaveAttribute("aria-current", "page");
     expect(within(nav).getByRole("link", { name: "首页" })).not.toHaveAttribute("aria-current");
-    expect(screen.getByRole("link", { name: "登录即可获得3积分" })).toHaveAttribute("href", "/login?next=%2Fzh-CN%2Fai-makeup");
+    expect(within(screen.getByRole("banner")).getByRole("link", { name: "登录" })).toHaveAttribute("href", "/login?next=%2Fzh-CN%2Fai-makeup");
     const scaffold = within(nav).getByRole("link", { name: "AI 视频生成器" });
     expect(scaffold).toHaveAttribute("href", "/zh-CN/ai-video-generator");
     expect(scaffold).not.toHaveAttribute("title", "即将推出");

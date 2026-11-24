@@ -1,0 +1,43 @@
+{
+  "results": [
+    {
+      "path": "/zh-CN/ai-image-generator",
+      "title": "AI 图片生成器：文字与参考图 | PictoWink",
+      "h1Count": 1,
+      "overflow": false
+    },
+    {
+      "path": "/ai-video-generator",
+      "title": "AI Video Generator: Text & Image to Video | PictoWink",
+      "h1Count": 1,
+      "overflow": false
+    },
+    {
+      "path": "/zh-CN/ai-video-generator",
+      "title": "AI 视频生成器：文生视频与图生视频 | PictoWink",
+      "h1Count": 1,
+      "overflow": false
+    },
+    {
+      "path": "/tools/image-to-image-ai",
+      "title": "Image to Image AI: Reference Photos & Prompts | PictoWink",
+      "h1Count": 1,
+      "overflow": false
+    },
+    {
+      "path": "/zh-CN/tools/image-to-image-ai",
+      "title": "AI 图生图：参考照片与提示词 | PictoWink",
+      "h1Count": 1,
+      "overflow": false
+    }
+  ],
+  "faq": "中文首页展开收起通过；答案明确生成未开放",
+  "desktop": {
+    "width": 1440,
+    "overflow": false
+  },
+  "mobile": {
+    "width": 390,
+    "overflow": false
+  }
+}

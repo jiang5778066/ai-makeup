@@ -1,6 +1,6 @@
 import { TARGET } from "./preflight";
 export const trustedHost = (host: string) => {
-  if (!/^[a-z0-9][a-z0-9-]*\.vercel\.app$/.test(host)) throw new Error("部署域名不受信");
+  if (host !== TARGET.domain && !/^[a-z0-9][a-z0-9-]*\.vercel\.app$/.test(host)) throw new Error("部署域名不受信");
   return host;
 };
 export const checkHealth = async (host: string, expected: { sha: string; project: string; deployment: string }, request: typeof fetch = fetch, bypass?: string) => {

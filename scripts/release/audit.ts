@@ -23,7 +23,7 @@ export const auditDependencies = async (run: AuditRunner = auditCommand, environ
   // 审计无需生产凭据；只输出经过校验的计数、包信息和锁摘要，不输出原始子进程日志。
   const excluded = new Set<string>([...runtimeRequired, "VERCEL_TOKEN", "MIGRATION_DATABASE_URL", "VERCEL_AUTOMATION_BYPASS_SECRET", "SUPABASE_SERVICE_ROLE_KEY", "AWS_SESSION_TOKEN", "RESEND_API_KEY"]);
   const env = { ...environment };
-  for (const key of excluded) delete env[key];
+  for (const key of Object.keys(env)) if(excluded.has(key)||/^MEDIA_/.test(key)||/^SUPABASE_.*(?:KEY|SECRET|TOKEN)/.test(key)) delete env[key];
   const results = await Promise.allSettled(scopes.map(async scope => {
     const cwd = scope === "application" ? REPOSITORY_ROOT : TOOL_DIRECTORY;
     const lockSha256 = createHash("sha256").update(await readFile(resolve(cwd, "package-lock.json"))).digest("hex");

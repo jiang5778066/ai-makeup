@@ -411,13 +411,13 @@ const englishPages: Record<LandingSlug, LandingPage> = {
 const chinesePages: Record<LandingSlug, LandingPage> = {
   home: {
     ...englishPages.home,
-    title: "AI 妆容工作室",
+    title: "FrameKoi",
     eyebrow: "面向创作者与美妆用户的 AI 工具",
     h1: "先在线试妆，再决定真实妆容",
     description: "免费预览本地实时妆效，登录后生成妆容，并比较不同场景的通用风格参考。",
     primaryCta: "免费试妆",
     secondaryCta: "查看价格",
-    seoTitle: "AI 妆容工作室 | 虚拟试妆与 AI 美妆顾问",
+    seoTitle: "FrameKoi | 虚拟试妆与 AI 美妆顾问",
     seoDescription: "免费使用本地实时预览，登录后用账户额度生成妆容，并查看通用风格参考。",
     keywords: ["AI 妆容", "虚拟试妆", "AI 美妆工具"],
     sections: ["AI 妆容生成器", "虚拟试妆工作台", "通用风格参考"],

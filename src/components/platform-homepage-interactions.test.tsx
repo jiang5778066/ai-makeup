@@ -29,13 +29,13 @@ describe("首页确定性交互", () => {
     expect(screen.getByRole("img").getAttribute("src")).not.toBe(before);
     expect(screen.getByRole("link", { name: /创建产品视频/ })).toHaveAttribute("href", "/zh-CN/ai-video-generator?mode=image-to-video");
   });
-  it("FAQ支持展开与收起，并说明真实3次与视频不可用", () => {
+  it("FAQ支持展开与收起，并说明报价确认和购买关闭", () => {
     render(<HomepageFaq locale="zh-CN" />);
     const button = screen.getByRole("button", { name: "FrameKoi 可以免费使用吗？" });
     expect(button).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(button);
     expect(button).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText(/新账户获得 3 次/)).toBeVisible();
+    expect(screen.getByText(/购买尚未开放；生成需使用已开放模式/)).toBeVisible();
     fireEvent.click(button);
     expect(button).toHaveAttribute("aria-expanded", "false");
   });

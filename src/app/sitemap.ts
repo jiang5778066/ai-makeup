@@ -1,20 +1,16 @@
 import type { MetadataRoute } from "next";
 import { landingSlugs } from "@/lib/content";
 import { locales, localizePath } from "@/lib/i18n";
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.framekoi.com";
+import { siteUrl } from "@/lib/brand";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const paths = ["/about", "/refund", "/content-moderation-policy", "/pricing", "/home", ...landingSlugs
-    .filter((slug) => slug !== "ai-makeup/generator" && slug !== "ai-makeup/filter")
-    .map((slug) => (slug === "home" ? "/" : `/${slug}`))];
-
-  return paths.flatMap((path) =>
-    locales.map((locale) => ({
-      url: `${siteUrl}${localizePath(path, locale)}`,
-      lastModified: new Date("2026-08-03"),
-      changeFrequency: "weekly" as const,
-      priority: path === "/" || path === "/ai-makeup" ? 1 : 0.8
-    }))
-  );
+  // 工作台、参数变体与不可用空壳不进入索引清单；没有准确更新时间时不伪造lastModified。
+  const paths = [...new Set([
+    "/", "/about", "/refund", "/content-moderation-policy", "/pricing", "/ai-image-generator", "/ai-video-generator", "/tools/image-to-image-ai",
+    ...landingSlugs.filter(slug => !["home", "ai-makeup/generator", "ai-makeup/filter"].includes(slug)).map(slug => `/${slug}`)
+  ])];
+  return paths.flatMap(path => locales.map(locale => ({
+    url: `${siteUrl}${localizePath(path, locale)}`,
+    alternates: { languages: Object.fromEntries(locales.map(language => [language, `${siteUrl}${localizePath(path, language)}`])) }
+  })));
 }

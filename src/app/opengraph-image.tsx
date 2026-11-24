@@ -1,83 +1,12 @@
 import { ImageResponse } from "next/og";
-
-export const alt = "FrameKoi — image and video creative tools";
+import { FrameKoiMark } from "@/components/platform-brand";
+export const alt = "FrameKoi — Your ideas. A wink away. AI image and video creation.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-
 export default function OpengraphImage() {
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          background: "#f4efe7",
-          display: "flex",
-          flexDirection: "column",
-          padding: "72px 80px",
-          fontFamily: "system-ui, sans-serif",
-          color: "#11100e"
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 8,
-              background: "#9d1f32",
-              color: "#fbf7ef",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 36,
-              fontWeight: 700
-            }}
-          >
-            F
-          </div>
-          <div style={{ fontSize: 26, color: "#25211e", letterSpacing: -0.4 }}>FrameKoi</div>
-        </div>
-
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            gap: 6
-          }}
-        >
-          <div style={{ fontSize: 92, fontWeight: 600, lineHeight: 1.02, letterSpacing: -1.8 }}>
-            Explore creative tools.
-          </div>
-          <div
-            style={{
-              fontSize: 92,
-              fontWeight: 600,
-              lineHeight: 1.02,
-              letterSpacing: -1.8,
-              color: "#9d1f32"
-            }}
-          >
-            Shape your next idea.
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            color: "#25211e",
-            fontSize: 22
-          }}
-        >
-          <span>Images · Video · Visual effects</span>
-          <span style={{ color: "#b7aa9a" }}>framekoi.com</span>
-        </div>
-      </div>
-    ),
-    size
-  );
+  return new ImageResponse(<div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "64px 76px", background: "#f6f4ee", color: "#232027", fontFamily: "sans-serif" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 18 }}><div style={{ display: "flex", width: 58, height: 58 }}><FrameKoiMark size={58} /></div><span style={{ fontSize: 38, fontWeight: 700 }}>FrameKoi</span></div>
+    <div style={{ display: "flex", flexDirection: "column", fontSize: 86, fontWeight: 700, letterSpacing: -3, lineHeight: 1.08 }}><span>Your ideas.</span><span style={{ color: "#6d4aff" }}>A wink away.</span></div>
+    <div style={{ display: "flex", fontSize: 26 }}>AI image &amp; video creation</div>
+  </div>, size);
 }

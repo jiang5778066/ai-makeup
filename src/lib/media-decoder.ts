@@ -1,3 +1,4 @@
+import {mediaExecutionSignal,checkMediaExecution} from './media-execution';
 import {spawn} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {isAbsolute} from 'node:path';
@@ -21,6 +22,7 @@ process.stdin.on('end',async()=>{try{
 export function createSharpMediaDecoder(options:{timeoutMs?:number;maxConcurrent?:number}={}):MediaDecoder{
  const timeout=Math.min(10000,Math.max(1,options.timeoutMs??5000)),max=Math.min(2,Math.max(1,options.maxConcurrent??2));let active=0;
  return async(bytes,mime)=>{
+  checkMediaExecution();const signal=mediaExecutionSignal();
   if(bytes.length>16*1024*1024||!['image/png','image/jpeg','image/webp'].includes(mime)||sniffMediaMime(bytes)!==mime)throw new MediaFault('media_decode_rejected');
   if(active>=max)throw new MediaFault('media_decoder_busy',503);
   let sharpPath:string;
@@ -34,12 +36,13 @@ export function createSharpMediaDecoder(options:{timeoutMs?:number;maxConcurrent
    const child=spawn(process.execPath,['--max-old-space-size=96','-e',program,sharpPath],{env:{NODE_ENV:'production',PATH:'/usr/bin:/bin',VIPS_CONCURRENCY:'1',MALLOC_ARENA_MAX:'2'},stdio:['pipe','pipe','pipe']});
    let output=Buffer.alloc(0),failed=false,timedOut=false;
    const kill=()=>{failed=true;child.kill('SIGKILL')};
+   const abort=()=>kill();signal?.addEventListener('abort',abort,{once:true});
    const timer=setTimeout(()=>{timedOut=true;kill()},timeout);
    child.stdout.on('data',(b:Buffer)=>{output=Buffer.concat([output,b]);if(output.length>1024)kill()});
    child.stderr.on('data',()=>{/* 原生库正文不进入用户错误或日志。 */});
    child.stdin.on('error',()=>{failed=true});child.on('error',()=>{failed=true});
    child.on('close',code=>{
-    clearTimeout(timer);
+    clearTimeout(timer);signal?.removeEventListener('abort',abort);
     if(timedOut||failed||code!==0){reject(new MediaFault(timedOut?'media_decode_timeout':'media_decode_rejected'));return}
     try{const r=JSON.parse(output.toString());if(r.mime!==mime||r.frames!==1||!Number.isSafeInteger(r.width)||!Number.isSafeInteger(r.height)||r.width<1||r.height<1||r.width>8192||r.height>8192||r.width*r.height>32000000)throw Error();resolve(r)}catch{reject(new MediaFault('media_decode_rejected'))}
    });child.stdin.end(bytes);

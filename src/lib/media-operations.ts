@@ -18,18 +18,17 @@ export function createMediaOperations(store:MediaStore,verify?:MediaOperationVer
   if(new Set(operator.approvalSubjects.filter(x=>x&&x!==operator.subject)).size<2)throw new MediaFault('two_person_approval_required',403);
   if(value.action==='confirm_failed'&&!operator.roles.includes('media_settlement'))throw new MediaFault('operation_forbidden',403);
   return store.database.transaction(async tx=>{
-   const snapshot=await store.get(value.taskId);if(!snapshot)throw new MediaFault('not_found',404);
-   await lockMediaBalance(tx,snapshot.user_id);
-   const [t]=await rows<TaskRecord>(tx,sql`SELECT * FROM media_tasks WHERE id=${value.taskId} FOR UPDATE`);
+   const [t]=await rows<TaskRecord&{lease_valid?:boolean}>(tx,sql`SELECT *, (lease_expires_at>clock_timestamp()) AS lease_valid FROM media_tasks WHERE id=${value.taskId} FOR UPDATE`);if(!t)throw new MediaFault('not_found',404);
    const [old]=await tx.execute(sql`SELECT payload_identity FROM media_task_events WHERE task_id=${t.id} AND operation_id=${value.operationId}`);
    if(old){if(old.payload_identity!==identity)throw new MediaFault('operation_conflict',409);return {taskId:t.id,replayed:true}}
-   if(t.state_version!==value.expectedVersion||t.credit_state!=='reserved'||t.status!=='reconciling'||t.result_locator)throw new MediaFault('operation_state_conflict',409);
+   if(t.lease_valid===true||t.state_version!==value.expectedVersion||t.credit_state!=='reserved'||t.status!=='reconciling'||t.result_locator)throw new MediaFault('operation_state_conflict',409);
+   await lockMediaBalance(tx,t.user_id);
    if(value.action==='bind_original'){
     if(t.provider_task_id||t.result_locator||!t.submission_id)throw new MediaFault('operation_state_conflict',409);
-    await tx.execute(sql`UPDATE media_tasks SET provider_task_id=${value.providerTaskId!},status='waiting',reconcile_stage='query',state_version=state_version+1,next_action_at=now(),updated_at=now() WHERE id=${t.id} RETURNING id`);
+    const changed=await tx.execute(sql`UPDATE media_tasks SET provider_task_id=${value.providerTaskId!},status='waiting',reconcile_stage='query',lease_token=null,lease_expires_at=null,state_version=state_version+1,next_action_at=now(),updated_at=now() WHERE id=${t.id} AND state_version=${value.expectedVersion} AND credit_state='reserved' AND (lease_expires_at IS NULL OR lease_expires_at<=clock_timestamp()) RETURNING id`);if(!changed.length)throw new MediaFault('operation_state_conflict',409);
    }else{
     const amount=await refundMediaCredits(tx,t.user_id,t.id);if(amount!==t.credits_quoted)throw new Error('media_consumptions_out_of_sync');
-    await tx.execute(sql`UPDATE media_tasks SET status='refunded',credit_state='refunded',credits_refunded_at=now(),error_code='operator_confirmed_failure',reconcile_stage=null,state_version=state_version+1,next_action_at=null,updated_at=now() WHERE id=${t.id} RETURNING id`);
+    const changed=await tx.execute(sql`UPDATE media_tasks SET status='refunded',credit_state='refunded',credits_refunded_at=now(),error_code='operator_confirmed_failure',reconcile_stage=null,lease_token=null,lease_expires_at=null,state_version=state_version+1,next_action_at=null,updated_at=now() WHERE id=${t.id} AND state_version=${value.expectedVersion} AND credit_state='reserved' AND (lease_expires_at IS NULL OR lease_expires_at<=clock_timestamp()) RETURNING id`);if(!changed.length)throw new MediaFault('operation_state_conflict',409);
    }
    await tx.execute(sql`INSERT INTO media_task_events(task_id,user_id,operation_id,event_type,state_version,actor_kind,actor_id,evidence_ref,payload_identity,details) VALUES(${t.id},${t.user_id},${value.operationId},${value.action},${t.state_version+1},'operator',${operator.subject},${value.evidenceSha256},${identity},${JSON.stringify({caseId:value.caseId,approvalSubjects:operator.approvalSubjects})}::jsonb) RETURNING id`);
    return {taskId:t.id,replayed:false};

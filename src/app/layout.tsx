@@ -3,15 +3,16 @@ import { headers } from "next/headers";
 import "./globals.css";
 import { PlatformNavigationProvider } from "@/components/platform-navigation-link";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.framekoi.com";
+import { siteUrl } from "@/lib/brand";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "FrameKoi | AI Image and Video Creation",
+    default: "FrameKoi | AI Image & Video Creation",
     template: "%s | FrameKoi"
   },
-  description: "Explore AI image and video creation tools, visual effects, and available makeup previews. Feature availability is shown on each tool.",
+  description: "Explore AI image and video tools, compare settings, and plan your next visual. Generation availability is shown in each tool.",
+  verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
   applicationName: "FrameKoi"
 };
 

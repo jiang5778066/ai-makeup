@@ -1,14 +1,15 @@
+import { coreToolMetadata } from "@/lib/core-tool-seo";
 /* eslint-disable @next/next/no-img-element */
 import type {Metadata} from 'next';
 import {ArrowRight,CheckCircle2,Lightbulb,Sparkles} from 'lucide-react';
-import {alternateLanguagesForPath,localizePath,type Locale} from '@/lib/i18n';
+import {localizePath,type Locale} from '@/lib/i18n';
 import {imageToImageContent} from '@/lib/platform-image-to-image-content';
 import {imageToImageMedia} from '@/lib/platform-image-to-image-media';
 import {SiteShell} from './site-shell';
 import {ImageToImageWorkspace} from './platform-image-to-image-workspace';
 import styles from './platform-image-to-image-page.module.css';
 const path='/tools/image-to-image-ai';
-export function imageToImageMetadata(locale:Locale):Metadata{const d=imageToImageContent[locale][0];return{title:{absolute:`${d.title} | FrameKoi`},description:d.intro,alternates:{canonical:localizePath(path,locale),languages:alternateLanguagesForPath(path)},openGraph:{title:`${d.title} | FrameKoi`,description:d.intro,locale:locale==='zh-CN'?'zh_CN':'en_US'}};}
+export function imageToImageMetadata(locale:Locale):Metadata{return coreToolMetadata("/tools/image-to-image-ai",locale); }
 export function imageToImageQuery(query:Record<string,string|string[]|undefined>){const q=new URLSearchParams();for(const[k,v]of Object.entries(query))for(const value of typeof v==='string'?[v]:v??[])q.append(k,value);return q.toString();}
 export function ImageToImagePage({locale,initialQuery=''}:{locale:Locale;initialQuery?:string}){const data=imageToImageContent[locale],hero=data[0],zh=locale==='zh-CN';const note=zh?'素材及工作流说明来自 Lanta AI 公开参照；示例非本站生成或账户作品。本站生成、下载生成结果及历史功能尚未开放。':'Images and workflow descriptions are from the public Lanta AI reference. Examples are separate from this site’s generations and account creations. Generation, generated downloads, and history are not available.';return <SiteShell locale={locale} currentPath={path}><main className={styles.page} lang={locale} data-image-to-image-page><nav className={styles.breadcrumb} aria-label={zh?'面包屑导航':'Breadcrumb'}><a href={localizePath('/',locale)}>{zh?'首页':'Home'}</a><span>›</span><a href={localizePath('/tools',locale)}>{zh?'工具':'Tools'}</a><span>›</span><span>{zh?'AI 图生图':'Image To Image AI'}</span></nav><header className={styles.hero}><h1>{hero.title}</h1><p>{hero.intro}</p><div className={styles.actions}>{hero.links.map((a,i)=><a key={a.href} className={i===0?styles.cta:styles.secondary} href={a.href}>{a.label}{i===0&&<ArrowRight size={17}/>}</a>)}</div><div className={styles.facts}>{(zh?['照片生成新图','多种 AI 模型','提示词引导编辑']:['Photo to Photo','Multiple AI Models','Prompt-Guided Edits']).map(x=><span key={x}>• {x}</span>)}</div></header><ImageToImageWorkspace locale={locale} initialQuery={initialQuery}/>
  {data.slice(1).map((section,idx)=>{const kind=['examples','definition','steps','uses','advantages','settings','tips','related','closing'][idx];return <section key={section.title} id={kind==='examples'?'examples':undefined} className={`${styles.section} ${styles[kind]??''}`} data-image-to-image-section={kind}><div className={styles.sectionHeading}>{section.badge&&<p className={styles.badge}>{section.badge}</p>}<h2>{section.title}</h2>{section.intro&&<p>{section.intro}</p>}</div>
