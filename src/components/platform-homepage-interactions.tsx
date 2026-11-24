@@ -42,7 +42,7 @@ export function HomepageScenes({ locale }: { locale: Locale }) {
 export function HomepageFaq({ locale }: { locale: Locale }) {
   const [open, setOpen] = useState<ReadonlySet<number>>(() => new Set());
   const uid = useId();
-  return <section className="platform-home-faq" data-home-section="faq"><div className="platform-home-container"><h2>{locale === "zh-CN" ? "关于 Makeup AI 创作平台的常见问题" : "Frequently asked questions about Makeup AI"}</h2>
+  return <section className="platform-home-faq" data-home-section="faq"><div className="platform-home-container"><h2>{locale === "zh-CN" ? "关于 FrameKoi 创作平台的常见问题" : "Frequently asked questions about FrameKoi"}</h2>
     <div className="platform-home-faq-list">{homepageFaqs[locale].map((faq, i) => <article key={faq.question}>
       <h3><button type="button" id={`${uid}-question-${i}`} aria-expanded={open.has(i)} aria-controls={`${uid}-answer-${i}`} onClick={() => setOpen(previous => { const next = new Set(previous); if (next.has(i)) next.delete(i); else next.add(i); return next; })}>{faq.question}<span>{open.has(i) ? <Minus size={16}/> : <Plus size={16}/>}</span></button></h3>
       <div id={`${uid}-answer-${i}`} role="region" aria-labelledby={`${uid}-question-${i}`} hidden={!open.has(i)}><p>{faq.answer}</p></div>

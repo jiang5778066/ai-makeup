@@ -46,7 +46,7 @@ export default function LoginPage() {
     <main className={styles.page}>
       <section className={styles.card}>
         <PlatformBrand locale={zh ? "zh-CN" : "en"}/>
-        <h1 style={{ fontSize: "2.4rem", lineHeight: 1.05, marginTop: 18 }}>{copy("Log in to AI Makeup Studio", "登录 AI 妆容工作室")}</h1>
+        <h1 style={{ fontSize: "2.4rem", lineHeight: 1.05, marginTop: 18 }}>{copy("Log in to FrameKoi", "登录 AI 妆容工作室")}</h1>
         <p className="lead" style={{ fontSize: "1rem" }}>
           {copy("Sign in to generate with your account credits. Local live preview is free. Photo drafts last 30 minutes in this browser on this site only.", "登录后可使用账户额度生成；本地实时预览免费。照片草稿仅在同一浏览器、同一站点保留 30 分钟，跨设备需重新选图。")}
         </p>

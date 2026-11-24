@@ -3,16 +3,16 @@ import { headers } from "next/headers";
 import "./globals.css";
 import { PlatformNavigationProvider } from "@/components/platform-navigation-link";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.framekoi.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Makeup AI | Live Virtual Try-On and AI Makeup",
-    template: "%s | Makeup AI"
+    default: "FrameKoi | AI Image and Video Creation",
+    template: "%s | FrameKoi"
   },
-  description: "Try full-face AI makeup and nine live virtual makeup effects on your photo or camera. Three free HD results, then $8 for 100.",
-  applicationName: "Makeup AI"
+  description: "Explore AI image and video creation tools, visual effects, and available makeup previews. Feature availability is shown on each tool.",
+  applicationName: "FrameKoi"
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

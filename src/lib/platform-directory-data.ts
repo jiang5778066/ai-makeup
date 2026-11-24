@@ -19,8 +19,8 @@ export const directoryContent: Readonly<Record<DirectoryPath, DirectoryContent>>
       "zh-CN": "探索我们的人工智能图像和视频生成工具集合，助您轻松创建惊艳内容。"
     },
     "eyebrow": {
-      "en": "Makeup AI Tools",
-      "zh-CN": "Makeup AI 工具"
+      "en": "FrameKoi Tools",
+      "zh-CN": "FrameKoi 工具"
     },
     "breadcrumb": {
       "en": "Tools",
@@ -526,8 +526,8 @@ export const directoryContent: Readonly<Record<DirectoryPath, DirectoryContent>>
       "zh-CN": "AI 图像模型"
     },
     "description": {
-      "en": "Explore Makeup AI image model pages. Compare use cases, view examples, and explore each model.",
-      "zh-CN": "探索 Makeup AI 的图像模型页面。比较使用场景，查看示例，并了解每个模型。"
+      "en": "Explore FrameKoi image model pages. Compare use cases, view examples, and explore each model.",
+      "zh-CN": "探索 FrameKoi 的图像模型页面。比较使用场景，查看示例，并了解每个模型。"
     },
     "breadcrumb": {
       "en": "AI Image Models",
@@ -581,8 +581,8 @@ export const directoryContent: Readonly<Record<DirectoryPath, DirectoryContent>>
       "zh-CN": "探索我们的 AI 视频模型集合，帮助您轻松创建令人惊叹的内容。"
     },
     "eyebrow": {
-      "en": "Makeup AI Video Models",
-      "zh-CN": "Makeup AI 视频模型"
+      "en": "FrameKoi Video Models",
+      "zh-CN": "FrameKoi 视频模型"
     },
     "breadcrumb": {
       "en": "AI Video Models",

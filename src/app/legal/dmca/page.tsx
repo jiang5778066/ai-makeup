@@ -1,28 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SupportContact } from "@/components/support-contact";
 import { LegalShell } from "@/components/legal-shell";
 
 export const metadata: Metadata = {
   title: "DMCA Notice",
-  description: "How to report content on AI Makeup Studio that infringes your copyright.",
+  description: "How to report content on FrameKoi that infringes your copyright.",
   robots: { index: true, follow: true }
 };
 
-const LAST_UPDATED = "2026-05-25";
-const DESIGNATED_AGENT_EMAIL = process.env.DMCA_EMAIL ?? "dmca@yourdomain.com";
+const LAST_UPDATED = "2026-11-24";
 
 export default function DmcaPage() {
   return (
     <LegalShell title="DMCA Notice" lastUpdated={LAST_UPDATED} currentPath="/legal/dmca">
       <p>
-        AI Makeup Studio respects intellectual property rights. If you believe a user has uploaded
+        FrameKoi respects intellectual property rights. If you believe a user has uploaded
         or generated content that infringes your copyright, follow the takedown process below.
       </p>
 
-      <h2>1. Designated agent</h2>
+      <h2>1. Copyright contact</h2>
       <p>
-        Send notices to our designated agent:{" "}
-        <a href={`mailto:${DESIGNATED_AGENT_EMAIL}`}>{DESIGNATED_AGENT_EMAIL}</a>.
+        Send copyright notices to our copyright contact:{" "}
+        <SupportContact kind="copyright" />.
       </p>
 
       <h2>2. What to include</h2>

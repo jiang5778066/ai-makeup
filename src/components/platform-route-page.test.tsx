@@ -16,7 +16,7 @@ it("四根双语介绍独立分发与canonical，不把ready介绍说成已接�
     const view = render(<PlatformRoutePage path={path} locale={locale} searchParams={{ model: ["102", "other"] }}/>);
     expect(screen.getByRole("heading")).toHaveTextContent(`${locale}:${path}:RootIntroduction`);
     const metadata = platformRouteMetadata(path, locale);
-    expect(metadata.title).toContain("Makeup AI");
+    expect(metadata.title).toContain("FrameKoi");
     expect(metadata.description).toMatch(/不代表该型号已接入|does not imply model availability/);
     expect(metadata.alternates?.canonical).toBe(`${locale === "zh-CN" ? "/zh-CN" : ""}${path}`);
     view.unmount();
@@ -39,7 +39,7 @@ describe("页面实际分发和SEO身份", () => {
       const view = render(<PlatformRoutePage path={path} locale={locale}/>);
       expect(screen.getByRole("heading", { name: `${locale}:${path}目录正文` })).toBeInTheDocument();
       const metadata = platformRouteMetadata(path, locale);
-      expect(metadata.title).toContain("Makeup AI");
+      expect(metadata.title).toContain("FrameKoi");
       expect(metadata.title).not.toMatch(/Currently unavailable|当前不可用/);
       expect(metadata.alternates?.canonical).toBe(`${locale === "zh-CN" ? "/zh-CN" : ""}${path}`);
       view.unmount();
@@ -48,9 +48,9 @@ describe("页面实际分发和SEO身份", () => {
   it("首页SEO体现图片视频与真实可用边界，不继承自拍步骤", () => {
     const landing = platformRouteMetadata("/", "zh-CN");
     const home = platformRouteMetadata("/home", "en");
-    expect(landing.title).toBe("图片与视频创作平台");
+    expect(landing.title).toEqual({ absolute: "图片与视频创作平台 | FrameKoi" });
     expect(landing.alternates?.canonical).toMatch(/\/zh-CN$/);
-    expect(home.title).toBe("Creative workspace");
+    expect(home.title).toEqual({ absolute: "Creative workspace | FrameKoi" });
     expect(home.alternates?.canonical).toMatch(/\/home$/);
   });
 });

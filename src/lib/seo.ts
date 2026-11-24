@@ -3,7 +3,7 @@ import type { LandingPage } from "./content";
 import type { Locale } from "./i18n";
 import { alternateLanguagesForPath, localizePath } from "./i18n";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.framekoi.com";
 
 export function metadataForPage(page: LandingPage, locale: Locale, path: string): Metadata {
   const alternates = alternateLanguagesForPath(path);
@@ -24,7 +24,7 @@ export function metadataForPage(page: LandingPage, locale: Locale, path: string)
       title: page.seoTitle,
       description: page.seoDescription,
       url: `${siteUrl}${localizePath(path, locale)}`,
-      siteName: "AI Makeup Studio",
+      siteName: "FrameKoi",
       locale,
       type: "website"
     },
@@ -83,7 +83,7 @@ export function pageSchemas(page: LandingPage, locale: Locale, path: string) {
         {
           "@type": "ListItem",
           position: 1,
-          name: "AI Makeup Studio",
+          name: "FrameKoi",
           item: `${siteUrl}${localizePath("/", locale)}`
         },
         {

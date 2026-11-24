@@ -7,7 +7,7 @@ afterEach(() => { document.body.style.overflow = ""; window.history.replaceState
 describe("两套平台外壳", () => {
   it("宣传页提供横向导航及可键盘展开的分组功能菜单", () => {
     render(<SiteShell locale="zh-CN" currentPath="/"><main>页面内容</main></SiteShell>);
-    expect(screen.getAllByRole("link", { name: "Makeup AI home" })[0]).toHaveAttribute("href", "/zh-CN");
+    expect(screen.getAllByRole("link", { name: "FrameKoi home" })[0]).toHaveAttribute("href", "/zh-CN");
     const nav = screen.getByRole("navigation", { name: "主导航" });
     expect(within(nav).getByRole("link", { name: "首页" })).toHaveAttribute("href", "/zh-CN/home");
     expect(screen.queryByRole("complementary", { name: "工作台导航" })).not.toBeInTheDocument();

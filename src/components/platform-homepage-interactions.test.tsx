@@ -31,7 +31,7 @@ describe("首页确定性交互", () => {
   });
   it("FAQ支持展开与收起，并说明真实3次与视频不可用", () => {
     render(<HomepageFaq locale="zh-CN" />);
-    const button = screen.getByRole("button", { name: "Makeup AI 可以免费使用吗？" });
+    const button = screen.getByRole("button", { name: "FrameKoi 可以免费使用吗？" });
     expect(button).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(button);
     expect(button).toHaveAttribute("aria-expanded", "true");

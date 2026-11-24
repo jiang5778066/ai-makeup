@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SupportContact } from "@/components/support-contact";
 import { LegalShell } from "@/components/legal-shell";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How AI Makeup Studio collects, uses, stores, and deletes your data.",
+  description: "How FrameKoi collects, uses, stores, and deletes your data.",
   robots: { index: true, follow: true }
 };
 
-const LAST_UPDATED = "2026-11-03";
-const CONTACT = process.env.PRIVACY_EMAIL ?? "privacy@yourdomain.com";
+const LAST_UPDATED = "2026-11-24";
 
 export default function PrivacyPage() {
   return (
     <LegalShell title="Privacy Policy" lastUpdated={LAST_UPDATED} currentPath="/legal/privacy">
       <p>
-        This Privacy Policy explains how AI Makeup Studio (&ldquo;we&rdquo;, &ldquo;us&rdquo;)
-        processes personal information when you use our website and AI makeup tools.
+        This Privacy Policy explains how FrameKoi (&ldquo;we&rdquo;, &ldquo;us&rdquo;)
+        processes personal information when you use our website and creative tools.
       </p>
 
       <h2>1. Information we collect</h2>
@@ -25,7 +25,7 @@ export default function PrivacyPage() {
           <strong>Account data:</strong> email address you provide to sign in via magic link.
         </li>
         <li>
-          <strong>Uploaded photos:</strong> selfies you upload to generate makeup looks. We treat
+          <strong>Uploaded photos:</strong> photos and other media you upload for available creative tools. We treat
           these as sensitive personal data.
         </li>
         <li>
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
         Retention: original photos are configured to expire within 24 hours; generated results
         within 30 days during paid beta. You may delete account generation data earlier from your
         dashboard or by emailing{" "}
-        <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+        <SupportContact kind="privacy" />.
       </p>
 
       <h2>3. How we use your data</h2>
@@ -81,14 +81,15 @@ export default function PrivacyPage() {
         Depending on where you live, you may have rights to access, correct, delete, port, restrict,
         or object to processing of your personal information; to opt out of targeted advertising
         and sale (we do not do either); and to lodge a complaint with a supervisory authority. To
-        exercise these rights email <a href={`mailto:${CONTACT}`}>{CONTACT}</a> from the email
+        exercise these rights email <SupportContact kind="privacy" /> from the email
         attached to your account. We respond within 30 days.
       </p>
 
       <h2>6. International transfers</h2>
       <p>
-        We operate from outside the EU. When data flows from the EEA / UK to our infrastructure we
-        rely on Standard Contractual Clauses with each processor.
+        We operate from China and use service providers in other countries. Your information may be
+        processed outside your country of residence. Where applicable law requires a transfer
+        mechanism, the required safeguards must be in place before the relevant processing.
       </p>
 
       <h2>7. Children</h2>
@@ -105,7 +106,7 @@ export default function PrivacyPage() {
 
       <h2>9. Contact</h2>
       <p>
-        Privacy questions: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>. See also our{" "}
+        Privacy questions: <SupportContact kind="privacy" />. See also our{" "}
         <Link href="/legal/terms">Terms of Service</Link>,{" "}
         <Link href="/legal/cookies">Cookie Policy</Link>, and{" "}
         <Link href="/legal/dmca">DMCA Notice</Link>.

@@ -36,10 +36,10 @@ describe('ICEdit 页面成员与生命周期', () => {
   });
   it.each(['en', 'zh-CN'] as const)('英中metadata使用绝对标题并保留canonical、语言与OG：%s', locale => {
     const metadata = iceditMetadata(locale);
-    const title = locale === 'en' ? 'ICEdit AI Image Editor with Prompts | Makeup AI' : 'ICEdit AI 图片编辑器：用提示词编辑图片 | Makeup AI';
+    const title = locale === 'en' ? 'ICEdit AI Image Editor with Prompts | FrameKoi' : 'ICEdit AI 图片编辑器：用提示词编辑图片 | FrameKoi';
     const path = locale === 'en' ? iceditPath : `/zh-CN${iceditPath}`;
     expect(metadata.title).toEqual({ absolute: title });
-    expect(title.match(/Makeup AI/g)).toHaveLength(1);
+    expect(title.match(/FrameKoi/g)).toHaveLength(1);
     expect(metadata.alternates).toEqual({ canonical: path, languages: { en: iceditPath, 'zh-CN': `/zh-CN${iceditPath}` } });
     expect(metadata.openGraph).toMatchObject({ title, description: metadata.description, type: 'website', locale: locale === 'en' ? 'en_US' : 'zh_CN', url: path });
   });

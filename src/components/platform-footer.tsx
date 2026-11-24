@@ -15,6 +15,6 @@ export function PlatformFooter({ locale }: Readonly<{ locale: Locale }>) {
       })}</div>)}
       <div><h2>{zh ? "关于与信任" : "About & Trust"}</h2><Link href="/login">{zh ? "登录" : "Sign in"}</Link><PlatformLink entry={candidate("about")} locale={locale} /><PlatformLink entry={candidate("refund")} locale={locale} /><Link href="/legal/privacy">{zh ? "隐私声明" : "Privacy Notice"}</Link><Link href="/legal/terms">{zh ? "服务条款" : "Terms of Service"}</Link><PlatformLink entry={candidate("moderation-policy")} locale={locale} /><Link href="/legal/cookies">Cookies</Link><Link href="/legal/dmca">DMCA</Link></div>
     </div>
-    <div className="platform-footer-bottom"><PlatformBrand locale={locale} /><span>Copyright © {new Date().getFullYear()} Makeup AI</span></div>
+    <div className="platform-footer-bottom"><PlatformBrand locale={locale} /><span>Copyright © {new Date().getFullYear()} FrameKoi</span></div>
   </footer>;
 }

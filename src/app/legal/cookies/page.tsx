@@ -4,7 +4,7 @@ import { LegalShell } from "@/components/legal-shell";
 
 export const metadata: Metadata = {
   title: "Cookie Policy",
-  description: "The essential cookies and local browser storage used by Makeup AI.",
+  description: "The essential cookies and local browser storage used by FrameKoi.",
   robots: { index: true, follow: true }
 };
 
@@ -41,7 +41,7 @@ export default function CookiesPage() {
       <h2>4. Payment provider</h2>
       <p>
         Selecting the paid pack redirects you to Creem. Creem applies its own cookie and privacy
-        policies on its checkout domain. Makeup AI does not receive full card details.
+        policies on its checkout domain. FrameKoi does not receive full card details.
       </p>
 
       <h2>5. Browser controls</h2>

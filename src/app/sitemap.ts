@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 import { landingSlugs } from "@/lib/content";
 import { locales, localizePath } from "@/lib/i18n";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.framekoi.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const paths = ["/home", ...landingSlugs
+  const paths = ["/about", "/refund", "/content-moderation-policy", "/pricing", "/home", ...landingSlugs
     .filter((slug) => slug !== "ai-makeup/generator" && slug !== "ai-makeup/filter")
     .map((slug) => (slug === "home" ? "/" : `/${slug}`))];
 

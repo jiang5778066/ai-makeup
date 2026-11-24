@@ -16,7 +16,7 @@ export function PlatformWorkspacePage({ locale, currentPath }: { locale: Locale;
     { id: "video-effects", title: zh ? "视频特效" : "Video effects", description: zh ? "将图片转换为惊艳的视频特效" : "Transform images with video effects", icon: MoonStar },
     { id: "video-styler", title: zh ? "视频转视频" : "Video to video", description: zh ? "将视频转换成不同风格" : "Explore different video styles", icon: RefreshCw }
   ];
-  return <SiteShell locale={locale} currentPath={currentPath} variant="workspace"><main className="platform-workspace-page"><h1 className="platform-home-sr-only">{zh ? "Makeup AI 创作工作台" : "Makeup AI creative workspace"}</h1><div className="platform-home-container">
+  return <SiteShell locale={locale} currentPath={currentPath} variant="workspace"><main className="platform-workspace-page"><h1 className="platform-home-sr-only">{zh ? "FrameKoi 创作工作台" : "FrameKoi creative workspace"}</h1><div className="platform-home-container">
     <HomepageCarousel title="" locale={locale} className="platform-workspace-models" loop>{workspaceModels.map(card => <HomepageModelCard key={card.id} card={card} locale={locale} compact />)}</HomepageCarousel>
     <section className="platform-workspace-primary"><h2 className="platform-home-sr-only">{zh ? "主要功能" : "Main features"}</h2><div>{primary.map(item => <PlatformLink key={item.id} entry={homepageEntry(item.id)} locale={locale}><span><strong>{item.title}</strong><small>{item.description}</small></span><i><item.icon size={24}/></i><span className="platform-workspace-experience">{zh ? "查看入口" : "Explore tool"}<ArrowRight size={14}/></span></PlatformLink>)}</div></section>
     <WorkspaceToolSection title={zh ? "AI 视频工具" : "AI video tools"} cards={workspaceVideoTools} locale={locale}/>

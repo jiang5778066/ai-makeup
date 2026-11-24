@@ -99,14 +99,14 @@ const sharedChineseFaqs = [
 const englishPages: Record<LandingSlug, LandingPage> = {
   home: {
     slug: "home",
-    title: "AI Makeup Studio",
+    title: "FrameKoi",
     eyebrow: "AI beauty tools for creators and shoppers",
     h1: "Try makeup ideas before they touch your face",
     description:
       "Preview local live makeup for free, sign in for generated looks, and compare general style references.",
     primaryCta: "Explore makeup styles",
     secondaryCta: "View pricing",
-    seoTitle: "AI Makeup Studio | Virtual Makeup Try-On and Beauty Advisor",
+    seoTitle: "FrameKoi | Virtual Makeup Try-On and Beauty Advisor",
     seoDescription:
       "Try free local makeup previews, sign in to generate with credits, and compare general makeup style references.",
     keywords: ["ai makeup", "virtual makeup try on", "ai beauty tools"],

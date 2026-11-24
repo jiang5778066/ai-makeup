@@ -1,0 +1,85 @@
+{
+  "checkedAt": "2026-11-24",
+  "mode": "本机生产构建，使用隔离占位环境；未访问真实数据库",
+  "routes": [
+    {
+      "path": "/",
+      "status": 200,
+      "title": "Image and video creative platform | FrameKoi",
+      "issues": []
+    },
+    {
+      "path": "/pricing",
+      "status": 200,
+      "title": "Pricing &amp; credits | FrameKoi",
+      "issues": []
+    },
+    {
+      "path": "/about",
+      "status": 200,
+      "title": "About FrameKoi | FrameKoi",
+      "issues": []
+    },
+    {
+      "path": "/refund",
+      "status": 200,
+      "title": "Refund Policy | FrameKoi",
+      "issues": []
+    },
+    {
+      "path": "/content-moderation-policy",
+      "status": 200,
+      "title": "Acceptable Use &amp; Content Moderation | FrameKoi",
+      "issues": []
+    },
+    {
+      "path": "/zh-CN/about",
+      "status": 200,
+      "title": "关于 FrameKoi | FrameKoi",
+      "issues": []
+    },
+    {
+      "path": "/zh-CN/refund",
+      "status": 200,
+      "title": "退款政策 | FrameKoi",
+      "issues": []
+    },
+    {
+      "path": "/zh-CN/content-moderation-policy",
+      "status": 200,
+      "title": "可接受使用与内容审核政策 | FrameKoi",
+      "issues": []
+    },
+    {
+      "path": "/legal/terms",
+      "status": 200,
+      "title": "Terms of Service | FrameKoi",
+      "issues": []
+    },
+    {
+      "path": "/legal/privacy",
+      "status": 200,
+      "title": "Privacy Policy | FrameKoi",
+      "issues": []
+    },
+    {
+      "path": "/legal/dmca",
+      "status": 200,
+      "title": "DMCA Notice | FrameKoi",
+      "issues": []
+    },
+    {
+      "path": "/robots.txt",
+      "status": 200,
+      "title": null,
+      "issues": []
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200,
+      "title": null,
+      "issues": []
+    }
+  ],
+  "deployment": "等待Vercel重新登录，未发布"
+}

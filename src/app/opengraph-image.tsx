@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "AI Makeup Studio — virtual makeup try-on and beauty advisor";
+export const alt = "FrameKoi — image and video creative tools";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -34,9 +34,9 @@ export default function OpengraphImage() {
               fontWeight: 700
             }}
           >
-            M
+            F
           </div>
-          <div style={{ fontSize: 26, color: "#25211e", letterSpacing: -0.4 }}>AI Makeup Studio</div>
+          <div style={{ fontSize: 26, color: "#25211e", letterSpacing: -0.4 }}>FrameKoi</div>
         </div>
 
         <div
@@ -49,7 +49,7 @@ export default function OpengraphImage() {
           }}
         >
           <div style={{ fontSize: 92, fontWeight: 600, lineHeight: 1.02, letterSpacing: -1.8 }}>
-            Try makeup ideas
+            Explore creative tools.
           </div>
           <div
             style={{
@@ -60,7 +60,7 @@ export default function OpengraphImage() {
               color: "#9d1f32"
             }}
           >
-            before they touch your face.
+            Shape your next idea.
           </div>
         </div>
 
@@ -73,8 +73,8 @@ export default function OpengraphImage() {
             fontSize: 22
           }}
         >
-          <span>AI generator · Virtual try-on · Beauty advisor</span>
-          <span style={{ color: "#b7aa9a" }}>aimakeup.studio</span>
+          <span>Images · Video · Visual effects</span>
+          <span style={{ color: "#b7aa9a" }}>framekoi.com</span>
         </div>
       </div>
     ),
