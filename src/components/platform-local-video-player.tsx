@@ -1,5 +1,6 @@
 'use client';
 
+import { track } from '@vercel/analytics';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Play, Square } from 'lucide-react';
 import { videoReframeCopy } from '@/lib/platform-video-reframe-data';
@@ -98,6 +99,13 @@ export function LocalVideoPlayer({ locale, source, onError, portraitPreview = fa
       if (playingRange.current !== range) return;
       stopSelection(video);
       setPlaybackError(true);
+      return;
+    }
+    if (playingRange.current === range) {
+      track(portraitPreview ? 'portrait_preview_played' : 'video_selection_played', {
+        locale,
+        source: source.sample ? 'sample' : 'local'
+      });
     }
   }
 

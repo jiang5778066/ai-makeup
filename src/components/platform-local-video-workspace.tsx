@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Film, FolderOpen, LockKeyhole, Trash2 } from 'lucide-react';
+import { Film, FolderOpen, LockKeyhole, Play, Trash2 } from 'lucide-react';
 import type { Locale } from '@/lib/i18n';
-import { localVideoEditorCopy } from '@/lib/platform-local-video-editor-data';
+import { localVideoEditorCopy, localVideoSamplePath } from '@/lib/platform-local-video-editor-data';
 import { LocalVideoPlayer } from './platform-local-video-player';
 import { useLocalVideoSource } from './platform-local-video-source';
 import styles from './platform-local-video-editor.module.css';
@@ -12,6 +12,7 @@ export function LocalVideoWorkspace({ locale, portraitPreview = false }: { local
   const copy = localVideoEditorCopy[locale];
   const { source, select, clear, failPreview } = useLocalVideoSource();
   const { video, pending, error } = source;
+  const sampleUnavailable = pending || Boolean(video?.sample);
   const input = useRef<HTMLInputElement>(null);
   const choose = useRef<HTMLButtonElement>(null);
   const focusAfterRemove = useRef(false);
@@ -43,6 +44,14 @@ export function LocalVideoWorkspace({ locale, portraitPreview = false }: { local
             if (file) void select(file);
           }}
         />
+        <button
+          type="button" className={styles.secondary} aria-disabled={sampleUnavailable}
+          onClick={() => {
+            if (!sampleUnavailable) void select({ url: localVideoSamplePath, name: copy.sampleName, sample: true });
+          }}
+        >
+          <Play size={16} aria-hidden="true" />{copy.sample}
+        </button>
         {video && (
           <button type="button" className={styles.secondary} onClick={removeVideo}>
             <Trash2 size={16} aria-hidden="true" />{copy.remove}

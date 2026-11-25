@@ -55,7 +55,7 @@
 .primary:hover:not(:disabled) { background: #ebe4ff; }
 .primary:disabled { color: #c5c0d1; background: #37333f; cursor: default; }
 .secondary { color: var(--editor-text); background: #22212a; border-color: #4b465a; }
-.secondary:hover { background: #302d3c; }
+.secondary:hover:not([aria-disabled="true"]) { background: #302d3c; }
 .fileInput {
   position: absolute;
   width: 1px;
@@ -171,3 +171,44 @@
   min-height: 36px;
   accent-color: var(--editor-accent);
 }
+
+.intro .scope { margin-block-start: 6px; font-size: .875rem; }
+.secondary[aria-disabled="true"] { opacity: .65; cursor: default; }
+
+.guide {
+  display: grid;
+  gap: 14px;
+  margin-block-start: 32px;
+  padding: clamp(16px, 3vw, 28px);
+  border: 1px solid var(--editor-line);
+  border-radius: 18px;
+  background: var(--editor-panel);
+}
+.guide h2, .comparison h3, .comparison p { margin: 0; }
+.guide h2 { font-size: clamp(1.3rem, 3vw, 1.65rem); }
+.guide ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-inline-start: 1.4rem;
+  color: var(--editor-muted);
+  line-height: 1.55;
+}
+.comparison {
+  display: grid;
+  gap: 10px;
+  margin-block-start: 4px;
+  padding-block-start: 14px;
+  border-block-start: 1px solid var(--editor-line);
+}
+.comparison p, .frames figcaption { color: var(--editor-muted); font-size: .875rem; line-height: 1.5; }
+.frames {
+  display: grid;
+  grid-template-columns: minmax(0, 16fr) minmax(0, 5fr) minmax(0, 7.2fr);
+  gap: clamp(6px, 1.5vw, 14px);
+  max-width: 704px;
+  align-items: start;
+}
+.frames figure { min-width: 0; margin: 0; }
+.frames img { display: block; width: 100%; height: auto; border-radius: 6px; }
+.frames figcaption { margin-block-start: 4px; font-variant-numeric: tabular-nums; }

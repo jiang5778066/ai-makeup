@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 type VideoMetadata = { duration: number; width: number; height: number };
-export type LocalVideo = VideoMetadata & { url: string; name: string };
-type SourceState = { video: LocalVideo | null; pending: boolean; error: 'empty' | 'decode' | null };
-type Probe = { url: string; controller: AbortController };
+type VideoSource = { url: string; name: string; sample?: true };
+export type LocalVideo = VideoMetadata & VideoSource;
+type SourceState = { video: LocalVideo | null; pending: boolean; error: 'empty' | 'decode' | 'sample' | null };
+type Probe = { source: VideoSource; controller: AbortController };
 
 const initialSource: SourceState = { video: null, pending: false, error: null };
 
@@ -43,10 +44,14 @@ function decodeVideo(url: string, signal: AbortSignal): Promise<VideoMetadata> {
   });
 }
 
+function releaseUrl(source: VideoSource | null) {
+  if (source && !source.sample) URL.revokeObjectURL(source.url);
+}
+
 function cancelProbe(probe: Probe | null) {
   if (!probe) return;
   probe.controller.abort();
-  URL.revokeObjectURL(probe.url);
+  releaseUrl(probe.source);
 }
 
 export function useLocalVideoSource() {
@@ -57,7 +62,7 @@ export function useLocalVideoSource() {
   const release = useCallback(() => {
     cancelProbe(pending.current);
     pending.current = null;
-    if (active.current) URL.revokeObjectURL(active.current.url);
+    releaseUrl(active.current);
     active.current = null;
   }, []);
 
@@ -74,39 +79,42 @@ export function useLocalVideoSource() {
     };
   }, [clear, release]);
 
-  async function select(file: File) {
+  async function select(input: File | (VideoSource & { sample: true })) {
     cancelProbe(pending.current);
     pending.current = null;
-    if (!file.size) {
+    const isFile = input instanceof File;
+    if (isFile && !input.size) {
       setSource({ video: active.current, pending: false, error: 'empty' });
       return;
     }
 
     let candidate: Probe | null = null;
     try {
-      candidate = { controller: new AbortController(), url: URL.createObjectURL(file) };
+      const next = isFile ? { url: URL.createObjectURL(input), name: input.name } : input;
+      candidate = { controller: new AbortController(), source: next };
       pending.current = candidate;
       setSource({ video: active.current, pending: true, error: null });
-      const metadata = await decodeVideo(candidate.url, candidate.controller.signal);
+      const metadata = await decodeVideo(next.url, candidate.controller.signal);
       if (pending.current !== candidate) return;
 
       pending.current = null;
-      if (active.current) URL.revokeObjectURL(active.current.url);
-      active.current = { ...metadata, url: candidate.url, name: file.name };
+      releaseUrl(active.current);
+      active.current = { ...metadata, ...next };
       setSource({ video: active.current, pending: false, error: null });
     } catch {
       if (pending.current !== candidate) return;
-      if (candidate) URL.revokeObjectURL(candidate.url);
+      if (candidate) releaseUrl(candidate.source);
       pending.current = null;
-      setSource({ video: active.current, pending: false, error: 'decode' });
+      setSource({ video: active.current, pending: false, error: isFile ? 'decode' : 'sample' });
     }
   }
 
   function failPreview(url: string) {
     if (active.current?.url !== url) return;
-    URL.revokeObjectURL(url);
+    const error = active.current.sample ? 'sample' : 'decode';
+    releaseUrl(active.current);
     active.current = null;
-    setSource({ video: null, pending: Boolean(pending.current), error: 'decode' });
+    setSource({ video: null, pending: Boolean(pending.current), error });
   }
 
   return { source, select, clear, failPreview };

@@ -8,9 +8,12 @@ describe("本地竖屏构图", () => {
   it("双语页面说明预览范围并提供本地视频选取", () => {
     render(<VideoReframePage locale="zh-CN" />);
     const content = screen.getByRole("main");
-    expect(within(content).getByRole("heading", { name: "横屏转竖屏预览" })).toBeVisible();
+    expect(within(content).getByRole("heading", { name: "横屏转竖屏预览（9:16 和 4:5）" })).toBeVisible();
     expect(within(content).getByRole("button", { name: "选择视频" })).toBeEnabled();
-    expect(within(content).getByText("构图仅在浏览器中预览，原文件保持原样。")).toBeVisible();
+    expect(within(content).getByRole("button", { name: "试用样片" })).toBeEnabled();
+    expect(within(content).getByRole("heading", { name: "比较同一帧的构图" })).toBeVisible();
+    expect(within(content).getAllByRole("img")).toHaveLength(3);
+    expect(within(content).getByText("构图仅在浏览器中预览，暂不支持导出。")).toBeVisible();
   });
 
   it.each([

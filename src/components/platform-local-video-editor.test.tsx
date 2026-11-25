@@ -2,8 +2,10 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import EnglishPage, { metadata as englishMetadata } from '@/app/(marketing)/ai-video-editor/page';
 import ChinesePage, { metadata as chineseMetadata } from '@/app/zh-CN/ai-video-editor/page';
+import { track } from '@vercel/analytics';
 import { LocalVideoWorkspace } from './platform-local-video-workspace';
 
+vi.mock('@vercel/analytics', () => ({ track: vi.fn() }));
 vi.mock('./site-shell', () => ({ SiteShell: ({ children }: { children: React.ReactNode }) => children }));
 vi.mock('./platform-navigation-link', () => ({
   PlatformNavigationLink: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>
@@ -52,8 +54,8 @@ describe('FrameKoi 本地视频编辑器', () => {
   });
 
   it.each([
-    [EnglishPage, englishMetadata, '/ai-video-editor', 'AI Video Editor', 'Choose video', 'AI Video Generator', '/ai-video-generator', 'Landscape to portrait preview'],
-    [ChinesePage, chineseMetadata, '/zh-CN/ai-video-editor', 'AI 视频编辑器', '选择视频', 'AI 视频生成器', '/zh-CN/ai-video-generator', '横屏转竖屏预览']
+    [EnglishPage, englishMetadata, '/ai-video-editor', 'Video Clip Preview Online', 'Choose video', 'AI Video Generator', '/ai-video-generator', 'Preview Landscape Video in 9:16 or 4:5'],
+    [ChinesePage, chineseMetadata, '/zh-CN/ai-video-editor', '在线视频选段预览', '选择视频', 'AI 视频生成器', '/zh-CN/ai-video-generator', '横屏转竖屏预览（9:16 和 4:5）']
   ] as const)('正式入口 %s 使用本地化标题、canonical 和通用工具链接', (Page, metadata, path, title, choose, link, toolPath, reframeLabel) => {
     render(<Page />);
     expect(screen.getByRole('heading', { level: 1, name: title })).toBeVisible();
@@ -110,6 +112,37 @@ describe('FrameKoi 本地视频编辑器', () => {
     expect(revoke.mock.calls).toEqual([['blob:older.webm'], ['blob:latest.webm']]);
   });
 
+  it('样片走同一解码流程，只有成功回放才记录来源和语言', async () => {
+    const play = vi.spyOn(HTMLMediaElement.prototype, 'play')
+      .mockRejectedValueOnce(new Error('播放失败'))
+      .mockResolvedValueOnce(undefined);
+    const { container } = render(<LocalVideoWorkspace locale="en" portraitPreview />);
+    const sampleButton = screen.getByRole('button', { name: 'Try sample video' });
+    sampleButton.focus();
+    fireEvent.click(sampleButton);
+    const sample = '/videos/local-preview/framing-sample.mp4';
+    const decoder = vi.mocked(HTMLMediaElement.prototype.load).mock.contexts.find(
+      node => (node as HTMLVideoElement).getAttribute('src') === sample
+    ) as HTMLVideoElement;
+    await decode(decoder);
+    const video = container.querySelector('video')!;
+    expect(video).toHaveAttribute('src', sample);
+    expect(sampleButton).toHaveFocus();
+    expect(sampleButton).toHaveAttribute('aria-disabled', 'true');
+    await decode(video);
+
+    const button = screen.getByRole('button', { name: 'Play selection' });
+    await act(async () => { fireEvent.click(button); });
+    expect(track).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent('could not play');
+    await act(async () => { fireEvent.click(button); });
+    expect(play).toHaveBeenCalledTimes(2);
+    expect(track).toHaveBeenCalledExactlyOnceWith('portrait_preview_played', { locale: 'en', source: 'sample' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove video' }));
+    expect(revoke).not.toHaveBeenCalled();
+  });
+
   it('禁止无效选区，从有效起点播放并在终点停止', async () => {
     const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
     const { container } = render(<LocalVideoWorkspace locale="en" />);
@@ -130,6 +163,7 @@ describe('FrameKoi 本地视频编辑器', () => {
     await act(async () => { fireEvent.click(button); });
     expect(video.currentTime).toBe(2);
     expect(play).toHaveBeenCalledOnce();
+    expect(track).toHaveBeenCalledExactlyOnceWith('video_selection_played', { locale: 'en', source: 'local' });
     video.currentTime = 4.2;
     fireEvent.timeUpdate(video);
     expect(video.pause).toHaveBeenCalled();

@@ -5,6 +5,7 @@ import { PlatformNavigationLink } from "./platform-navigation-link";
 import { localVideoEditorPath } from "@/lib/platform-local-video-editor-data";
 import { localizePath, type Locale } from "@/lib/i18n";
 import { videoReframeCopy, videoReframePath } from "@/lib/platform-video-reframe-data";
+import { LocalVideoGuide } from "./platform-local-video-guide";
 import styles from "./platform-local-video-editor.module.css";
 
 export function VideoReframePage({ locale }: { locale: Locale }) {
@@ -15,18 +16,19 @@ export function VideoReframePage({ locale }: { locale: Locale }) {
         <header className={styles.intro}>
           <h1>{copy.title}</h1>
           <p>{copy.description}</p>
+          <p className={styles.scope}>{copy.scope}</p>
         </header>
         <div id="generator">
           <LocalVideoWorkspace locale={locale} portraitPreview />
         </div>
         <div className={styles.afterWorkspace}>
-          <p>{copy.scope}</p>
           <nav className={styles.tools} aria-label={locale === "zh-CN" ? "相关工具" : "Related tools"}>
             <PlatformNavigationLink href={localizePath(localVideoEditorPath, locale)}>
               {copy.playback}<ArrowRight size={16} aria-hidden="true" />
             </PlatformNavigationLink>
           </nav>
         </div>
+        <LocalVideoGuide title={copy.guideTitle} steps={copy.steps} comparison={copy} />
       </main>
     </SiteShell>
   );
