@@ -26,9 +26,11 @@ export const command = (binary: string, args: string[], env: NodeJS.ProcessEnv =
     if (failure) return reject(failure);
     if (code !== 0) {
       if (classifyVercel) {
+        const output = (diagnostic + "\n" + Buffer.concat(chunks).toString("utf8").slice(-8192)).replace(/\x1b\[[0-9;]*m/g, "");
         const categories = [
-          [/invalid.token|token.*expired|No existing credentials|invalid credentials/i, "凭据无效"],
+          [/invalid.token|token.*expired|token.*not valid|No existing credentials|invalid credentials/i, "凭据无效"],
           [/scope-not-accessible|not able to load teams|access to the specified team|team.*not found/i, "团队权限"],
+          [/not able to load user|access to the specified account|loading user|\/v2\/user/i, "CLI 用户身份"],
           [/not authorized|unauthorized|forbidden|permission|403/i, "接口权限"],
           [/environment variables|env.*pull|sensitive/i, "环境配置读取"],
           [/project.*not found|could not retrieve project|not linked/i, "项目链接"],
@@ -36,9 +38,10 @@ export const command = (binary: string, args: string[], env: NodeJS.ProcessEnv =
           [/ENOENT|EACCES|EPERM|ENOTDIR/i, "本地配置路径"],
           [/unknown option|unknown or unexpected option|invalid option/i, "CLI 参数"],
           [/git.*not found|git.*not installed|git repository/i, "Git 工作目录"],
+          [/unexpected error|unhandled|uncaught/i, "CLI 内部异常"],
         ] as const;
-        const match = categories.find(([pattern]) => pattern.test(diagnostic));
-        console.error(`Vercel CLI 退出码 ${code ?? "未知"}，原因类别 ${match?.[1] ?? "未知"}`);
+        const matches = categories.filter(([pattern]) => pattern.test(output)).map(([, category]) => category);
+        console.error(`Vercel CLI 退出码 ${code ?? "未知"}，诊断 ${matches.join("、") || "未匹配"}，标准错误长度 ${diagnostic.length}、标准输出段数 ${chunks.length}`);
       }
       return reject(new Error("子命令失败"));
     }
