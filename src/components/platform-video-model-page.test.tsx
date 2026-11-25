@@ -28,7 +28,7 @@ beforeAll(() => {
 describe("C2c视频模型专页本地表单边界", () => {
   it("四条路径保持各自标题身份并禁用生成", () => {
     const cases = [
-      ["/ai-video-models/kling-ai", "Kling AI Video Generator on Lanta AI"],
+      ["/ai-video-models/kling-ai", "Kling AI Video Generator"],
       ["/ai-video-models/kling-3-0", "Kling 3.0: All-in-One AI Video Generator"],
       ["/ai-video-models/seedance-2-0", "Seedance 2.0 AI Video Generator"],
       ["/ai-video-models/happy-horse-1-0", "HappyHorse 1.0 AI Video Generator"],
@@ -43,6 +43,18 @@ describe("C2c视频模型专页本地表单边界", () => {
       expect(screen.getByRole("button", { name: "Generation not available yet" })).toBeDisabled();
       view.unmount();
     }
+  });
+
+  it.each([
+    ["en", "/ai-video-models/kling-ai", "Kling AI Video Generator", /Generation is not available on FrameKoi/],
+    ["zh-CN", "/zh-CN/ai-video-models/kling-ai", "Kling AI 视频生成器", /FrameKoi 暂未开放 Kling 视频生成/],
+  ] as const)("Kling 首屏准确标示预览能力（%s）", (locale, url, title, availability) => {
+    window.history.replaceState({}, "", url);
+    render(<PlatformVideoModelPage path="/ai-video-models/kling-ai" locale={locale} />);
+    const hero = within(document.querySelector('[data-reference-section="0"]') as HTMLElement);
+    expect(hero.getByRole("heading", { name: title, level: 1 })).toBeVisible();
+    expect(hero.getByText(availability)).toBeVisible();
+    expect(hero.queryByText(/Lanta AI/i)).toBeNull();
   });
 
   it("Kling本地会员提示关闭后保留原时长且不提交请求", () => {

@@ -1691,7 +1691,7 @@ export const generatorPages = {
  "/ai-video-models/wan-2-5": {kind:"video",family:"wan",title:{en:"Wan 2.5 AI Video Generator","zh-CN":"Wan 2.5 AI 视频生成器"},defaultModel:"wan-2-5"},
  "/ai-video-models/wan-2-6": {kind:"video",family:"wan",title:{en:"Wan 2.6 AI Video Generator","zh-CN":"Wan 2.6 AI 视频生成器"},defaultModel:"wan-2-6"},
  "/ai-video-models/wan-3-0": {kind:"video",family:"wan",title:{en:"Wan 3.0 AI Video Generator","zh-CN":"Wan 3.0 AI 视频生成器"},defaultModel:"wan-3-0"},
- "/ai-video-models/kling-ai": {kind:"video",family:"video",title:{en:"Kling AI Video Generator on Lanta AI","zh-CN":"Lanta AI 上的 Kling AI 视频生成器"},defaultModel:"kling-2-6"},
+ "/ai-video-models/kling-ai": {kind:"video",family:"video",title:{en:"Kling AI Video Generator","zh-CN":"Kling AI 视频生成器"},defaultModel:"kling-2-6"},
  "/ai-video-models/kling-3-0": {kind:"video",family:"video",title:{en:"Kling 3.0: All-in-One AI Video Generator","zh-CN":"Kling 3.0：一体化 AI 视频生成器"},defaultModel:"kling-3-0"},
  "/ai-video-models/seedance-2-0": {kind:"video",family:"video",title:{en:"Seedance 2.0 AI Video Generator","zh-CN":"Seedance 2.0 AI 视频生成器"},defaultModel:"seedance-2-0"},
  "/ai-video-models/happy-horse-1-0": {kind:"video",family:"video",title:{en:"HappyHorse 1.0 AI Video Generator","zh-CN":"HappyHorse 1.0 AI 视频生成器"},defaultModel:"happy-horse-1-0"},

@@ -93,3 +93,17 @@ it("C2d五页双语实际分发及SEO以pathname命名，重复model不改介绍
 
 vi.mock("./platform-dreamface-page", () => ({ PlatformDreamfacePage: ({ locale, initialQuery }: {locale:string;initialQuery:string}) => <h1>{locale}:DreamFace:{initialQuery}</h1> }));
 it("DreamFace专属分派保重复query和双语metadata，不冒充Lanta provider",()=>{for(const locale of ["en","zh-CN"]as const){const path="/ai-video-models/dreamface-ai",view=render(<PlatformRoutePage path={path} locale={locale} searchParams={{model:["dreamface-ai","112"],tab:"text"}}/>);expect(screen.getByRole("heading")).toHaveTextContent(`${locale}:DreamFace:model=dreamface-ai&model=112&tab=text`);const meta=platformRouteMetadata(path,locale);expect(meta.title).toContain("DreamFace");expect(meta.description).toMatch(/生成服务尚未开放|Generation is not available/);expect(meta.alternates?.canonical).toBe(`${locale==="zh-CN"?"/zh-CN":""}${path}`);view.unmount();}});
+
+it.each([
+  ["en", "/ai-video-models/kling-ai", "Kling AI Video Generator"],
+  ["zh-CN", "/zh-CN/ai-video-models/kling-ai", "Kling AI 视频生成器"],
+] as const)("Kling 模型页使用各自的规范网址和双向语言标记（%s）", (locale, canonical, title) => {
+  const path = "/ai-video-models/kling-ai";
+  expect(platformRouteMetadata(path, locale, { duration: "10" })).toMatchObject({
+    title,
+    alternates: {
+      canonical,
+      languages: { en: path, "zh-CN": `/zh-CN${path}`, "x-default": path },
+    },
+  });
+});

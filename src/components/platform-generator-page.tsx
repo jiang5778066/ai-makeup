@@ -35,5 +35,25 @@ function GeneratorSession({path,locale,query}:{path:GeneratorPath;locale:Locale;
  }
  return <><div className={`platform-generator-workspace platform-generator-workspace-${page.family}`} id="generator" data-generator-model={state.model} data-generation-availability="capabilities">{page.kind==='video'?<PlatformVideoGeneratorForm {...props}/>:<PlatformImageGeneratorForm {...props}/>}<Showcase video={page.kind==='video'} locale={locale}/></div>{page.family==='video'&&<header className="platform-generator-video-title"><h1>{locale==='zh-CN'?'AI 视频生成器：从文字与图片探索视频创意':'AI Video Generator: Explore Videos from Text & Images'}</h1><p>{locale==='zh-CN'?'从提示词或照片开始，描述一个明确的动作和镜头运动。可以了解参数并预览本地文件；可用模式与报价以生成面板为准。':'Start with a prompt or a photo. Describe one clear action and how the camera should move. Explore settings and local previews; check the generation panel for available modes and quotes.'}</p></header>}<PlatformGeneratorContent family={page.family==='wan'?'video':page.family} locale={locale} previewModel={previewModel} onPrompt={prompt=>{const next=changeGeneratorModel(changeGeneratorMode(state,'text'),'gpt-image-2');update({...next,prompt});document.getElementById('generator')?.scrollIntoView({behavior:'smooth'});document.getElementById('platform-generator-prompt')?.focus({preventScroll:true})}}/></>;
 }
-function ReactiveGenerator({path,locale,initialQuery=''}:Props){const serverPath=`${localizePath(path,locale)}${initialQuery?`?${initialQuery}`:''}`,url=usePlatformUrl(serverPath),parsed=new URL(url,'https://local.invalid');const active=parsed.pathname===localizePath(path,locale);return <SiteShell locale={locale} currentPath={path}><main className={`platform-generator platform-generator-${generatorPages[path].family}`} data-generator-page={path}><Hero path={path} locale={locale}/>{active&&<GeneratorSession key={`${locale}:${generatorSelectionKey(path,parsed.search)}`} path={path} locale={locale} query={parsed.search}/>}</main></SiteShell>}
-export function PlatformGeneratorPage(props:Props){return <Suspense fallback={<SiteShell locale={props.locale} currentPath={props.path}><main className="platform-generator"><Hero path={props.path} locale={props.locale}/><p>{props.locale==='zh-CN'?'正在准备本地参数预览…':'Preparing local parameter preview…'}</p></main></SiteShell>}><ReactiveGenerator {...props}/></Suspense>}
+function ReactiveGenerator({ path, locale, initialQuery = '' }: Props) {
+ const pathname = localizePath(path, locale);
+ const serverPath = initialQuery ? `${pathname}?${initialQuery}` : pathname;
+ const url = usePlatformUrl(serverPath);
+ const parsed = new URL(url, 'https://local.invalid');
+ if (parsed.pathname !== pathname) return null;
+
+ const selectionKey = generatorSelectionKey(path, parsed.search);
+ return <GeneratorSession key={`${locale}:${selectionKey}`} path={path} locale={locale} query={parsed.search}/>;
+}
+
+export function PlatformGeneratorPage({ path, locale, initialQuery }: Props) {
+ const loading = locale === 'zh-CN' ? '正在准备本地参数预览…' : 'Preparing local parameter preview…';
+ return <SiteShell locale={locale} currentPath={path}>
+  <main className={`platform-generator platform-generator-${generatorPages[path].family}`} data-generator-page={path}>
+   <Hero path={path} locale={locale}/>
+   <Suspense fallback={<p>{loading}</p>}>
+    <ReactiveGenerator path={path} locale={locale} initialQuery={initialQuery}/>
+   </Suspense>
+  </main>
+ </SiteShell>;
+}

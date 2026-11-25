@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { localizePath, type Locale } from '@/lib/i18n';
 import { localVideoEditorCopy, localVideoEditorPath } from '@/lib/platform-local-video-editor-data';
+import { videoReframeCopy, videoReframePath } from '@/lib/platform-video-reframe-data';
 import { PlatformNavigationLink } from './platform-navigation-link';
 import { SiteShell } from './site-shell';
 import { LocalVideoWorkspace } from './platform-local-video-workspace';
@@ -19,6 +20,9 @@ export function LocalVideoEditorPage({ locale }: { locale: Locale }) {
         <div className={styles.afterWorkspace}>
           <p>{copy.scope}</p>
           <nav className={styles.tools} aria-label={copy.tools}>
+            <PlatformNavigationLink href={localizePath(videoReframePath, locale)}>
+              {videoReframeCopy[locale].title}<ArrowRight size={16} aria-hidden="true" />
+            </PlatformNavigationLink>
             <PlatformNavigationLink href={localizePath('/ai-video-generator', locale)}>
               {copy.videoTool}<ArrowRight size={16} aria-hidden="true" />
             </PlatformNavigationLink>

@@ -51,7 +51,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                     "className": "platform-video-model-ref-11 platform-video-model-ref-8 platform-video-model-ref-12 platform-video-model-ref-13 platform-video-model-ref-14 platform-video-model-ref-15 platform-video-model-ref-16 platform-video-model-ref-17 platform-video-model-ref-18 platform-video-model-ref-19 platform-video-model-ref-20 platform-video-model-ref-21 platform-video-model-ref-22 platform-video-model-ref-23 platform-video-model-ref-24 platform-video-model-ref-25 platform-video-model-ref-26 platform-video-model-ref-27"
                                   },
                                   "children": [
-                                    "Kling AI on Lanta AI"
+                                    "Kling 2.6 · Model preview"
                                   ]
                                 },
                                 {
@@ -68,20 +68,6 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                       "children": [
                                         "Kling AI Video Generator"
                                       ]
-                                    },
-                                    {
-                                      "tag": "br",
-                                      "attrs": {},
-                                      "children": []
-                                    },
-                                    {
-                                      "tag": "span",
-                                      "attrs": {
-                                        "className": "platform-video-model-ref-33 platform-video-model-ref-34 platform-video-model-ref-35 platform-video-model-ref-36 platform-video-model-ref-37 platform-video-model-ref-38"
-                                      },
-                                      "children": [
-                                        "on Lanta AI"
-                                      ]
                                     }
                                   ]
                                 },
@@ -91,7 +77,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                     "className": "platform-video-model-ref-39 platform-video-model-ref-40 platform-video-model-ref-41 platform-video-model-ref-42"
                                   },
                                   "children": [
-                                    "Create with ",
+                                    "Explore settings for ",
                                     {
                                       "tag": "strong",
                                       "attrs": {},
@@ -99,7 +85,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                         "Kling AI"
                                       ]
                                     },
-                                    " through Lanta AI's browser-based video generator."
+                                    " and preview a file in your browser."
                                   ]
                                 },
                                 {
@@ -108,7 +94,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                     "className": "platform-video-model-ref-40 platform-video-model-ref-41 platform-video-model-ref-42"
                                   },
                                   "children": [
-                                    "Turn a prompt or source image into a 5- or 10-second Kling 2.6 clip, with optional generated audio."
+                                    "Generation is not available on FrameKoi."
                                   ]
                                 }
                               ]
@@ -126,7 +112,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                     "href": "#generator"
                                   },
                                   "children": [
-                                    "Start with Kling AI",
+                                    "Preview Kling settings",
                                     {
                                       "tag": "svg",
                                       "attrs": {
@@ -366,7 +352,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                 "className": "platform-video-model-ref-33 platform-video-model-ref-34 platform-video-model-ref-107 platform-video-model-ref-37 platform-video-model-ref-38"
                               },
                               "children": [
-                                "How to use Kling AI video generator on Lanta AI"
+                                "Kling AI video workflow reference"
                               ]
                             }
                           ]
@@ -2139,7 +2125,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                             "className": "platform-video-model-ref-122 platform-video-model-ref-29 platform-video-model-ref-30 platform-video-model-ref-121 platform-video-model-ref-32"
                           },
                           "children": [
-                            "Kling AI 2.6 on Lanta AI"
+                            "Kling AI 2.6 settings"
                           ]
                         },
                         {
@@ -2454,7 +2440,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                             "className": "platform-video-model-ref-11 platform-video-model-ref-8 platform-video-model-ref-12 platform-video-model-ref-13 platform-video-model-ref-14 platform-video-model-ref-15 platform-video-model-ref-16 platform-video-model-ref-17 platform-video-model-ref-18 platform-video-model-ref-19 platform-video-model-ref-20 platform-video-model-ref-21 platform-video-model-ref-22 platform-video-model-ref-23 platform-video-model-ref-24 platform-video-model-ref-25 platform-video-model-ref-26 platform-video-model-ref-27"
                           },
                           "children": [
-                            "Why Lanta AI for Kling AI"
+                            "Kling AI workflow considerations"
                           ]
                         },
                         {
@@ -2495,7 +2481,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                 "src": "https://cdn.lantaai.com/videos/a6e9ebdb-9436-4907-ac1f-4cf112b8dea1.mp4",
                                 "poster": "https://cdn.lantaai.com/outputs/e3e77119-06cd-429f-b192-fb8e7a0f38a7.jpg",
                                 "className": "platform-video-model-ref-89 platform-video-model-ref-183 platform-video-model-ref-90 platform-video-model-ref-87",
-                                "title": "Lanta AI Workflow"
+                                "title": "Reference workflow"
                               },
                               "children": [],
                               "media": {
@@ -3346,7 +3332,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                     "className": "platform-video-model-ref-11 platform-video-model-ref-8 platform-video-model-ref-12 platform-video-model-ref-13 platform-video-model-ref-14 platform-video-model-ref-15 platform-video-model-ref-16 platform-video-model-ref-17 platform-video-model-ref-18 platform-video-model-ref-19 platform-video-model-ref-20 platform-video-model-ref-21 platform-video-model-ref-22 platform-video-model-ref-23 platform-video-model-ref-24 platform-video-model-ref-25 platform-video-model-ref-26 platform-video-model-ref-27"
                                   },
                                   "children": [
-                                    "Lanta AI 上的 Kling AI"
+                                    "Kling 2.6 · 模型预览"
                                   ]
                                 },
                                 {
@@ -3363,20 +3349,6 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                       "children": [
                                         "Kling AI 视频生成器"
                                       ]
-                                    },
-                                    {
-                                      "tag": "br",
-                                      "attrs": {},
-                                      "children": []
-                                    },
-                                    {
-                                      "tag": "span",
-                                      "attrs": {
-                                        "className": "platform-video-model-ref-33 platform-video-model-ref-34 platform-video-model-ref-35 platform-video-model-ref-36 platform-video-model-ref-37 platform-video-model-ref-38"
-                                      },
-                                      "children": [
-                                        "尽在 Lanta AI"
-                                      ]
                                     }
                                   ]
                                 },
@@ -3386,7 +3358,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                     "className": "platform-video-model-ref-39 platform-video-model-ref-40 platform-video-model-ref-41 platform-video-model-ref-42"
                                   },
                                   "children": [
-                                    "通过 Lanta AI 的浏览器视频生成器使用 ",
+                                    "了解 ",
                                     {
                                       "tag": "strong",
                                       "attrs": {},
@@ -3394,7 +3366,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                         "Kling AI"
                                       ]
                                     },
-                                    " 创作。"
+                                    " 的参数，并在浏览器中预览本地文件。"
                                   ]
                                 },
                                 {
@@ -3403,7 +3375,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                     "className": "platform-video-model-ref-40 platform-video-model-ref-41 platform-video-model-ref-42"
                                   },
                                   "children": [
-                                    "将提示词或源图片转化为 5 秒或 10 秒的 Kling 2.6 视频片段，并可选择生成音频。"
+                                    "FrameKoi 暂未开放 Kling 视频生成。"
                                   ]
                                 }
                               ]
@@ -3421,7 +3393,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                     "href": "#generator"
                                   },
                                   "children": [
-                                    "从 Kling AI 开始",
+                                    "预览 Kling 参数",
                                     {
                                       "tag": "svg",
                                       "attrs": {
@@ -3661,7 +3633,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                 "className": "platform-video-model-ref-33 platform-video-model-ref-34 platform-video-model-ref-107 platform-video-model-ref-37 platform-video-model-ref-38"
                               },
                               "children": [
-                                "如何在 Lanta AI 上使用 Kling AI 视频生成器"
+                                "Kling AI 视频创作流程参考"
                               ]
                             }
                           ]
@@ -5434,7 +5406,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                             "className": "platform-video-model-ref-122 platform-video-model-ref-29 platform-video-model-ref-30 platform-video-model-ref-121 platform-video-model-ref-32"
                           },
                           "children": [
-                            "Lanta AI 上的 Kling AI 2.6"
+                            "Kling AI 2.6 参数"
                           ]
                         },
                         {
@@ -5749,7 +5721,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                             "className": "platform-video-model-ref-11 platform-video-model-ref-8 platform-video-model-ref-12 platform-video-model-ref-13 platform-video-model-ref-14 platform-video-model-ref-15 platform-video-model-ref-16 platform-video-model-ref-17 platform-video-model-ref-18 platform-video-model-ref-19 platform-video-model-ref-20 platform-video-model-ref-21 platform-video-model-ref-22 platform-video-model-ref-23 platform-video-model-ref-24 platform-video-model-ref-25 platform-video-model-ref-26 platform-video-model-ref-27"
                           },
                           "children": [
-                            "为什么选择 Lanta AI 的 Kling AI"
+                            "Kling AI 创作流程参考"
                           ]
                         },
                         {
@@ -5790,7 +5762,7 @@ export const videoModelContent: Record<CoreVideoModelPath, Record<Locale, VideoR
                                 "src": "https://cdn.lantaai.com/videos/a6e9ebdb-9436-4907-ac1f-4cf112b8dea1.mp4",
                                 "poster": "https://cdn.lantaai.com/outputs/e3e77119-06cd-429f-b192-fb8e7a0f38a7.jpg",
                                 "className": "platform-video-model-ref-89 platform-video-model-ref-183 platform-video-model-ref-90 platform-video-model-ref-87",
-                                "title": "Lanta AI 工作流"
+                                "title": "参考工作流"
                               },
                               "children": [],
                               "media": {

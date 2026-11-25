@@ -52,13 +52,16 @@ describe('FrameKoi 本地视频编辑器', () => {
   });
 
   it.each([
-    [EnglishPage, englishMetadata, '/ai-video-editor', 'AI Video Editor', 'Choose video', 'AI Video Generator', '/ai-video-generator'],
-    [ChinesePage, chineseMetadata, '/zh-CN/ai-video-editor', 'AI 视频编辑器', '选择视频', 'AI 视频生成器', '/zh-CN/ai-video-generator']
-  ] as const)('正式入口 %s 使用本地化标题、canonical 和通用工具链接', (Page, metadata, path, title, choose, link, toolPath) => {
+    [EnglishPage, englishMetadata, '/ai-video-editor', 'AI Video Editor', 'Choose video', 'AI Video Generator', '/ai-video-generator', 'Landscape to portrait preview'],
+    [ChinesePage, chineseMetadata, '/zh-CN/ai-video-editor', 'AI 视频编辑器', '选择视频', 'AI 视频生成器', '/zh-CN/ai-video-generator', '横屏转竖屏预览']
+  ] as const)('正式入口 %s 使用本地化标题、canonical 和通用工具链接', (Page, metadata, path, title, choose, link, toolPath, reframeLabel) => {
     render(<Page />);
     expect(screen.getByRole('heading', { level: 1, name: title })).toBeVisible();
     expect(screen.getByRole('button', { name: choose })).toBeVisible();
     expect(screen.getByRole('link', { name: link })).toHaveAttribute('href', toolPath);
+    expect(screen.getByRole('link', { name: reframeLabel })).toHaveAttribute(
+      'href', path.replace('/ai-video-editor', '/tools/landscape-to-portrait-video-converter-ai')
+    );
     expect(metadata.title).toBe(title);
     expect(metadata.alternates?.canonical).toBe(path);
     expect(metadata.alternates?.languages).toMatchObject({ en: '/ai-video-editor', 'zh-CN': '/zh-CN/ai-video-editor' });

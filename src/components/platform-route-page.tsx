@@ -1,6 +1,6 @@
 import { coreToolMetadata } from "@/lib/core-tool-seo";
 import { notFound } from "next/navigation";
-import type { Locale } from "@/lib/i18n";
+import { alternateLanguagesForPath, localizePath, type Locale } from "@/lib/i18n";
 import { getLandingPage, slugFromPath } from "@/lib/content";
 import { platformSearchQuery, resolveHomepageRoute, type PlatformSearchParams } from "@/lib/platform-homepage";
 import { platformHomepageMetadata, platformHomepageSchemas } from "@/lib/platform-homepage-seo";
@@ -40,7 +40,24 @@ export function platformRouteMetadata(path: string, locale: Locale, searchParams
     const page = rootGeneratorPages[route.path];
     return { title: `${page.title[locale]}`, description: locale === "zh-CN" ? `${page.title[locale]}：模型介绍与公开示例。通用生成器入口不代表该型号已接入，生成服务尚未开放。` : `${page.title[locale]}: model information and public examples. A link to the general generator does not imply model availability. Generation is not available yet.`, alternates: { canonical: `${locale === "zh-CN" ? "/zh-CN" : ""}${route.path}` } };
   }
-  if (route?.kind === "video-model") { const page = videoModelPages[route.path]; return { title: `${page.title[locale]}`, description: locale === "zh-CN" ? `${page.title[locale]}：公开模型资料与本地参数预览。${route.path==='/ai-video-models/grok-imagine'?'本站视频能力以生成面板为准。':'生成服务尚未开放。'}` : `${page.title[locale]}: public model information and local parameter preview. ${route.path==='/ai-video-models/grok-imagine'?'Site video availability is shown in the generation panel.':'Generation is not available yet.'}`, alternates: { canonical: `${locale === "zh-CN" ? "/zh-CN" : ""}${page.canonical}` } }; }
+  if (route?.kind === "video-model") {
+    const page = videoModelPages[route.path];
+    const title = page.title[locale];
+    const hasGenerationPanel = route.path === "/ai-video-models/grok-imagine";
+    const description = locale === "zh-CN"
+      ? `${title}：公开模型资料与本地参数预览。${hasGenerationPanel ? "本站视频能力以生成面板为准。" : "生成服务尚未开放。"}`
+      : `${title}: public model information and local parameter preview. ${hasGenerationPanel ? "Site video availability is shown in the generation panel." : "Generation is not available yet."}`;
+    return {
+      title,
+      description,
+      alternates: {
+        canonical: localizePath(page.canonical, locale),
+        ...(route.path === "/ai-video-models/kling-ai" && {
+          languages: { ...alternateLanguagesForPath(page.canonical), "x-default": page.canonical }
+        })
+      }
+    };
+  }
   if (route?.kind === "wan") return { title: wanTitle(route.path, locale), description: locale === "zh-CN" ? `${wanTitle(route.path, locale)}：公开模型资料、示例与参数预览。视频生成暂不可用。` : `${wanTitle(route.path, locale)}: public model information, examples and settings. Video generation is not available.`, alternates: { canonical: `${locale === "zh-CN" ? "/zh-CN" : ""}${route.path}` } };
   if (route?.kind === "generator") { const page = generatorPages[route.path]; const siteImage=page.kind==='image'&&page.family!=='nano',siteVideo=route.path==='/ai-video-generator'; return { title: `${page.title[locale]}`, description: locale === "zh-CN" ? `${page.title[locale]}：公开模型资料与本地参数、文件预览。${siteImage?'本站图片能力以生成面板为准。':siteVideo?'本站视频能力以生成面板为准。':'生成服务尚未开放。'}` : `${page.title[locale]}: public model information and local parameter and file previews. ${siteImage?'Site image availability is shown in the generation panel.':siteVideo?'Site video availability is shown in the generation panel.':'Generation is not available yet.'}`, alternates: { canonical: `${locale === "zh-CN" ? "/zh-CN" : ""}${route.path}` } }; }
   if (route?.kind === "directory") { const page = directoryContent[route.path]; return { title: `${page.title[locale]}`, description: page.description[locale], alternates: { canonical: `${locale === "zh-CN" ? "/zh-CN" : ""}${route.path}` } }; }
