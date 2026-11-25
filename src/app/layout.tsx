@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
@@ -21,7 +22,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const locale = requestHeaders.get("x-page-locale") === "zh-CN" ? "zh-CN" : "en";
   return (
     <html lang={locale}>
-      <body><PlatformNavigationProvider>{children}</PlatformNavigationProvider></body>
+      <body>
+        <PlatformNavigationProvider>{children}</PlatformNavigationProvider>
+        <Analytics />
+      </body>
     </html>
   );
 }
