@@ -93,10 +93,13 @@ export class Vercel {
     this.migrationOriginal = value; this.migrationSelected = selected;
     return selected;
   }
-  async inspect() {
+  async inspect(mark: (check: string) => void = () => {}) {
+    mark("Vercel 项目身份");
     const project = await this.api<{ id: string; accountId: string; nodeVersion: string; rootDirectory?: string | null }>(`/v9/projects/${TARGET.project}`);
     if (project.id !== TARGET.project || project.accountId !== TARGET.team || project.nodeVersion !== "24.x" || !!project.rootDirectory) throw new Error("项目身份或 Node 版本不匹配");
+    mark("上一生产部署");
     const previous = await previousProduction(this.api.bind(this), this.config.bootstrap);
+    mark("官方 CLI 拉取生产配置");
     await mkdir(resolve(this.root, ".vercel"), { recursive: true, mode: 0o700 });
     await chmod(resolve(this.root, ".vercel"), 0o700);
     await writeFile(resolve(this.root, ".vercel/project.json"), JSON.stringify({ projectId: TARGET.project, orgId: TARGET.team }), { mode: 0o600 });
@@ -112,6 +115,7 @@ export class Vercel {
     if (native && await readlink(envPath) !== "/dev/null") throw new Error("原生pull内存边界变化");
     const link = JSON.parse(await readFile(resolve(this.root, ".vercel/project.json"), "utf8"));
     if (link.projectId !== TARGET.project || link.orgId !== TARGET.team) throw new Error("本地项目链接不匹配");
+    mark("生产运行环境快照");
     this.runtime = await this.readRuntime();
     // dotenv4不支持任意值往返；清空拉取文件，完整已验证值直接传入构建进程。
     if (!native) { await writeFile(envPath, "", { mode: 0o600 }); await chmod(envPath, 0o600); }
@@ -124,6 +128,7 @@ export class Vercel {
     const fileEnv = native ? { RELEASE_SHA: this.config.sha, RELEASE_PROJECT_ID: TARGET.project } : this.runtime;
     await writeFile(file, JSON.stringify({ ...base, env: fileEnv, build: { ...build, env: fileEnv } }), { mode: 0o600 });
     await chmod(file, 0o600);
+    mark("应用数据库只读连接");
     await this.databaseReady();
     return previous;
   }

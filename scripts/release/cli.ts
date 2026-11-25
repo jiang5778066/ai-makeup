@@ -7,6 +7,7 @@ import { auditDependencies } from "./audit";
 import { release, type ReleaseResult } from "./pipeline";
 import { TARGET, type ReleaseConfig } from "./preflight";
 import { Vercel, prepareResultDirectory } from "./vercel";
+import { ApiFailure } from "./previous";
 import { checkHealth } from "./health";
 import { databaseStatus, migrateDatabase } from "../db/migration";
 import { trustSource } from "./trust";
@@ -66,14 +67,29 @@ const execute = async (c: ReleaseConfig) => {
       } else await trustSource(c.sha);
     }, audit: () => auditDependencies(),
     inspect: async () => {
-      if (c.authMode === "native-cli") {
-        c.migrationUrl = await vercel.migrationConfiguration();
-        await migrationStatus(c.migrationUrl);
-        c.bypass = await vercel.productionValue("VERCEL_AUTOMATION_BYPASS_SECRET", true);
-      } else await databaseStatus(c.migrationUrl);
-      const previous = await vercel.inspect();
-      if (c.migrationSource === "vercel-production" || c.migrationSource === "vercel-production-session") await vercel.assertMigrationSnapshot(c.migrationUrl);
-      return previous;
+      let check = "迁移连接与数据库结构";
+      const mark = (next: string) => { check = next; };
+      try {
+        if (c.authMode === "native-cli") {
+          c.migrationUrl = await vercel.migrationConfiguration();
+          await migrationStatus(c.migrationUrl);
+          mark("候选保护配置");
+          c.bypass = await vercel.productionValue("VERCEL_AUTOMATION_BYPASS_SECRET", true);
+        } else await databaseStatus(c.migrationUrl);
+        const previous = await vercel.inspect(mark);
+        if (c.migrationSource === "vercel-production" || c.migrationSource === "vercel-production-session") {
+          mark("迁移来源与生产快照");
+          await vercel.assertMigrationSnapshot(c.migrationUrl);
+        }
+        return previous;
+      } catch (error) {
+        const code = (error as { code?: unknown })?.code;
+        const status = error instanceof ApiFailure
+          ? `（HTTP ${error.status}）`
+          : typeof code === "string" && /^[0-9A-Z]{5}$/.test(code) ? `（SQLSTATE ${code}）` : "";
+        console.error(`生产检查失败于${check}${status}`);
+        throw error;
+      }
     },
     validate: async () => { for (const script of ["test", "typecheck", "lint"]) await command("npm", ["run", script], { ...buildEnvironment(), NODE_ENV: "test" }); },
     build: async () => { await vercel.build(); buildCompleted = true; }, candidate: async () => { await recheck(); await vercel.assertBypassSnapshot(); return vercel.candidate(); },
