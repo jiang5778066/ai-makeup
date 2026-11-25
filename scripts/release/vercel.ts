@@ -1,5 +1,6 @@
 import { readFile, writeFile, mkdir, chmod, symlink, readlink, lstat } from "node:fs/promises";
 import { resolve } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { command, type CommandRunner } from "./command";
 import { REPOSITORY_ROOT, VERCEL_ENTRY } from "./paths";
 import { TARGET, type ReleaseConfig } from "./preflight";
@@ -33,7 +34,9 @@ export class Vercel {
     const api = args[0] === "api" || args[0] === "whoami";
     const env = buildEnvironment(api ? {} : { ...this.runtime, ...extra });
     if (!native) env.VERCEL_TOKEN = this.config.token;
-    return this.run(process.execPath, [VERCEL_ENTRY, ...args, "--scope", TARGET.team, "--cwd", this.root, ...(native ? [] : ["--global-config", resolve(this.root, ".vercel/cli-config")])], env, this.root, api ? API_LIMITS : undefined);
+    // 机器令牌使用固定的项目和团队环境变量。显式 scope 会额外要求 CLI 查询个人用户。
+    const context = native ? ["--scope", TARGET.team] : ["--global-config", resolve(this.root, ".vercel/cli-config")];
+    return this.run(process.execPath, [VERCEL_ENTRY, ...args, "--cwd", this.root, ...context], env, this.root, api ? API_LIMITS : undefined);
   }
   async deployment(id: string, sha?: string): Promise<DeploymentDetails> {
     if (!/^(dpl_[a-zA-Z0-9]+|[a-z0-9-]+\.vercel\.app)$/.test(id)) throw new Error("部署标识无效");
@@ -113,7 +116,7 @@ export class Vercel {
       catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
       await symlink("/dev/null", envPath);
     }
-    await this.cli(["pull", "--yes", "--environment=production", "--debug"]);
+    await this.cli(["pull", "--yes", "--environment=production"]);
     if (native && await readlink(envPath) !== "/dev/null") throw new Error("原生pull内存边界变化");
     const link = JSON.parse(await readFile(resolve(this.root, ".vercel/project.json"), "utf8"));
     if (link.projectId !== TARGET.project || link.orgId !== TARGET.team) throw new Error("本地项目链接不匹配");
@@ -162,14 +165,34 @@ export class Vercel {
     return { id: deployment.id, url: deployment.url };
   }
   async promote(deployment: Deployment) {
-    await this.deployment(deployment.id, this.config.sha);
+    const verified = await this.deployment(deployment.id, this.config.sha);
+    if (verified.id !== deployment.id || verified.url !== deployment.url) throw new Error("切换候选身份发生变化");
     if (!this.runtime) throw new Error("缺少已验证环境快照");
     assertSameSnapshot(this.runtime, await this.readRuntime());
     if (this.config.migrationSource === "vercel-production" || this.config.migrationSource === "vercel-production-session") await this.assertMigrationSnapshot(this.config.migrationUrl);
     await this.databaseReady();
-    await this.cli(["promote", deployment.id, "--yes"]);
-    const alias = await this.api<{ deploymentId: string }>(`/v4/aliases/${TARGET.domain}`);
-    if (alias.deploymentId !== deployment.id) throw new Error("正式域名未指向候选");
+    if (this.config.authMode === "token") {
+      // 使用锁定 CLI 同一提升接口，直接按已核验的团队、项目和部署发起切换。
+      const response = await fetch(`https://api.vercel.com/v10/projects/${TARGET.project}/promote/${deployment.id}?teamId=${TARGET.team}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${this.config.token}`, "Content-Type": "application/json" },
+        body: "{}",
+        redirect: "error",
+        signal: AbortSignal.timeout(API_LIMITS.timeoutMs)
+      });
+      await response.body?.cancel();
+      if (!response.ok) throw new ApiFailure(response.status);
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const alias = await this.api<{ deploymentId: string }>(`/v4/aliases/${TARGET.domain}`);
+        if (alias.deploymentId === deployment.id) return;
+        await delay(3000);
+      }
+    } else {
+      await this.cli(["promote", deployment.id, "--yes"]);
+      const alias = await this.api<{ deploymentId: string }>(`/v4/aliases/${TARGET.domain}`);
+      if (alias.deploymentId === deployment.id) return;
+    }
+    throw new Error("正式域名未指向候选");
   }
 }
 export const prepareResultDirectory = async () => { await mkdir(resolve(REPOSITORY_ROOT, "release-result"), { recursive: true }); };

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { snapshotRuntime } from "./snapshot";
 import { Vercel, type DeploymentDetails } from "./vercel";
 import { TARGET, runtimeRequired, validateRuntime, type ReleaseConfig } from "./preflight";
@@ -24,6 +24,19 @@ describe("Vercel 适配器边界", () => {
   it.each([{ projectId: "other" }, { ownerId: "other" }, { target: "preview" }, { readyState: "ERROR" }, { meta: { releaseSha: "other" } }, { url: "evil.test" }])("拒绝 API 错误身份 %j", async (patch) => { const v = new FixtureVercel(config); v.value = { ...detail, ...patch }; await expect(v.candidate()).rejects.toThrow(); expect(v.calls).toHaveLength(1); });
   it("切换前重查身份，切换后确认正式 alias", async () => { const v = new FixtureVercel(config); v.alias = "dpl_other"; await expect(v.promote({ id: detail.id, url: detail.url })).rejects.toThrow(); expect(v.calls[0][0]).toBe("promote"); });
   it("身份不匹配时不调用 promote", async () => { const v = new FixtureVercel(config); v.value = { ...detail, projectId: "other" }; await expect(v.promote({ id: detail.id, url: detail.url })).rejects.toThrow(); expect(v.calls).toEqual([]); });
+  it("机器令牌通过固定团队项目提升已验证的候选", async () => {
+    const v = new FixtureVercel({ ...config, authMode: "token", token: "fixture" });
+    const request = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
+    vi.stubGlobal("fetch", request);
+    try {
+      await v.promote({ id: detail.id, url: detail.url });
+      expect(v.calls).toEqual([]);
+      expect(request).toHaveBeenCalledExactlyOnceWith(
+        `https://api.vercel.com/v10/projects/${TARGET.project}/promote/${detail.id}?teamId=${TARGET.team}`,
+        expect.objectContaining({ method: "POST", redirect: "error", headers: { Authorization: "Bearer fixture", "Content-Type": "application/json" } })
+      );
+    } finally { vi.unstubAllGlobals(); }
+  });
 });
 describe("生产运行配置", () => {
   const env = () => ({ ...Object.fromEntries(runtimeRequired.map((k) => [k, "fixture"])), DATABASE_URL: `postgresql://postgres:fixture@db.${TARGET.supabaseRef}.supabase.co:5432/postgres?sslmode=verify-full`, NEXT_PUBLIC_SITE_URL: `https://${TARGET.domain}`, NEXT_PUBLIC_SUPABASE_URL: `https://${TARGET.supabaseRef}.supabase.co` });
