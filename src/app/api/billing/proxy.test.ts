@@ -19,8 +19,8 @@ it.each(["Accept-Encoding", "Accept-Encoding, cookie"])("保留既有Vary %s且�
   expect(response.headers.get("vary")?.split(",").map(value => value.trim().toLowerCase())).toEqual(["accept-encoding", "cookie"]);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
 });
-it.each(["/api/account/session", "/api/account/logout?source=header"])("D1既有精确路径%s继续保密", async path => {
-  const response = await proxy(new NextRequest(`https://makeup.example${path}`));
+it.each([["POST", "/api/account/session"], ["GET", "/api/account/logout?source=header"]])("账户接口未实现方法 %s %s 的代理响应继续保密", async (method, path) => {
+  const response = await proxy(new NextRequest(`https://makeup.example${path}`, { method }));
   expect(response.status).toBe(401); expect(response.headers.get("cache-control")).toBe("private, no-store"); expect(response.headers.get("vary")).toBe("Cookie");
 });
 it.each(["/api/billing/checkout/child", "/api/credits/balance/child", "/api/credits/balances", "/api/account/session/child", "/api/projects"])("近似受保护路径%s不扩大补头", async path => {
@@ -34,7 +34,7 @@ it.each(["/api/billing/status?attempt=synthetic", "/api/billing/checkouts"])("�
 it("已登录响应和locale请求头保持原样", async () => {
   const response = NextResponse.next({ headers: { Vary: "Accept-Encoding", "Cache-Control": "original" } });
   session.update.mockResolvedValue({ user: { id: "synthetic" }, response });
-  for (const path of ["/api/billing/checkout", "/api/credits/balance", "/api/account/session", "/zh-CN/my-creations"]) expect(await proxy(new NextRequest(`https://makeup.example${path}`))).toBe(response);
+  for (const path of ["/api/billing/checkout", "/api/credits/balance", "/api/account/delete-data", "/zh-CN/my-creations"]) expect(await proxy(new NextRequest(`https://makeup.example${path}`))).toBe(response);
   expect(response.headers.get("vary")).toBe("Accept-Encoding"); expect(response.headers.get("cache-control")).toBe("original");
   expect(session.update.mock.calls.at(-1)?.[1].get("x-page-locale")).toBe("zh-CN");
 });

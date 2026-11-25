@@ -6,13 +6,13 @@ import type { Locale } from "@/lib/i18n";
 import type { PlatformEntry } from "@/lib/platform-navigation";
 import { entryHref } from "@/lib/platform-navigation";
 
-type Props = Readonly<{ entry: PlatformEntry; locale: Locale; children?: React.ReactNode; className?: string; active?: boolean; onNavigate?: () => void }>;
+type Props = Readonly<{ entry: PlatformEntry; locale: Locale; children?: React.ReactNode; className?: string; active?: boolean; onNavigate?: () => void; "aria-describedby"?: string }>;
 
-export function PlatformLink({ entry, locale, children, className, active, onNavigate }: Props) {
+export function PlatformLink({ entry, locale, children, className, active, onNavigate, "aria-describedby": describedBy }: Props) {
   const [notice, setNotice] = useState(false);
   return <>
     <Link href={entryHref(entry, locale)} prefetch={entry.status === "ready" ? undefined : false} className={className}
-      aria-current={active ? "page" : undefined} title={entry.status === "pending" ? (locale === "zh-CN" ? "即将推出" : "Coming soon") : undefined}
+      aria-current={active ? "page" : undefined} aria-describedby={describedBy} title={entry.status === "pending" ? (locale === "zh-CN" ? "即将推出" : "Coming soon") : undefined}
       onClick={(event) => {
         if (entry.status === "pending") { event.preventDefault(); setNotice(true); return; }
         onNavigate?.();

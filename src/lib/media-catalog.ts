@@ -1,6 +1,7 @@
 import {MEDIA_VIDEO_SECONDS} from './media-video-contract';
 import { MediaFault, mediaUuid, strictObject, type MediaEconomics, type MediaMode, type MediaRequest } from './media-contracts';
 export const mediaModes:MediaMode[]=['text_to_image','image_to_image','text_to_video','image_to_video'];
+export const MEDIA_PROMPT_LIMIT = 3800;
 export function normalizeMediaRequest(value:unknown):MediaRequest {
  const b=strictObject(value,['clientIntentId','mediaType','model','mode','prompt','parameters','inputIds','locale','consent','consentVersion']);
  if(typeof b.clientIntentId!=='string'||!mediaUuid.test(b.clientIntentId)||b.consent!==true||typeof b.consentVersion!=='string'||!b.consentVersion||b.consentVersion.length>100)throw new MediaFault('consent_or_intent_invalid');
@@ -12,7 +13,7 @@ export function normalizeMediaRequest(value:unknown):MediaRequest {
  if(image?(p.quality!=='1k'||p.size!=='2:3'||p.n!==1):(p.durationSeconds!==MEDIA_VIDEO_SECONDS||p.resolution!=='480p'))throw new MediaFault('unsupported_parameters');
  if(typeof b.prompt!=='string')throw new MediaFault('invalid_prompt');
  const prompt=b.prompt.normalize('NFC').replace(/\r\n?/g,'\n').trim();
- if(!prompt||prompt.length>3800)throw new MediaFault('invalid_prompt');
+ if(!prompt||prompt.length>MEDIA_PROMPT_LIMIT)throw new MediaFault('invalid_prompt');
  if(!Array.isArray(b.inputIds)||b.inputIds.some(x=>typeof x!=='string'||!mediaUuid.test(x))||b.inputIds.length!==(String(b.mode).startsWith('image_to_')?1:0))throw new MediaFault('invalid_inputs');
  if(b.locale!=='en'&&b.locale!=='zh-CN')throw new MediaFault('invalid_locale');
  return {clientIntentId:b.clientIntentId,mediaType:b.mediaType as MediaRequest['mediaType'],model:b.model as string,mode:b.mode as MediaMode,prompt,parameters:p as MediaRequest['parameters'],inputIds:b.inputIds,locale:b.locale,consent:true,consentVersion:b.consentVersion};

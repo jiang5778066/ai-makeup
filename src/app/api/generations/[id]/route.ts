@@ -1,5 +1,5 @@
 import { legacyGenerationFields } from "@/lib/platform-creations-legacy-schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { generations } from "@/db/schema";
 import { getCurrentUser } from "@/lib/supabase/server";
@@ -23,7 +23,8 @@ export async function GET(
   const [row] = await db
     .select(legacyGenerationFields)
     .from(generations)
-    .where(and(eq(generations.id, id), eq(generations.userId, user.id)));
+    // 兼容尚未增加 deleted_at 的旧库，同时停止为已软移除作品签名。
+    .where(and(eq(generations.id, id), eq(generations.userId, user.id), sql`to_jsonb(${generations})->>'deleted_at' IS NULL`));
 
   if (!row) {
     return NextResponse.json({ code: "not_found" }, { status: 404 });

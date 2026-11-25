@@ -75,6 +75,20 @@ afterEach(() => {
 });
 
 describe("MakeupTool local UI regressions (no real generation)", () => {
+  it.each(["/api/uploads/sign", "/api/makeup/generate"])("收到 %s 关闭响应时保留照片并显示明确提示", async (endpoint) => {
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((url, init) => url === endpoint
+      ? Promise.resolve(Response.json({ code: "generation_disabled" }, { status: 503 }))
+      : original(url, init));
+    await mount();
+    await generate();
+    expect(screen.getByRole("alert")).toHaveTextContent("Makeup generation is currently unavailable.");
+    expect(screen.getByAltText("Selected selfie preview")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Generate makeup" })).toBeEnabled();
+    if (endpoint.endsWith("/sign")) {
+      expect(vi.mocked(fetch).mock.calls.map(([url]) => url)).toEqual(["/api/credits/balance", endpoint]);
+    }
+  });
   it("游客保存照片、风格、强度和完整中文地址后再登录，绝不上传", async () => {
     window.history.replaceState({}, "", "/zh-CN/ai-makeup?source=test#try");
     vi.mocked(fetch).mockResolvedValue({ ok: false, status: 401 } as Response);

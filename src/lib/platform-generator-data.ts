@@ -1,10 +1,12 @@
+import { videoModeTools, type VideoModeToolPath } from "./platform-video-mode-tools";
+
 export type GeneratorMode = "image" | "text";
 export type GeneratorKind = "image" | "video";
 export type WanGeneratorPath = `/ai-video-models/${"wan-2-2"|"wan-2-5"|"wan-2-6"|"wan-3-0"}`;
 export type CoreVideoModelPath = `/ai-video-models/${"kling-ai"|"kling-3-0"|"seedance-2-0"|"happy-horse-1-0"}`;
 export type AdditionalVideoModelPath = `/ai-video-models/${"grok-imagine"|"mindvideo-ai"|"sora-2"|"veo-3"|"vheer"}`;
 export type VideoModelPath = CoreVideoModelPath | AdditionalVideoModelPath;
-export type GeneratorPath = "/ai-video-models/dreamface-ai" | WanGeneratorPath | VideoModelPath | "/ai-image-generator" | "/ai-video-generator" | "/ai-image-models/gpt-image-2" | "/ai-image-models/nano-banana-pro";
+export type GeneratorPath = "/ai-video-models/dreamface-ai" | WanGeneratorPath | VideoModelPath | VideoModeToolPath | "/ai-image-generator" | "/ai-video-generator" | "/ai-image-models/gpt-image-2" | "/ai-image-models/nano-banana-pro";
 export type GeneratorConfig = { promptLimit: number; ratios: string[]; resolutions: string[]; reference?: {max:number;accept:string;maxBytes:number;localByteLimit:boolean}; durations?: number[]; durationRange?: [number,number]; audio?: boolean; sound?:boolean; multishot?:boolean; enhance?:boolean; keyframes?:boolean; flavors?:string[] };
 export type GeneratorModel = {id:string;referenceId:string;name:string;kind:GeneratorKind;brand:string;modes:Partial<Record<GeneratorMode,GeneratorConfig>> };
 // 来源：C2a两组公开参数矩阵；只表示可预览的UI，真实生成尚未接入。
@@ -1679,6 +1681,7 @@ export const generatorModels: GeneratorModel[] = [
 ];
 
 export const generatorPages = {
+ ...videoModeTools,
  "/ai-video-models/dreamface-ai": {kind:"video",family:"video",title:{en:"DreamFace AI Video Generator","zh-CN":"DreamFace AI 视频生成器"},defaultModel:"lanta-2-1"},
  "/ai-image-generator": { kind:"image", family:"image", title:{en:"AI Image Generator", "zh-CN":"AI 图片生成器"}, defaultModel:"gpt-image-2" },
  "/ai-video-generator": { kind:"video", family:"video", title:{en:"AI Video Generator", "zh-CN":"AI 视频生成器"}, defaultModel:"grok-imagine" },

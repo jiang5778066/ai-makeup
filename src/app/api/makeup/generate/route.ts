@@ -1,11 +1,11 @@
 import { insertLegacyGeneration } from "@/lib/platform-creations-legacy-schema";
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { generations } from "@/db/schema";
 import { getStyleLibrary } from "@/lib/content";
 import { toLocale, type Locale } from "@/lib/i18n";
 import { getCurrentUser } from "@/lib/supabase/server";
-import { inngest } from "@/inngest/client";
+import { scheduleInitialMakeupDispatch, sendInitialMakeupEvents } from "@/lib/makeup-dispatch";
+import { lockAccountData } from "@/lib/account-data-lock";
+import { isOwnedLegacyUploadKey, legacyUploadExists } from "@/lib/storage";
 import { isGenerationEnabled } from "@/lib/launch-flags";
 import { rateLimit, requestIp } from "@/lib/rate-limit";
 import {
@@ -26,8 +26,6 @@ type GenerateRequest = {
   sourceMode?: SourceMode;
   makeupConfig?: MakeupConfig;
 };
-
-const GENERATION_COST = 1;
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +56,7 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  if (!body.uploadKey.startsWith(`${user.id}/`)) {
+  if (!isOwnedLegacyUploadKey(user.id, body.uploadKey)) {
     return NextResponse.json({ code: "invalid_upload" }, { status: 400 });
   }
 
@@ -84,7 +82,7 @@ export async function POST(request: Request) {
   }
   if (
     mode === "virtual_try_on" &&
-    !body.renderedUploadKey?.startsWith(`${user.id}/`)
+    !isOwnedLegacyUploadKey(user.id, body.renderedUploadKey)
   ) {
     return NextResponse.json({ code: "invalid_rendered_upload" }, { status: 400 });
   }
@@ -97,50 +95,57 @@ export async function POST(request: Request) {
   const style = styles.find((item) => item.id === body.styleId) ?? styles[0];
   const intensity = Math.max(20, Math.min(100, body.intensity ?? 62));
   const { db } = await import("@/db/client");
+  const { getBalance } = await import("@/lib/credits");
+  const { MAKEUP_GENERATION_COST } = await import("@/lib/makeup-accounting");
 
-  const [{ id: generationId }] = await insertLegacyGeneration(db, {
-      userId: user.id,
-      uploadKey: body.uploadKey,
-      renderedUploadKey: mode === "virtual_try_on" ? body.renderedUploadKey : undefined,
-      styleId: mode === "virtual_try_on" ? "virtual-custom" : style.id,
-      mode,
-      sourceMode,
-      makeupConfig,
-      intensity,
-      locale,
-      status: "queued"
-    });
-
-  const { InsufficientCreditsError, deductCredits } = await import("@/lib/credits");
+  const { uploadKey } = body;
+  const renderedUploadKey = mode === "virtual_try_on" ? body.renderedUploadKey : undefined;
+  let admission;
   try {
-    await deductCredits(user.id, GENERATION_COST, "generation", {
-      type: "generation",
-      id: generationId
+    admission = await db.transaction(async (tx) => {
+      await lockAccountData(tx, user.id);
+      const deadline = AbortSignal.timeout(3_000);
+      // 等清理提交后再核验两张图。事务在 queued 记录写入并提交后释放锁。
+      const [source, rendered] = await Promise.allSettled([
+        legacyUploadExists(uploadKey, deadline),
+        renderedUploadKey && renderedUploadKey !== uploadKey ? legacyUploadExists(renderedUploadKey, deadline) : true
+      ]);
+      if (source.status === "rejected" || rendered.status === "rejected" || deadline.aborted) {
+        return { status: 503, code: "upload_storage_unavailable" } as const;
+      }
+      if (!source.value || !rendered.value) {
+        return { status: 404, code: source.value ? "rendered_upload_not_found" : "upload_not_found" } as const;
+      }
+      // 入口仅做余额预检。最终扣分在审核通过后的任务事务中完成。
+      if (await getBalance(user.id, tx) < MAKEUP_GENERATION_COST) {
+        return { status: 402, code: "insufficient_credits", message: locale === "zh-CN"
+          ? "credits 余额不足，请先购买套餐。"
+          : "Not enough credits. Please top up to continue." } as const;
+      }
+      const [{ id }] = await insertLegacyGeneration(tx, {
+        userId: user.id,
+        uploadKey,
+        renderedUploadKey,
+        styleId: mode === "virtual_try_on" ? "virtual-custom" : style.id,
+        mode,
+        sourceMode,
+        makeupConfig,
+        intensity,
+        locale,
+        status: "queued"
+      });
+      await scheduleInitialMakeupDispatch(tx, id);
+      return { id };
     });
-  } catch (error) {
-    if (error instanceof InsufficientCreditsError) {
-      await db
-        .update(generations)
-        .set({ status: "failed", error: "insufficient_credits" })
-        .where(eq(generations.id, generationId));
-      return NextResponse.json(
-        {
-          code: "insufficient_credits",
-          message:
-            locale === "zh-CN"
-              ? "credits 余额不足，请先购买套餐。"
-              : "Not enough credits. Please top up to continue."
-        },
-        { status: 402 }
-      );
-    }
-    throw error;
+  } catch {
+    return NextResponse.json({ code: "generation_admission_unavailable" }, { status: 503 });
   }
+  if ("code" in admission) {
+    return NextResponse.json({ code: admission.code, message: admission.message }, { status: admission.status });
+  }
+  const { id: generationId } = admission;
 
-  await inngest.send({
-    name: "makeup/generate.requested",
-    data: { generationId }
-  });
+  await sendInitialMakeupEvents([{ generationId }]);
 
   return NextResponse.json({ generationId, status: "queued" }, { status: 202 });
 }

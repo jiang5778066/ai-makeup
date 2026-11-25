@@ -1,3 +1,4 @@
+import { Readable } from "node:stream";
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -8,9 +9,7 @@ declare global {
 export const R2_BUCKET_ORIGINALS = process.env.R2_BUCKET_ORIGINALS ?? "makeup-originals";
 export const R2_BUCKET_RESULTS = process.env.R2_BUCKET_RESULTS ?? "makeup-results";
 
-function getClient() {
-  if (global.__r2Client) return global.__r2Client;
-
+function createClient(maxAttempts?: number) {
   const accountId = process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
@@ -19,15 +18,22 @@ function getClient() {
     throw new Error("R2 credentials are not configured. See .env.example for required keys.");
   }
 
-  const client = new S3Client({
+  return new S3Client({
     region: "auto",
     endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-    credentials: { accessKeyId, secretAccessKey }
+    credentials: { accessKeyId, secretAccessKey },
+    maxAttempts
   });
+}
 
+function getClient() {
+  if (global.__r2Client) return global.__r2Client;
+  const client = createClient();
   if (process.env.NODE_ENV !== "production") global.__r2Client = client;
   return client;
 }
+
+let legacyUploadCheckClient: S3Client | undefined;
 
 export function isStorageConfigured() {
   return Boolean(
@@ -60,7 +66,39 @@ export async function presignGetUrl(args: {
 }
 
 export async function deleteObject(bucket: string, key: string): Promise<void> {
-  await getClient().send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+  await getClient().send(new DeleteObjectCommand({ Bucket: bucket, Key: key }), { abortSignal: AbortSignal.timeout(30_000) });
+}
+
+export async function legacyUploadExists(key: string, signal: AbortSignal): Promise<boolean> {
+  try {
+    // 读取首字节以区分 NoSuchKey 和 NoSuchBucket。持锁期间禁用 SDK 重试和退避等待。
+    legacyUploadCheckClient ??= createClient(1);
+    const result = await legacyUploadCheckClient.send(
+      new GetObjectCommand({ Bucket: R2_BUCKET_ORIGINALS, Key: key, Range: "bytes=0-0" }),
+      { abortSignal: signal }
+    );
+    if (result.Body instanceof Readable) {
+      if (result.ContentLength === 1) {
+        for await (const chunk of result.Body) {
+          if (chunk.length === 1) return true;
+          break;
+        }
+      }
+      result.Body.destroy();
+    }
+    throw new Error("legacy_upload_read_failed");
+  } catch (error) {
+    const failure = error as { name?: string; $metadata?: { httpStatusCode?: number } } | null;
+    if (failure?.$metadata?.httpStatusCode === 404 && failure.name === "NoSuchKey") return false;
+    throw error;
+  }
+}
+
+export function isOwnedLegacyUploadKey(userId: string, key: unknown): key is string {
+  const prefix = `${userId}/`;
+  if (typeof key !== "string" || !key.startsWith(prefix)) return false;
+  const filename = key.slice(prefix.length);
+  return Boolean(filename) && !/[^a-z0-9_.-]/i.test(filename) && filename[0] !== "." && !filename.includes("..");
 }
 
 export function buildUploadKey(userId: string, ext: string): string {

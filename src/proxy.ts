@@ -18,22 +18,37 @@ function isProtected(pathname: string, prefixes: string[]) {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
+function withSessionCookies(response: NextResponse, sessionResponse: NextResponse) {
+  const cookies = sessionResponse.headers.getSetCookie();
+  if (cookies.length) {
+    for (const cookie of cookies) response.headers.append("Set-Cookie", cookie);
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.append("Vary", "Cookie");
+  }
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-page-locale", pathname === "/zh/ai-makeup" || pathname === "/zh-CN" || pathname.startsWith("/zh-CN/") ? "zh-CN" : "en");
   // 固定服务路由自行校验专用凭据，避免用户cookie刷新引入外部认证请求。
   if (pathname === "/api/internal/media/step") return NextResponse.next({ request: { headers: requestHeaders } });
+  // 两个账户接口在路由内核验会话，并区分会话失效与认证服务故障。
+  if (
+    (pathname === "/api/account/session" && (request.method === "GET" || request.method === "HEAD")) ||
+    (pathname === "/api/account/logout" && request.method === "POST")
+  ) return NextResponse.next({ request: { headers: requestHeaders } });
   const { response, user } = await updateSession(request, requestHeaders);
 
   if (!user && isProtected(pathname, PROTECTED_PAGE_PREFIXES)) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", `${pathname}${search}`);
-    return NextResponse.redirect(loginUrl);
+    return withSessionCookies(NextResponse.redirect(loginUrl), response);
   }
 
   if (!user && isProtected(pathname, PROTECTED_API_PREFIXES)) {
-    const denied = NextResponse.json({ code: "unauthorized", message: "Sign in required." }, { status: 401 });
+    const denied = withSessionCookies(NextResponse.json({ code: "unauthorized", message: "Sign in required." }, { status: 401 }), response);
     if (pathname === "/api/account/session" || pathname === "/api/account/logout" || pathname === "/api/billing/checkout" || pathname === "/api/credits/balance") {
       denied.headers.set("Cache-Control", "private, no-store");
       const vary = (denied.headers.get("Vary") ?? "").split(",").map(value => value.trim()).filter(Boolean);

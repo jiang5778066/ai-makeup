@@ -1,30 +1,72 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { ArrowLeft, Construction } from "lucide-react";
-import type { Locale } from "@/lib/i18n";
-import { localizePath } from "@/lib/i18n";
-import type { PlatformEntry } from "@/lib/platform-navigation";
+import { brand } from "@/lib/brand";
+import { localizePath, type Locale } from "@/lib/i18n";
+import { directoryCards, directoryPaths } from "@/lib/platform-directory-data";
 import { resolveHomepageRoute } from "@/lib/platform-homepage";
+import type { PlatformEntry } from "@/lib/platform-navigation";
 import { usePlatformUrl } from "./use-platform-url";
 import { SiteShell } from "./site-shell";
+import { PlatformTemplateGuide } from "./platform-template-guide";
 
 type ScaffoldProps = { locale: Locale; currentPath: string; entry: PlatformEntry; initialQuery?: string };
+
+const unavailableLabel = { en: "Currently unavailable", "zh-CN": "当前不可用" } as const;
+
+const chineseTitles = new Map<string, string>([
+  ...directoryPaths.flatMap(path => directoryCards(path).map(card => [card.entryId, card.title["zh-CN"]] as const)),
+  ["christmas-ai-photo-generator", "AI 圣诞照片生成器"],
+  ["hunyuanvideo-avatar", "混元视频数字人"]
+]);
+
 export function PlatformScaffoldPage(props: ScaffoldProps) {
+  if (!props.entry.templateId) return <ScaffoldContent {...props}/>;
+
   const serverPath = `${localizePath(props.currentPath, props.locale)}${props.initialQuery ? `?${props.initialQuery}` : ""}`;
-  return <Suspense fallback={<ScaffoldContent {...props} locationPath={serverPath}/>}><ReactiveScaffold {...props} serverPath={serverPath}/></Suspense>;
+  return <Suspense fallback={<ScaffoldContent {...props}/>}>
+    <ReactiveTemplate locale={props.locale} currentPath={props.currentPath} serverPath={serverPath}/>
+  </Suspense>;
 }
-function ReactiveScaffold(props: ScaffoldProps & { serverPath: string }) {
-  const locationPath = usePlatformUrl(props.serverPath);
-  return <ScaffoldContent {...props} locationPath={locationPath}/>;
+
+function ReactiveTemplate({ locale, currentPath, serverPath }: Pick<ScaffoldProps, "locale" | "currentPath"> & { serverPath: string }) {
+  const location = new URL(usePlatformUrl(serverPath), "https://local.invalid");
+  const { pathname } = location;
+  const templateId = location.searchParams.get("template_id");
+  // 与服务端统一采用首个重复参数，模板切换后按当前地址选择标题。
+  const resolved = resolveHomepageRoute(currentPath, { template_id: templateId ?? undefined });
+  const entry = resolved?.kind === "scaffold" ? resolved.entry : null;
+
+  const active = pathname === localizePath(currentPath, locale);
+  const title = active && entry ? `${entry.label[locale]} · ${unavailableLabel[locale]} | ${brand.name}` : null;
+  // 原生历史切到无效查询时保留上一个有效标题。
+  const [lastTitle, setLastTitle] = useState(title);
+  if (title && title !== lastTitle) setLastTitle(title);
+
+  return <>
+    {active && lastTitle && <title>{lastTitle}</title>}
+    <ScaffoldContent locale={locale} currentPath={currentPath} entry={entry}/>
+  </>;
 }
-function ScaffoldContent({ locale, currentPath, entry, locationPath }: ScaffoldProps & { locationPath: string }) {
-  const query = new URL(locationPath, "https://local.invalid").searchParams;
-  // 与服务端统一采用首个重复参数；客户端过渡时也不能沿用旧模板标题。
-  const resolved = resolveHomepageRoute(currentPath, { template_id: query.get("template_id") ?? undefined });
-  const selected = resolved?.kind === "scaffold" ? resolved.entry : null;
-  const title = selected?.label[locale] ?? (locale === "zh-CN" ? "未指定或不支持的模板" : "Missing or unsupported template");
-  const selection = { path: locationPath, model: query.get("model") ?? entry.model ?? "", mode: query.get("mode") ?? entry.mode ?? "", template: query.get("template_id") ?? "" };
+
+function ScaffoldContent({ locale, currentPath, entry }: Pick<ScaffoldProps, "locale" | "currentPath"> & { entry: PlatformEntry | null }) {
+  if (entry?.templateId) return <PlatformTemplateGuide templateId={entry.templateId} locale={locale}/>;
   const zh = locale === "zh-CN";
-  return <SiteShell locale={locale} currentPath={currentPath}><main className="platform-scaffold" id="generator"><Construction size={36}/><p>{zh ? "工具预览" : "Tool preview"}</p><h1>{title}</h1><strong>{zh ? "当前不可用" : "Currently unavailable"}</strong><p>{zh ? "此入口的专用工具和生成服务尚未开放。你可以返回工作台浏览，或使用已开放的美妆工具。" : "The dedicated tool and generation service are not available yet. Browse the workspace or use the available makeup tools."}</p><dl><dt>{zh ? "当前入口" : "Destination"}</dt><dd>{selection.path}</dd>{selection.model && <><dt>{zh ? "模型" : "Model"}</dt><dd>{selection.model}</dd></>}{selection.mode && <><dt>{zh ? "模式" : "Mode"}</dt><dd>{selection.mode}</dd></>}{selection.template && <><dt>{zh ? "模板" : "Template"}</dt><dd>{selection.template}</dd></>}</dl><a className="platform-home-cta" href={localizePath("/home", locale)}><ArrowLeft size={16}/>{zh ? "返回工作台" : "Back to workspace"}</a></main></SiteShell>;
+  let title = entry?.label[locale] ?? (zh ? "未指定或不支持的模板" : "Missing or unsupported template");
+  if (entry && zh && entry.label["zh-CN"] === entry.label.en) {
+    title = chineseTitles.get(entry.id) ?? title;
+  }
+
+  return <SiteShell locale={locale} currentPath={currentPath}>
+    <main className="platform-scaffold" id="generator">
+      <Construction aria-hidden="true" size={36}/>
+      <h1>{title}</h1>
+      <strong>{unavailableLabel[locale]}</strong>
+      <p>{zh ? "此功能尚未开放。你可以在工作台浏览其他功能，或使用已开放的美妆工具。" : "This feature is not available yet. Browse other features in the workspace or use the available makeup tools."}</p>
+      <a className="platform-home-cta" href={localizePath("/home", locale)}>
+        <ArrowLeft aria-hidden="true" size={16}/>{zh ? "返回工作台" : "Back to workspace"}
+      </a>
+    </main>
+  </SiteShell>;
 }

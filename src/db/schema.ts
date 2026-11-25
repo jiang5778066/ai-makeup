@@ -56,12 +56,16 @@ export const generations = pgTable(
     error: text("error"),
     creditsRefundedAt: timestamp("credits_refunded_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    dispatchDueAt: timestamp("dispatch_due_at", { withTimezone: true }),
+    initialRunId: text("initial_run_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
   },
   (t) => [
     index("generations_user_idx").on(t.userId),
     index("generations_status_idx").on(t.status),
+    index("generations_initial_dispatch_due_idx").on(t.dispatchDueAt, t.id)
+      .where(sql`${t.status} = 'queued' AND ${t.dispatchDueAt} IS NOT NULL`),
     index("generations_visible_user_created_idx").on(t.userId, t.createdAt.desc(), t.id.desc()).where(sql`${t.deletedAt} IS NULL`)
   ]
 );

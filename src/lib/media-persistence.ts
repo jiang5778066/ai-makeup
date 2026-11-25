@@ -86,12 +86,17 @@ export function createMediaStore(database:MediaDatabase=mediaDatabase){
   const [r]=await rows<TaskRecord>(tx,sql`UPDATE media_tasks SET lease_token=null,lease_expires_at=null WHERE id=${t.id}::uuid AND ${leaseWhere(t)} RETURNING *`);return r??null;
  })},
  async transition(t:TaskRecord,patch:{status:'waiting'|'storing'|'reconciling';taskId?:string;locator?:string;error?:string;stage?:string;submissionResponse?:boolean}){
+  const auditIdentityConflict=(tx:MediaExecutor,current:TaskRecord)=>audit(tx,current,'late_identity_conflict',{
+   responseHash:canonicalHash({taskId:patch.taskId,locator:patch.locator}),expectedVersion:t.state_version
+  });
   return database.transaction(async tx=>{
    const current=await get(tx,t.id,true);if(!current||!owns(current,t))return null;
    // 旧租约或旧版本的晚肯定响应不自动补写；未知原ID走受控人工核对。
    const sameSubmission=Boolean(t.submission_id&&current.submission_id===t.submission_id&&t.submission&&current.submission&&current.submission.payloadHash===current.request_hash&&t.submission.payloadHash===t.request_hash&&canonicalHash(current.submission)===canonicalHash(t.submission)&&current.user_id===t.user_id&&current.request_hash===t.request_hash&&current.model===t.model&&current.mode===t.mode&&current.provider===t.provider&&current.provider_account_ref===t.provider_account_ref&&canonicalHash(current.request)===canonicalHash(t.request));
    if(current.credit_state!=='reserved'||['done','refunded','failed'].includes(current.status)||patch.submissionResponse&&!sameSubmission){await audit(tx,current,'late_response_ignored',{expectedVersion:t.state_version});return null}
-   if(patch.taskId&&current.provider_task_id&&current.provider_task_id!==patch.taskId)throw new MediaFault('provider_identity_conflict',409);
+   if(patch.taskId&&current.provider_task_id&&current.provider_task_id!==patch.taskId){
+    await auditIdentityConflict(tx,current);return null;
+   }
    // 人工暂停只能被已核原提交成功结果转为存储；accepted不能重新开启自动查询。
    const paused=current.error_code==='media_manual_review_required'&&!patch.locator;
    const [r]=await rows<TaskRecord>(tx,sql`UPDATE media_tasks SET status=${paused?'reconciling':patch.status},provider_task_id=coalesce(provider_task_id,${patch.taskId??null}),result_locator=coalesce(${patch.locator??null},result_locator),error_code=${paused?'media_manual_review_required':patch.error??null},reconcile_stage=${paused?'query':patch.stage??null},state_version=state_version+1,updated_at=now(),next_action_at=${paused?sql`null`:sql`now()+interval '60 seconds'`} WHERE id=${t.id} AND state_version=${current.state_version} AND credit_state='reserved' AND ${leaseWhere(t)} RETURNING *`);
@@ -101,7 +106,10 @@ export function createMediaStore(database:MediaDatabase=mediaDatabase){
    // 唯一索引是最终归属门禁；并发抢占冲突回滚后单独保留去密审计。
    let cause:unknown=error;
    for(let depth=0;depth<4&&cause&&typeof cause==='object';depth++){
-    if('code' in cause&&cause.code==='23505'&&patch.submissionResponse){await database.transaction(async tx=>{const current=await get(tx,t.id,true);if(current)await audit(tx,current,'late_identity_conflict',{responseHash:canonicalHash({taskId:patch.taskId,locator:patch.locator}),expectedVersion:t.state_version})});return null}
+    if(patch.submissionResponse&&patch.taskId&&'code' in cause&&cause.code==='23505'&&'constraint_name' in cause&&cause.constraint_name==='media_tasks_provider_task_uq'){
+     await database.transaction(async tx=>{const current=await get(tx,t.id,true);if(current)await auditIdentityConflict(tx,current)});
+     return null;
+    }
     cause='cause' in cause?cause.cause:null;
    }
    throw error;

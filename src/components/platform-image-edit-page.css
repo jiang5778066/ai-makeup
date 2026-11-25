@@ -1,0 +1,482 @@
+/* 深链使用浏览器原生锚点定位和历史滚动恢复。 */
+html:has([data-portrait-image-edit]) {
+  scroll-behavior: auto;
+}
+
+.platform-image-edit-page {
+  --image-ink: #24271f;
+  --image-muted: #73766d;
+  --image-line: #deded3;
+  --image-accent: #3d5c48;
+  color: var(--image-ink);
+  background: #f6f5ef;
+  min-height: 100vh;
+  padding-bottom: 64px;
+  font-family: "Platform Geist", Arial, sans-serif;
+}
+
+.platform-image-edit-page :is(h1, h2, h3) {
+  color: var(--image-ink);
+}
+.platform-image-edit-breadcrumb {
+  max-width: 1320px;
+  margin: auto;
+  padding: 24px 28px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--image-muted);
+  font-size: 13px;
+}
+.platform-image-edit-breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+.platform-image-edit-breadcrumb a:hover {
+  color: var(--image-accent);
+}
+.platform-image-edit-hero {
+  max-width: 1320px;
+  margin: auto;
+  padding: 42px 28px 76px;
+  display: grid;
+  grid-template-columns: minmax(0,1.1fr) minmax(260px,.72fr);
+  gap: 72px;
+  align-items: center;
+}
+.platform-image-edit-hero>div {
+  max-width: 700px;
+}
+
+.platform-image-edit-hero h1 {
+  font-family: var(--font-platform-serif,Georgia,serif);
+  font-size: clamp(46px,6vw,78px);
+  line-height: .99;
+  letter-spacing: -.055em;
+  font-weight: 500;
+  margin: 23px 0 20px;
+  max-width: 720px;
+}
+
+.platform-image-edit-hero > div > p {
+  color: #4d574b;
+  font-size: 17px;
+  line-height: 1.65;
+  max-width: 54ch;
+}
+
+.platform-image-edit-hero>div>a {
+  margin-top: 25px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #334d3a;
+  color: white;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 13px 21px;
+  font-size: 14px;
+  font-weight: 650;
+}
+.platform-image-edit-illustration {
+  position: relative;
+  width: 100%;
+  max-width: 450px;
+  margin: 0;
+  justify-self: center;
+}
+.platform-image-edit-illustration img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  box-shadow: 0 24px 58px #33391f21;
+}
+.platform-image-edit-illustration figcaption {
+  margin-top: 8px;
+  color: #555b4f;
+  font-size: 12px;
+  text-align: right;
+}
+.platform-image-edit-art {
+  aspect-ratio: 1.15;
+  max-width: 450px;
+  width: 100%;
+  justify-self: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background: linear-gradient(142deg,#d8e2d1 0 32%,#c2d0b6 32% 50%,#eadcc3 50% 73%,#bdcbb2 73%);
+  box-shadow: 0 24px 58px #33391f21;
+  transform: rotate(1.5deg);
+}
+.platform-image-edit-art:before {
+  content: "";
+  position: absolute;
+  width: 46%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #f5eee0;
+  left: 27%;
+  top: 18%;
+  box-shadow: 0 0 0 17px #f8f4e9a1;
+}
+.platform-image-edit-art:after {
+  content: "";
+  position: absolute;
+  left: 13%;
+  right: 13%;
+  bottom: -9%;
+  height: 56%;
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(90deg,#526553,#758366 45%,#445648);
+}
+.platform-image-edit-art-ring {
+  position: absolute;
+  z-index: 1;
+  inset: 12% 15% 11%;
+  border: 1px solid #fff9e8a6;
+  border-radius: 48%;
+  transform: rotate(-18deg);
+}
+.platform-image-edit-art-dash {
+  position: absolute;
+  z-index: 2;
+  width: 17%;
+  height: 1px;
+  left: 20%;
+  top: 31%;
+  background: #fffdf2;
+  box-shadow: 152px 78px #fffdf2,-31px 103px #fffdf2;
+}
+
+.platform-image-edit-main {
+  max-width: 1320px;
+  margin: auto;
+  padding: 0 28px;
+}
+
+
+
+.platform-image-edit-workspace {
+  scroll-margin-top: 90px;
+  display: grid;
+  grid-template-columns: minmax(0,1.05fr) minmax(290px,.75fr);
+  gap: 22px;
+  align-items: start;
+}
+.platform-image-edit-form,.platform-image-edit-guide {
+  background: #fffefa;
+  border: 1px solid #d6d0c5;
+  border-radius: 22px;
+  box-shadow: 0 14px 38px #43361b0d;
+  padding: 25px;
+  min-width: 0;
+}
+.platform-image-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+}
+.platform-image-edit-form h2 {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 20px;
+  margin: 0 0 2px;
+}
+.platform-image-edit-upload h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+.platform-image-edit-form .platform-generator-field {
+  font-size: 13px;
+}
+.platform-image-edit-form .platform-generator-hint {
+  color: #5c6357!important;
+}
+.platform-image-edit-form .platform-generator-label,.platform-image-edit-form .platform-generator-field>label {
+  color: var(--image-ink);
+}
+.platform-image-edit-form .platform-generator-error {
+  color: #793528!important;
+}
+.platform-image-edit-upload>p {
+  color: var(--image-muted);
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+.platform-image-edit-upload .platform-generator-drop {
+  background: #f1f4ed;
+  border-color: #a7b6a1;
+  min-height: 0;
+}
+.platform-image-edit-upload .platform-generator-upload-grid {
+  grid-template-columns: 1fr;
+}
+.platform-image-edit-upload .platform-generator-add {
+  max-width: none;
+  aspect-ratio: auto;
+  border: 0;
+  color: var(--image-ink);
+}
+.platform-image-edit-upload .platform-generator-add>svg {
+  color: #3d5c48;
+  background: #dce7d9;
+}
+.platform-image-edit-upload .platform-generator-add small {
+  color: var(--image-muted);
+}
+.platform-image-edit-upload .platform-generator-upload-slot {
+  aspect-ratio: 4/3;
+  color: #fff;
+}
+.platform-image-edit-form #image-style-history,
+.platform-image-edit-page [data-image-edit-anchor],
+.platform-image-edit-page #hair-related,
+.platform-image-edit-page #hair-closing {
+  scroll-margin-top: 90px;
+}
+/* 账户核验使面板高度变化，为末尾说明预留页头上方的定位余量。 */
+.platform-image-edit-page #hair-closing {
+  scroll-margin-top: 128px;
+}
+.platform-image-edit-page span[data-image-edit-anchor] {
+  display: block;
+  height: 0;
+}
+.platform-image-edit-options {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+}
+.platform-image-edit-options legend {
+  font-size: 14px;
+  font-weight: 650;
+  margin-bottom: 10px;
+}
+.platform-image-edit-options label {
+  min-width: 0;
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 11px;
+  border: 1px solid var(--image-line);
+  border-radius: 12px;
+  cursor: pointer;
+  background: #fff;
+}
+.platform-image-edit-options label[data-selected=true] {
+  border-color: #718b69;
+  background: #f1f5ed;
+  box-shadow: inset 0 0 0 1px #718b69;
+}
+.platform-image-edit-options input {
+  accent-color: #476346;
+  margin: 3px 0 0;
+}
+.platform-image-edit-swatch {
+  flex: 0 0 13px;
+  height: 13px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px #24271f33;
+  margin-top: 2px;
+}
+.platform-image-edit-option-copy {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+}
+.platform-image-edit-option-copy strong {
+  font-size: 12px;
+  line-height: 1.35;
+}
+.platform-image-edit-option-copy small {
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--image-muted);
+}
+.platform-image-edit-form textarea {
+  width: 100%;
+  min-height: 115px;
+  resize: vertical;
+  border: 1px solid var(--image-line);
+  background: #fbfaf6;
+  border-radius: 11px;
+  padding: 12px;
+  color: var(--image-ink);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.platform-image-edit-prompt-label {
+  font-size: 14px;
+  font-weight: 650;
+  margin-bottom: -13px;
+}
+.platform-image-edit-intent {
+  margin: -7px 0 0;
+  padding: 12px;
+  border-radius: 11px;
+  background: #f1f3ec;
+  color: #56624f;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.platform-image-edit-intent strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #384634;
+}
+.platform-image-edit-form [aria-label="Site generation"],.platform-image-edit-form [aria-label="本站生成"] {
+  border-top: 1px solid var(--image-line);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  font-size: 12px;
+}
+.platform-image-edit-form [aria-label="Site generation"]>button,.platform-image-edit-form [aria-label="本站生成"]>button {
+  border-radius: 9px;
+  border: 1px solid #637b5d;
+  background: #415b43;
+  color: white;
+  padding: 10px 13px;
+  align-self: flex-start;
+  cursor: pointer;
+}
+.platform-image-edit-form [aria-label="Site generation"]>button:disabled,.platform-image-edit-form [aria-label="本站生成"]>button:disabled {
+  opacity: .46;
+  cursor: not-allowed;
+}
+.platform-image-edit-error {
+  color: #8c342a;
+  background: #fff0ed;
+  border-radius: 9px;
+  padding: 10px;
+  font-size: 12px;
+}
+.platform-image-edit-return-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #425d47;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 650;
+}
+.platform-image-edit-guide {
+  padding: 27px;
+  background: #edf0e8;
+  border-color: #e2e6d9;
+  position: sticky;
+  top: 95px;
+}
+.platform-image-edit-guide h2 {
+  font: 500 31px/1.12 var(--font-platform-serif,Georgia,serif);
+  letter-spacing: -.035em;
+  margin: 17px 0 27px;
+}
+.platform-image-edit-guide ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.platform-image-edit-guide li {
+  padding: 16px 0;
+  border-top: 1px solid #cfd7c8;
+}
+.platform-image-edit-guide li strong {
+  font-size: 13px;
+}
+.platform-image-edit-guide li p {
+  font-size: 11px;
+  color: #697064;
+  line-height: 1.55;
+  margin: 6px 0 0;
+}
+.platform-image-edit-result-note {
+  border-left: 2px solid #819275;
+  padding-left: 12px;
+  color: #60695a;
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 20px 0 0;
+}
+.platform-image-edit-related {
+  max-width: 1264px;
+  margin: 32px auto 0;
+  padding: 0 28px;
+  display: flex;
+  gap: 10px;
+}
+.platform-image-edit-related>a {
+  background: #fffefa;
+  border: 1px solid var(--image-line);
+  border-radius: 999px;
+  padding: 11px 15px;
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  color: #405844;
+  text-decoration: none;
+  font-size: 12px;
+}
+@media(max-width:800px) {
+  .platform-image-edit-hero {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding-top: 24px;
+  }
+  .platform-image-edit-art {
+    max-width: 520px;
+  }
+  .platform-image-edit-workspace {
+    grid-template-columns: 1fr;
+  }
+  .platform-image-edit-guide {
+    position: static;
+    grid-row: 2;
+  }
+}
+@media(max-width:560px) {
+  .platform-image-edit-breadcrumb {
+    padding: 16px 18px;
+    font-size: 11px;
+    gap: 7px;
+  }
+  .platform-image-edit-hero {
+    padding: 25px 19px 53px;
+  }
+  .platform-image-edit-hero h1 {
+    font-size: 49px;
+  }
+
+  .platform-image-edit-hero > div > p {
+    font-size: 15px;
+  }
+
+  .platform-image-edit-main {
+    padding: 0 14px;
+  }
+  .platform-image-edit-form,.platform-image-edit-guide {
+    padding: 18px;
+    border-radius: 17px;
+  }
+  .platform-image-edit-options {
+    grid-template-columns: 1fr;
+  }
+  .platform-image-edit-related {
+    padding: 0 15px;
+    flex-wrap: wrap;
+  }
+  .platform-image-edit-art {
+    aspect-ratio: 1.3;
+  }
+}

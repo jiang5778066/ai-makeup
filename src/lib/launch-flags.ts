@@ -3,7 +3,7 @@ export function isCheckoutEnabled() {
 }
 
 export function isGenerationEnabled() {
-  return process.env.DISABLE_GENERATION !== "1";
+  return process.env.ENABLE_GENERATION === "1" && process.env.DISABLE_GENERATION !== "1";
 }
 
 export function dailySpendCapCents(): number | null {

@@ -47,6 +47,19 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); window.history.replaceState({}, "", "/"); });
 describe("实时试妆（存储/模型/网络均为受控替身）", () => {
+  it.each(["/api/uploads/sign", "/api/makeup/generate"])("收到 %s 关闭响应时保留实时预览且不进入未知任务状态", async (endpoint) => {
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((url, init) => url === endpoint
+      ? Promise.resolve(Response.json({ code: "generation_disabled" }, { status: 503 }))
+      : original(url, init));
+    await mountPhoto();
+    await generate();
+    expect(screen.getByRole("alert")).toHaveTextContent("Saving HD results is currently unavailable.");
+    expect(screen.getByRole("button", { name: /Create HD result/ })).toBeEnabled();
+    if (endpoint.endsWith("/sign")) {
+      expect(vi.mocked(fetch).mock.calls.map(([url]) => url)).toEqual(["/api/credits/balance", endpoint, endpoint]);
+    }
+  });
   it("保留上传、摄像头和九个部位控件", async () => {
     render(<VirtualTryOn locale="en" focusedPart="lipstick" />); await flush();
     expect(screen.getByRole("button", { name: "Upload photo" })).toBeInTheDocument(); expect(screen.getByRole("button", { name: "Live camera" })).toBeInTheDocument(); expect(screen.getAllByRole("tab")).toHaveLength(9);

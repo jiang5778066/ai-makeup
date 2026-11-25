@@ -32,11 +32,11 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
       },
       {
         "title": "AI Image Generator Core Advantages",
-        "description": "Explore model choices, settings and prompt ideas. Image generation is not connected here; existing AI Makeup follows actual account rules.",
+        "description": "Explore model choices, settings and prompt ideas. Check the generation panel for available modes. AI Makeup follows the existing account rules.",
         "cards": [
           {
             "title": "Advanced Model Lineup",
-            "description": "Browse public settings for models including Nano Banana Pro, Flux 2 and Z Image. The lineup describes parameter previews; generation services are not connected.",
+            "description": "Browse public settings for models including Nano Banana Pro, Flux 2 and Z Image. These models are listed for parameter preview. For GPT Image 2, check the generation panel for available modes.",
             "bullets": [
               "Nano Banana Pro settings",
               "Flux 2 settings",
@@ -50,10 +50,10 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Parameter Preview & Availability",
-            "description": "Choose a model, adjust parameters, and preview local images. Image generation is not available yet; AI Makeup continues to use your actual account credits.",
+            "description": "Choose a model, adjust parameters, and preview local images. Check the panel for available modes and confirm the quote before generation. AI Makeup continues to use your account credits.",
             "bullets": [
               "Local preview uses no credits",
-              "Generation is not available",
+              "Confirm quoted credits before generation",
               "Existing AI Makeup account credits"
             ],
             "image": "",
@@ -84,7 +84,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
       },
       {
         "title": "How to Use the  AI Image Generator",
-        "description": "Explore the public workflow from choosing a model to writing a prompt and reviewing settings. This page offers local previews only.",
+        "description": "Choose a model, write a prompt, and review the available settings in the generation panel.",
         "cards": [
           {
             "title": "Enter Your Prompt or Upload Photo",
@@ -98,7 +98,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "AI Processing & Generation",
-            "description": "Choose a model and settings, then check your prompt and references. This page previews parameters locally and does not send a generation task.",
+            "description": "Choose a model and settings, then check your prompt and references. Preview your settings locally. To generate in an available mode, confirm the quote in the panel.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -108,7 +108,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Explore Public Examples",
-            "description": "Browse and download attributed public examples. They are not project generations or your account creations. A real generation workflow is not connected yet.",
+            "description": "Browse and download attributed public examples. They are not project generations or your account creations. After a successful generation, find your images in My Creations.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -219,11 +219,11 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
       },
       {
         "title": "Frequently Asked Questions About  AI Image Generator",
-        "description": "Learn about public model information and the scope of this page. Generation is unavailable and local files are not uploaded.",
+        "description": "Learn about the source models and check the generation panel for available modes. Local previews do not upload files.",
         "cards": [
           {
             "title": "What is an AI image generator and how does it work?",
-            "description": "Public model information: An AI image generator is a sophisticated machine learning system that creates images from text descriptions or transforms existing photos. The AI image generator on Lanta AI uses advanced neural networks trained on millions of images to understand visual concepts and generate new, unique images based on your input. When you enter a text prompt, the AI interprets your description and creates a corresponding image pixel by pixel, resulting in professional-quality visuals in seconds. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: An AI image generator is a sophisticated machine learning system that creates images from text descriptions or transforms existing photos. The AI image generator on Lanta AI uses advanced neural networks trained on millions of images to understand visual concepts and generate new, unique images based on your input. When you enter a text prompt, the AI interprets your description and creates a corresponding image pixel by pixel, resulting in professional-quality visuals in seconds.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -233,7 +233,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Is your AI image generator really free to use?",
-            "description": "This model’s generation is not available in this project. No free quota, generation speed, or commercial image rights are promised here. Local previews use no credits; existing AI Makeup follows its actual account rules.",
+            "description": "Check the generation panel for available modes and quoted credits. No free quota, generation speed, or commercial image rights are promised here. Local previews use no credits; existing AI Makeup follows its actual account rules.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -243,7 +243,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "What types of images can I create with your AI image maker?",
-            "description": "Public model information: The AI image maker on Lanta AI supports an incredible variety of styles and subjects. You can create realistic AI images including portraits, landscapes, and product photos. The AI cartoon image generator on Lanta AI produces anime, comic, and illustration styles. You can also generate abstract art, fantasy scenes, 3D renders, oil paintings, watercolors, and much more. The text to image AI understands complex prompts, allowing you to create virtually any visual you can imagine. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: The AI image maker on Lanta AI supports an incredible variety of styles and subjects. You can create realistic AI images including portraits, landscapes, and product photos. The AI cartoon image generator on Lanta AI produces anime, comic, and illustration styles. You can also generate abstract art, fantasy scenes, 3D renders, oil paintings, watercolors, and much more. The text to image AI understands complex prompts, allowing you to create virtually any visual you can imagine.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -253,7 +253,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "How do I get the best results from the AI image generator?",
-            "description": "Public model information: For optimal results on Lanta AI, use detailed, specific prompts. Instead of 'a dog', try 'a golden retriever puppy playing in autumn leaves, warm sunlight, professional photography'. Include style references like 'realistic', 'cartoon', 'oil painting', or 'anime'. Mention lighting, mood, camera angle, and artistic influences. The best free AI image generator on Lanta AI responds well to descriptive language and artistic direction. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: For optimal results on Lanta AI, use detailed, specific prompts. Instead of 'a dog', try 'a golden retriever puppy playing in autumn leaves, warm sunlight, professional photography'. Include style references like 'realistic', 'cartoon', 'oil painting', or 'anime'. Mention lighting, mood, camera angle, and artistic influences. The best free AI image generator on Lanta AI responds well to descriptive language and artistic direction.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -263,7 +263,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Can I use the image to image AI feature to transform my photos?",
-            "description": "Public model information: Absolutely! The image to image AI feature on Lanta AI lets you upload existing photos and transform them into different styles. You can create AI image from photo references, turning portraits into cartoon characters, landscapes into paintings, or product photos into stylized graphics. This feature is perfect for creating variations, applying artistic filters, or reimagining your existing visual content. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: Absolutely! The image to image AI feature on Lanta AI lets you upload existing photos and transform them into different styles. You can create AI image from photo references, turning portraits into cartoon characters, landscapes into paintings, or product photos into stylized graphics. This feature is perfect for creating variations, applying artistic filters, or reimagining your existing visual content.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -273,7 +273,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "What's the difference between text to image AI and image to image AI?",
-            "description": "Public model information: Text to image AI creates entirely new images from written descriptions-you type what you want, and the AI generates it from scratch. Image to image AI takes an existing photo as a starting point and transforms it based on your instructions. Both features use the AI image generator technology on Lanta AI, but they serve different creative purposes. Text to image is ideal for new concepts, while image to image excels at style transfer and photo enhancement. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: Text to image AI creates entirely new images from written descriptions-you type what you want, and the AI generates it from scratch. Image to image AI takes an existing photo as a starting point and transforms it based on your instructions. Both features use the AI image generator technology on Lanta AI, but they serve different creative purposes. Text to image is ideal for new concepts, while image to image excels at style transfer and photo enhancement.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -283,7 +283,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Are the AI-generated images I create mine to use commercially?",
-            "description": "This model’s generation is not available in this project. No free quota, generation speed, or commercial image rights are promised here. Local previews use no credits; existing AI Makeup follows its actual account rules.",
+            "description": "Check the generation panel for available modes and quoted credits. No free quota, generation speed, or commercial image rights are promised here. Local previews use no credits; existing AI Makeup follows its actual account rules.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -293,7 +293,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "How does your realistic AI image generator compare to others?",
-            "description": "Public realism references discuss detail, anatomy and lighting. This project has not verified output quality or connected model generation.",
+            "description": "Public realism references discuss detail, anatomy and lighting. These examples do not establish FrameKoi output quality.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -346,11 +346,11 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
       },
       {
         "title": "AI 图片生成器 核心优势",
-        "description": "浏览不同模型、参数与提示词思路。本项目图片生成尚未开放，现有美妆服务继续按真实账户规则运行。",
+        "description": "浏览不同模型、参数与提示词思路。可用模式以生成面板为准。AI 美妆沿用现有账户规则。",
         "cards": [
           {
             "title": "先进模型矩阵",
-            "description": "浏览 Nano Banana Pro、Flux 2 和 Z Image 等公开模型的参数。模型列表只表示可预览的界面，尚未连接生成服务。",
+            "description": "浏览 Nano Banana Pro、Flux 2 和 Z Image 等公开模型的参数。这些模型的参数供预览。GPT Image 2 的可用模式以生成面板为准。",
             "bullets": [
               "Nano Banana Pro 参数",
               "Flux 2 参数",
@@ -364,10 +364,10 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "参数预览与真实可用边界",
-            "description": "你可以在此选择模型、调整参数和预览本地图片。图片生成服务尚未开放；已有 AI 美妆继续使用账户实际额度。",
+            "description": "你可以在此选择模型、调整参数和预览本地图片。请在生成面板查看可用模式，并在生成前确认报价。AI 美妆继续使用账户实际额度。",
             "bullets": [
               "本地预览不扣额度",
-              "生成暂不可用",
+              "生成前确认报价积分",
               "AI美妆沿原账户额度"
             ],
             "image": "",
@@ -398,7 +398,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
       },
       {
         "title": "如何使用  AI 图片生成器",
-        "description": "从选择模型、编写提示词到预览参数，了解公开图片生成流程。本页面只提供本地预览。",
+        "description": "选择模型、编写提示词，在生成面板查看当前可用的参数。",
         "cards": [
           {
             "title": "输入提示词或上传图片",
@@ -412,7 +412,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "AI 智能处理与生成",
-            "description": "选择模型和参数，检查提示词及参考图片。此页面提供本地参数预览，尚未发送生成任务。",
+            "description": "选择模型和参数，检查提示词及参考图片。参数可在本地预览。使用已开放的模式时，在面板确认报价后再提交。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -422,7 +422,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "浏览公开示例",
-            "description": "浏览并下载标明来源的公开示例。它们不是本项目生成或你的账户作品；未来真实生成接入后另行说明结果流程。",
+            "description": "浏览并下载标明来源的公开示例。这些示例来自公开资料。你的图片生成成功后，可以在「我的作品」查看。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -533,11 +533,11 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
       },
       {
         "title": "关于  AI 图片生成器",
-        "description": "了解公开模型资料与此页面的使用范围；生成尚未开放，本地文件不会上传。",
+        "description": "了解公开模型资料和页面用法。可用模式以生成面板为准，本地预览不会上传文件。",
         "cards": [
           {
             "title": "什么是 AI 图片生成器？它如何工作？",
-            "description": "公开模型资料：AI 图片生成器是一种基于机器学习的系统，可根据文本描述生成图像，或基于已有图片进行风格与内容转换。Lanta AI 使用经过大规模图像数据训练的神经网络来理解视觉语义，并据此生成新的图像结果。输入提示词后，系统会逐步构建画面细节，在短时间内输出可直接使用的高质量视觉内容。 本项目尚未接入该模型生成，以上不是本项目能力验证。",
+            "description": "公开模型资料：AI 图片生成器是一种基于机器学习的系统，可根据文本描述生成图像，或基于已有图片进行风格与内容转换。Lanta AI 使用经过大规模图像数据训练的神经网络来理解视觉语义，并据此生成新的图像结果。输入提示词后，系统会逐步构建画面细节，在短时间内输出可直接使用的高质量视觉内容。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -547,7 +547,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "这个 AI 图片生成器真的可以免费使用吗？",
-            "description": "本项目此模型生成尚未开放，不承诺免费额度、生成速度或生成图片的商用授权。本地文件与参数预览不扣额度；已有AI美妆继续按账户实际规则运行。",
+            "description": "在生成面板查看可用模式和报价积分。本站不承诺免费额度、生成速度或生成图片的商用授权。本地文件与参数预览不扣额度；已有AI美妆继续按账户实际规则运行。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -557,7 +557,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "可以生成哪些类型的图片？",
-            "description": "公开模型资料：可生成写实人像、风景、商品图、动漫/插画、抽象艺术、幻想场景、3D 渲染、油画、水彩等多种类型。无论是文生图还是图生图，都支持复杂提示词和风格控制。 本项目尚未接入该模型生成，以上不是本项目能力验证。",
+            "description": "公开模型资料：可生成写实人像、风景、商品图、动漫/插画、抽象艺术、幻想场景、3D 渲染、油画、水彩等多种类型。无论是文生图还是图生图，都支持复杂提示词和风格控制。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -567,7 +567,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "如何获得更好的生成效果？",
-            "description": "公开模型资料：建议使用更具体的提示词，明确主体、场景、光线、风格、镜头与情绪等信息。例如与其输入“a dog”，不如输入“a golden retriever puppy playing in autumn leaves, warm sunlight, professional photography”。描述越清晰，生成越可控。 本项目尚未接入该模型生成，以上不是本项目能力验证。",
+            "description": "公开模型资料：建议使用更具体的提示词，明确主体、场景、光线、风格、镜头与情绪等信息。例如与其输入“a dog”，不如输入“a golden retriever puppy playing in autumn leaves, warm sunlight, professional photography”。描述越清晰，生成越可控。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -577,7 +577,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "可以用图生图来改造现有照片吗？",
-            "description": "公开模型资料：可以。你可以上传已有照片并进行风格转换、变体生成或细节重绘，例如将人像转为卡通风、将风景转为绘画风，或将商品图转为更具营销感的视觉样式。 本项目尚未接入该模型生成，以上不是本项目能力验证。",
+            "description": "公开模型资料：可以。你可以上传已有照片并进行风格转换、变体生成或细节重绘，例如将人像转为卡通风、将风景转为绘画风，或将商品图转为更具营销感的视觉样式。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -587,7 +587,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "文生图和图生图有什么区别？",
-            "description": "公开模型资料：文生图是从文字描述直接生成全新图像；图生图则以现有图片为基础，根据指令进行二次创作或风格迁移。两者使用相同的 AI 生成能力，但适用于不同创作场景。 本项目尚未接入该模型生成，以上不是本项目能力验证。",
+            "description": "公开模型资料：文生图是从文字描述直接生成全新图像；图生图则以现有图片为基础，根据指令进行二次创作或风格迁移。两者使用相同的 AI 生成能力，但适用于不同创作场景。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -597,7 +597,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "我生成的图片可以商用吗？",
-            "description": "本项目此模型生成尚未开放，不承诺免费额度、生成速度或生成图片的商用授权。本地文件与参数预览不扣额度；已有AI美妆继续按账户实际规则运行。",
+            "description": "在生成面板查看可用模式和报价积分。本站不承诺免费额度、生成速度或生成图片的商用授权。本地文件与参数预览不扣额度；已有AI美妆继续按账户实际规则运行。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -607,7 +607,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "你们的写实效果相比其他工具有什么优势？",
-            "description": "公开模型的写实风格资料涉及细节、解剖和光照。本项目没有验证其生成质量，模型生成尚未接入。",
+            "description": "公开模型的写实风格资料涉及细节、解剖和光照。公开示例仅供参考。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1036,7 +1036,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
         "cards": [
           {
             "title": "What is GPT Image 2?",
-            "description": "Public model information: GPT Image 2 is OpenAI's newer image model for both image generation and image editing. It is designed to handle more complex visual tasks with stronger text rendering, cleaner layouts, and more reliable prompt following. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: GPT Image 2 is OpenAI's newer image model for both image generation and image editing. It is designed to handle more complex visual tasks with stronger text rendering, cleaner layouts, and more reliable prompt following. Check the generation panel for available modes on FrameKoi.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1046,7 +1046,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "What can I create with GPT Image 2?",
-            "description": "Public model information: You can create posters, ads, social graphics, product visuals, infographics, presentation slides, UI mockups, photorealistic scenes, manga pages, and other polished creative assets. It is especially useful when the output needs to look ready to use, not just exploratory. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: You can create posters, ads, social graphics, product visuals, infographics, presentation slides, UI mockups, photorealistic scenes, manga pages, and other polished creative assets. It is especially useful when the output needs to look ready to use, not just exploratory. Check the generation panel for available modes on FrameKoi.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1056,7 +1056,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Is GPT Image 2 better at generating text inside images?",
-            "description": "Public model information: Yes. Better text rendering is one of its most noticeable upgrades. It does a much better job with readable text in posters, menus, labels, diagrams, and other design-heavy images. Very dense or highly specific copy may still need a retry, but the baseline is much stronger. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: Yes. Better text rendering is one of its most noticeable upgrades. It does a much better job with readable text in posters, menus, labels, diagrams, and other design-heavy images. Very dense or highly specific copy may still need a retry, but the baseline is much stronger. Check the generation panel for available modes on FrameKoi.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1066,7 +1066,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Can GPT Image 2 create realistic photos?",
-            "description": "Public model information: Yes. GPT Image 2 is stronger at realistic scenes with more believable lighting, texture, composition, and fine detail. It works well for portraits, product shots, lifestyle visuals, and cinematic-style imagery. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: Yes. GPT Image 2 is stronger at realistic scenes with more believable lighting, texture, composition, and fine detail. It works well for portraits, product shots, lifestyle visuals, and cinematic-style imagery. Check the generation panel for available modes on FrameKoi.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1076,7 +1076,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Does GPT Image 2 support anime, manga, and stylized art?",
-            "description": "Public model information: Yes. It captures the overall look and feel of stylized directions better than earlier image models, including anime, manga, comics, collage, and other art-driven outputs. Results usually feel more coherent and closer to the requested style. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: Yes. It captures the overall look and feel of stylized directions better than earlier image models, including anime, manga, comics, collage, and other art-driven outputs. Results usually feel more coherent and closer to the requested style. Check the generation panel for available modes on FrameKoi.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1086,7 +1086,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Can GPT Image 2 edit an existing image?",
-            "description": "Public model information: Yes. GPT Image 2 supports both new image generation and edits to existing images. It can help with changes to lighting, background, styling, layout, and other visual details while preserving the broader direction of the image. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: Yes. GPT Image 2 supports both new image generation and edits to existing images. It can help with changes to lighting, background, styling, layout, and other visual details while preserving the broader direction of the image. Check the generation panel for available modes on FrameKoi.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1096,7 +1096,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Can GPT Image 2 keep the same character consistent?",
-            "description": "Public model information: It is generally better than earlier models at keeping a character recognizable across variations, which makes it more useful for comics, social campaigns, and multi-image creative work. Exact consistency is still not perfect, especially across many scenes. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: It is generally better than earlier models at keeping a character recognizable across variations, which makes it more useful for comics, social campaigns, and multi-image creative work. Exact consistency is still not perfect, especially across many scenes. Check the generation panel for available modes on FrameKoi.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1106,7 +1106,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Does GPT Image 2 work with non-English text?",
-            "description": "Public model information: Yes. GPT Image 2 is stronger with non-English copy, including languages that use non-Latin scripts. That makes it more practical for localized posters, ads, UI mockups, and multilingual design work. This model is not connected for generation here; these are not verified project capabilities.",
+            "description": "Public model information: Yes. GPT Image 2 is stronger with non-English copy, including languages that use non-Latin scripts. That makes it more practical for localized posters, ads, UI mockups, and multilingual design work. Check the generation panel for available modes on FrameKoi.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1538,7 +1538,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
         "cards": [
           {
             "title": "GPT Image 2 是什么？",
-            "description": "公开模型资料将 GPT Image 2 介绍为 OpenAI 用于图像生成与编辑的新一代图像模型，侧重复杂视觉任务、清晰文字、整洁版式和提示词遵循。本项目尚未接入其生成服务。",
+            "description": "公开模型资料将 GPT Image 2 介绍为 OpenAI 用于图像生成与编辑的新一代图像模型，侧重复杂视觉任务、清晰文字、整洁版式和提示词遵循。本站可用的模式以生成面板为准。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1568,7 +1568,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "GPT Image 2 能生成写实照片吗？",
-            "description": "公开参照介绍了更自然的光照、纹理、构图和细节，展示人像、产品照、生活方式与电影感场景。写实照片是该模型的公开应用方向；页面示例不代表本项目生成，当前不能在此提交生成。",
+            "description": "公开参照介绍了更自然的光照、纹理、构图和细节，展示人像、产品照、生活方式与电影感场景。写实照片是该模型的公开应用方向，页面示例来自外部资料。本站可用的模式以生成面板为准。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1578,7 +1578,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "GPT Image 2 支持动漫、漫画和风格化艺术吗？",
-            "description": "公开参照涵盖动漫、漫画、连环画、拼贴等风格化艺术，描述其能更好地保持整体风格与画面连贯性。具体效果仍依赖提示词与模型输出，本项目尚未接入这些创作功能。",
+            "description": "公开参照涵盖动漫、漫画、连环画、拼贴等风格化艺术，描述其能更好地保持整体风格与画面连贯性。具体效果取决于提示词和模型输出。本站可用的模式以生成面板为准。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1588,7 +1588,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "GPT Image 2 能编辑现有图片吗？",
-            "description": "公开资料说明 GPT Image 2 可生成新图，也可编辑现有图片，例如调整光照、背景、风格、版式与局部视觉细节，同时尽量保持原图方向。本页选图仅用于本机预览，不会上传或执行模型编辑。",
+            "description": "公开资料说明 GPT Image 2 可生成新图，也可编辑现有图片，例如调整光照、背景、风格、版式与局部视觉细节，同时尽量保持原图方向。本地预览不会上传文件。要使用当前可用的图生图模式，请按面板提示确认所选图片和报价。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1598,7 +1598,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "GPT Image 2 能保持同一个角色一致吗？",
-            "description": "公开资料描述其在多张变化图中维持角色辨识度的能力有所提升，适合漫画、系列宣传和多图创作。但跨大量场景的精确一致性仍不完美，需要逐张检查；本项目不承诺角色一致性或提供该生成服务。",
+            "description": "公开资料描述其在多张变化图中维持角色辨识度的能力有所提升，适合漫画、系列宣传和多图创作。跨场景的角色一致性仍需逐张检查。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1642,7 +1642,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
     "en": [
       {
         "title": "How to Use Nano Banana Pro",
-        "description": "Generate or refine professional visuals in three straightforward steps.",
+        "description": "Preview Nano Banana Pro settings and browse public examples.",
         "cards": [
           {
             "title": "Step 1 · Describe the image you want",
@@ -1655,8 +1655,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "Step 2 · Generate, edit, and iterate",
-            "description": "Choose a model and preview its local settings. Generation is not connected and no generation task is sent.",
+            "title": "Step 2 · Preview settings",
+            "description": "Preview Nano Banana Pro settings locally. Generation with this model is not available.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -1666,7 +1666,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Step 3 · Browse Public Examples",
-            "description": "Browse public examples and their sources. Project-generated results are not available to export.",
+            "description": "Browse public Nano Banana Pro examples and their sources.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2022,7 +2022,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
     "zh-CN": [
       {
         "title": "如何使用 Nano Banana Pro",
-        "description": "三步完成专业级视觉生成或图片精修。",
+        "description": "预览 Nano Banana Pro 的参数并浏览公开示例。",
         "cards": [
           {
             "title": "步骤 1 · 描述你想要的画面",
@@ -2035,8 +2035,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "步骤 2 · 生成、编辑并反复优化",
-            "description": "选择模型和本地参数，检查你的创意描述。生成服务尚未接入，不会发出生成任务。",
+            "title": "步骤 2 · 预览参数",
+            "description": "在本地预览 Nano Banana Pro 参数。该模型的生成暂未开放。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2046,7 +2046,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "步骤 3 · 浏览公开示例",
-            "description": "浏览公开示例及来源；当前不能导出本项目生成结果。",
+            "description": "浏览 Nano Banana Pro 的公开示例及来源。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2606,7 +2606,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "Step 3: Generate Your Video",
-            "description": "Click Generate and let Lanta AI turn your prompt or images into a short AI video.",
+            "description": "Choose an available mode in the generation panel, then confirm the quote to submit. When generation succeeds, view the video in My Creations.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2889,8 +2889,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
         "description": "",
         "cards": [
           {
-            "title": "How does Lanta AI Video Generator work?",
-            "description": "Public model information: Lanta AI turns text prompts and images into short AI videos. You can start with a written idea, upload an image, choose an AI video model, and generate a clip in minutes. For better results, describe the motion, camera movement, mood, and style you want. Generation is not connected in this project.",
+            "title": "How does the FrameKoi video generator work?",
+            "description": "Choose a mode in the generation panel and enter a prompt. For image-to-video, also select a first frame. If the mode is available, sign in, give consent, and confirm the quote to submit. Check the task status in the panel and find completed videos in My Creations.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2899,8 +2899,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "Is Lanta AI Video Generator free to try?",
-            "description": "This model’s generation is not available in this project. No free quota, generation speed, or commercial image rights are promised here. Local previews use no credits; existing AI Makeup follows its actual account rules.",
+            "title": "Can I try the FrameKoi video generator for free?",
+            "description": "Local previews use no credits. FrameKoi does not promise a free quota. For a generation task in an available mode, review the credit quote before you confirm.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2909,8 +2909,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "How long does it take to generate an AI video?",
-            "description": "Public model information: Most videos take 3-5 minutes to generate. The exact time depends on the model, video length, quality, scene complexity, and current processing load. Shorter clips and simpler prompts usually generate faster. Generation is not connected in this project.",
+            "title": "How long does video generation take?",
+            "description": "After submitting, check the task status in the generation panel. Processing time varies, and FrameKoi offers no fixed completion time.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2919,8 +2919,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "Can I generate videos from both text and images?",
-            "description": "Public model information: Yes. Use Text to Video to create a scene from a prompt, or Image to Video to animate a product photo, portrait, character image, artwork, or visual concept. You can also use prompts with images to guide motion, style, and camera movement. Generation is not connected in this project.",
+            "title": "How do text-to-video and image-to-video differ?",
+            "description": "Text-to-video starts with a prompt and requires no image. In image-to-video, selecting one first-frame image gives you a local preview. If the mode is available, give consent and request a quote. FrameKoi then uploads the first frame and verifies it before providing the quote. Confirm the quote to submit the task.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2929,8 +2929,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "Which AI video model should I choose?",
-            "description": "Public model information: Lanta 2.1: Choose it for quick tests, first drafts, and lower-cost experiments.\n\nGrok Imagine: when you want to turn an idea, prompt, or image into a video quickly.\n\nSeedance 2.0 Fast: when you want to test different inputs, such as text, images, audio, or videos, and creative directions faster.\n\nWan 2.6: when the same person, voice, or story needs to stay more connected across multiple shots.\n\nKling 3.0: when you want cinematic control, stronger camera movement, native audio, and film-like storytelling.\n\nHappy Horse 1.0: when your video needs multiple references, richer scene detail, stronger motion, and a more complete short-film structure. Generation is not connected in this project.",
+            "title": "Which video models can I use on FrameKoi?",
+            "description": "Grok Imagine Video 1.5 is the model used for site generation in supported modes. Check the generation panel for the model and settings that are currently available. Other model entries may offer public information or parameter previews.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2939,8 +2939,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "What types of videos can I create with Lanta AI?",
-            "description": "Public model information: You can create social media clips, product videos, ad concepts, cinematic shots, character videos, music visuals, anime-style clips, and storyboard previews. Lanta AI works well for short, visual content made from prompts, product images, portraits, or creative concepts. Generation is not connected in this project.",
+            "title": "What types of videos can I plan with FrameKoi?",
+            "description": "Public examples from external models include social clips, product concepts, storyboards, and character motion. Use them for inspiration and check the generation panel for the modes you can try on FrameKoi.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2949,8 +2949,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "How can I get better AI video results?",
-            "description": "Public model information: Keep each video focused on one clear idea. Describe the subject, action, camera movement, lighting, mood, and style. If you use an image, make sure the image is clear and let the prompt focus on how you want it to move. For complex ideas, generate shorter clips first and refine from there. Generation is not connected in this project.",
+            "title": "How can I write a better video prompt?",
+            "description": "The public examples can help you plan a shot. Describe the subject, one clear action, and the camera movement. If the mode uses a first frame, choose an image that makes the subject easy to see.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2959,8 +2959,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "How do I make longer AI videos?",
-            "description": "Public model information: The most reliable way is to build longer videos from shorter clips. Break your idea into scenes, generate each part separately, then edit the best clips together. This gives you more control over pacing, camera movement, character consistency, and overall quality. Generation is not connected in this project.",
+            "title": "Can I make a longer video?",
+            "description": "The Grok Imagine Video 1.5 generation panel specifies 1 second at 480p for each supported mode. Check the panel for the current settings. For longer projects, plan several shots and edit them together.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -2969,8 +2969,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "Will failed AI video generations waste my credits?",
-            "description": "This model’s generation is not available in this project. No free quota, generation speed, or commercial image rights are promised here. Local previews use no credits; existing AI Makeup follows its actual account rules.",
+            "title": "What happens to my credits if video generation fails?",
+            "description": "When FrameKoi accepts your submission, the quoted credits are reserved. They are settled when the task succeeds or returned when a failure is confirmed. If the task is under review, credits remain reserved. Check the original task for an update.",
             "bullets": [],
             "image": "",
             "video": "",
@@ -3204,7 +3204,7 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
           },
           {
             "title": "步骤 3：生成视频",
-            "description": "点击生成，让 Lanta AI 把你的提示词或图片转换成一段 AI 短视频。",
+            "description": "在生成面板选择可用模式，确认报价后提交。生成成功后，在「我的作品」查看视频。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -3487,8 +3487,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
         "description": "",
         "cards": [
           {
-            "title": "Lanta AI 视频生成器是如何工作的？",
-            "description": "公开参照中的视频生成器可以把文字描述或参考图片交给所选模型制作短视频。此页面目前只提供本地提示词、参数与文件预览，不会发送生成任务。",
+            "title": "FrameKoi 视频生成器是怎么工作的？",
+            "description": "在生成面板选择模式并输入提示词。使用图生视频时，还需选择一张首帧图片。模式可用时，登录并同意授权，确认报价后提交。可在面板查询任务状态，生成成功后到「我的作品」查看视频。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -3497,8 +3497,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "Lanta AI 视频生成器可以免费试用吗？",
-            "description": "本项目此模型生成尚未开放，不承诺免费额度、生成速度或生成图片的商用授权。本地文件与参数预览不扣额度；已有AI美妆继续按账户实际规则运行。",
+            "title": "FrameKoi 视频生成器可以免费试用吗？",
+            "description": "本地预览不扣积分。FrameKoi 暂无免费额度承诺。使用已开放模式生成视频时，请先查看报价所需的积分，再确认提交。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -3507,8 +3507,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "生成一个 AI 视频需要多久？",
-            "description": "本项目此模型生成尚未开放，不承诺免费额度、生成速度或生成图片的商用授权。本地文件与参数预览不扣额度；已有AI美妆继续按账户实际规则运行。",
+            "title": "生成一个视频需要多久？",
+            "description": "提交后可在生成面板查询任务状态。处理时间因任务而异，FrameKoi 不提供固定完成时间。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -3517,8 +3517,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "我可以同时用文本和图片生成视频吗？",
-            "description": "你可以在此切换文生视频和图生视频面板，检查对应字段和模型参数；选择的参考文件仅在本机预览。",
+            "title": "文生视频和图生视频有什么区别？",
+            "description": "文生视频使用提示词，无需图片。图生视频选图后会先在本地预览。模式可用时，同意授权并点击获取报价，系统会上传单张首帧并完成核验，再提供报价。确认报价后才提交生成任务。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -3527,8 +3527,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "我该选择哪个 AI 视频模型？",
-            "description": "公开资料将模型分别用于快速创意、多参考、叙事和镜头控制等场景。可浏览Wan、Seedance、Kling、Grok等已观察模型的参数，名称不代表本项目已接入provider。",
+            "title": "FrameKoi 可以使用哪些视频模型？",
+            "description": "Grok Imagine Video 1.5 用于本站已开放的生成模式。当前可用模型和参数以生成面板为准。其他列出的模型可能只提供公开资料或参数预览。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -3537,8 +3537,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "我可以用 Lanta AI 生成哪些类型的视频？",
-            "description": "公开示例包含社交短片、产品广告、电影分镜、动漫角色、音乐和舞蹈概念。这些只是外部模型的参考展示，不是本项目生成结果。",
+            "title": "可以用 FrameKoi 规划哪些视频？",
+            "description": "公开示例来自外部模型，涵盖社交短片、产品展示、分镜和角色动作等方向。可参考这些示例构思画面，并在生成面板查看本站可用的模式。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -3547,8 +3547,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "怎样才能得到更好的 AI 视频结果？",
-            "description": "可先明确主体、动作、场景、镜头、灯光和风格，并使用清晰参考图；复杂任务可先拆短镜头。这些是创作建议，不构成本项目生成质量承诺。",
+            "title": "怎样写出更好的视频提示词？",
+            "description": "可从公开示例中参考镜头构思。描述主体、一个明确的动作和镜头运动。使用首帧的模式下，选一张能清楚看到主体的图片。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -3557,8 +3557,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "如何制作更长的 AI 视频？",
-            "description": "公开参照可通过模型时长选项或分段创作得到较长内容。已观察Wan2.5的10秒需要会员，本地保留该门槛并维持5秒；不提供购买或解锁。",
+            "title": "怎样制作更长的视频？",
+            "description": "Grok Imagine Video 1.5 的生成面板为当前支持的模式显示 1 秒、480p，实际可用设置请查看面板。制作较长视频时，可以先规划多个镜头，再将短片剪辑在一起。",
             "bullets": [],
             "image": "",
             "video": "",
@@ -3567,8 +3567,8 @@ export const generatorContent:Record<"image"|"gpt"|"nano"|"video",Record<"en"|"z
             "href": ""
           },
           {
-            "title": "AI 视频生成失败会浪费积分吗？",
-            "description": "本项目此模型生成尚未开放，不承诺免费额度、生成速度或生成图片的商用授权。本地文件与参数预览不扣额度；已有AI美妆继续按账户实际规则运行。",
+            "title": "视频生成失败后，积分如何处理？",
+            "description": "FrameKoi 受理任务后会预留报价中的积分。任务成功后结算，确认失败后退回。结果待核对期间积分仍预留，可继续查询原任务。",
             "bullets": [],
             "image": "",
             "video": "",

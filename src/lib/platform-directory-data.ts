@@ -121,8 +121,12 @@ export const directoryContent: Readonly<Record<DirectoryPath, DirectoryContent>>
       {
         "entryId": "landscape-to-portrait-video-converter-ai",
         "title": {
-          "en": "Landscape to Portrait Video Converter AI",
-          "zh-CN": "AI 横屏转竖屏视频转换器"
+          "en": "Landscape to portrait preview",
+          "zh-CN": "横屏转竖屏预览"
+        },
+        "description": {
+          "en": "Preview 9:16 or 4:5 framing with a local video.",
+          "zh-CN": "用本地视频预览 9:16 或 4:5 的竖屏构图。"
         },
         "mediaKey": "tools-11",
         "hash": null
@@ -303,6 +307,10 @@ export const directoryContent: Readonly<Record<DirectoryPath, DirectoryContent>>
           "en": "Christmas(Heart)",
           "zh-CN": "圣诞爱心"
         },
+        "description": {
+          "en": "Framing guidance and sample prompt. Dedicated template generation is not available yet.",
+          "zh-CN": "构图指导与示例提示词。专用模板生成服务尚未开放。"
+        },
         "mediaKey": "video-effects-01",
         "hash": null,
         "badge": "hot"
@@ -353,6 +361,10 @@ export const directoryContent: Readonly<Record<DirectoryPath, DirectoryContent>>
           "en": "Earth Zoom Out",
           "zh-CN": "地球拉远"
         },
+        "description": {
+          "en": "Storyboard and prompt guide. Dedicated generation is unverified.",
+          "zh-CN": "分镜与提示词资料页。专用生成尚未验证。"
+        },
         "mediaKey": "video-effects-06",
         "hash": null,
         "badge": "new"
@@ -372,6 +384,10 @@ export const directoryContent: Readonly<Record<DirectoryPath, DirectoryContent>>
           "en": "AI Angel Wings",
           "zh-CN": "AI 天使翅膀"
         },
+        "description": {
+          "en": "Storyboard and prompt guide. Dedicated generation is unverified.",
+          "zh-CN": "分镜与提示词资料页。专用生成尚未验证。"
+        },
         "mediaKey": "video-effects-08",
         "hash": null
       },
@@ -380,6 +396,10 @@ export const directoryContent: Readonly<Record<DirectoryPath, DirectoryContent>>
         "title": {
           "en": "AI Angel Halo",
           "zh-CN": "AI 天使光环"
+        },
+        "description": {
+          "en": "Framing guidance and sample prompt. Dedicated template generation is not available yet.",
+          "zh-CN": "构图指导与示例提示词。专用模板生成服务尚未开放。"
         },
         "mediaKey": "video-effects-09",
         "hash": null
@@ -404,7 +424,7 @@ export const directoryContent: Readonly<Record<DirectoryPath, DirectoryContent>>
       {
         "entryId": "ai-hair-style-changer",
         "title": {
-          "en": "AI Hair Style Changer",
+          "en": "AI Hairstyle Changer",
           "zh-CN": "AI 发型更换"
         },
         "mediaKey": "image-effects-01",
@@ -491,12 +511,16 @@ export const directoryContent: Readonly<Record<DirectoryPath, DirectoryContent>>
       {
         "entryId": "ai-south-park",
         "title": {
-          "en": "AI South Park Character Creator",
-          "zh-CN": "AI 南方公园角色创作"
+          "en": "Paper Cutout Collage",
+          "zh-CN": "纸片拼贴插画"
         },
         "mediaKey": "image-effects-10",
         "hash": null,
-        "badge": "new"
+        "badge": "new",
+        "description": {
+          "en": "Illustration guide with a FrameKoi example.",
+          "zh-CN": "查看 FrameKoi 示意图和纸片拼贴步骤。"
+        }
       },
       {
         "entryId": "ai-album-cover-generator",
@@ -511,12 +535,21 @@ export const directoryContent: Readonly<Record<DirectoryPath, DirectoryContent>>
       {
         "entryId": "change-eye-color",
         "title": {
-          "en": "Change Eye Color",
-          "zh-CN": "更改眼睛颜色"
+          "en": "Eye Color Changer",
+          "zh-CN": "瞳色更换"
         },
         "mediaKey": "image-effects-12",
         "hash": null,
         "badge": "new"
+      },
+      {
+        "entryId": "christmas-ai-photo-generator",
+        "title": {
+          "en": "Christmas AI Photo Generator",
+          "zh-CN": "AI 圣诞照片生成器"
+        },
+        "mediaKey": "image-effects-13",
+        "hash": null
       }
     ]
   },

@@ -1,5 +1,8 @@
+import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { entryHref, isEntryActive, platformEntries, platformEntry, switchPlatformLocale } from "./platform-navigation";
+import { slugFromPath } from "./content";
+import { resolveHomepageRoute } from "./platform-homepage";
+import { entryHref, featureGroups, footerCandidateEntries, footerGroups, isEntryActive, platformEntries, platformEntry, primaryEntryIds, publicPlatformEntry, publicPlatformHref, sidebarGroups, switchPlatformLocale } from "./platform-navigation";
 
 describe("平台入口与语言", () => {
   it("保留模板参数和专用锚点，不替换成美妆入口", () => {
@@ -32,5 +35,39 @@ describe("平台入口与语言", () => {
     expect(switchPlatformLocale("/", "zh-CN")).toBe("/zh-CN");
     expect(switchPlatformLocale("/login?next=%2Fzh-CN%2Fai-makeup%23try", "zh-CN")).toBe("/login?next=%2Fzh-CN%2Fai-makeup%23try");
     expect(entryHref(platformEntry("creations"), "zh-CN")).toBe("/zh-CN/my-creations");
+  });
+  it("共享候选仅开放有正文的双语目标，目录中的占位路由仍有独立身份", () => {
+    const candidates = [
+      ...primaryEntryIds,
+      ...sidebarGroups.flatMap(({ ids }) => [...ids]),
+      ...featureGroups.flatMap(({ ids }) => [...ids]),
+      ...footerGroups.flatMap(({ items }) => items.map(({ id }) => id)),
+    ];
+    const nonReady = new Set(candidates.filter((id) => !publicPlatformEntry(id)));
+    expect(nonReady).toEqual(new Set([
+      "guides", "image-video-guide", "image-guide", "blog",
+    ]));
+    expect(publicPlatformEntry("image-to-video")?.pathname).toBe("/tools/ai-image-to-video");
+    expect(publicPlatformEntry("text-to-video")?.pathname).toBe("/tools/ai-text-to-video");
+    for (const entry of [...platformEntries, ...footerCandidateEntries]) {
+      const { pathname, query } = entry;
+      const route = resolveHomepageRoute(pathname, query);
+      const sourcePath = pathname === "/" ? "" : pathname;
+      const staticPages = (existsSync(`src/app${sourcePath}/page.tsx`) || existsSync(`src/app/(marketing)${sourcePath}/page.tsx`))
+        && existsSync(`src/app/zh-CN${sourcePath}/page.tsx`);
+      const substantive = route ? route.kind !== "scaffold" : staticPages || slugFromPath(pathname) !== null;
+      expect(Boolean(publicPlatformEntry(entry.id)), entry.id).toBe(substantive);
+      if (entry.status === "scaffold") expect(route, entry.id).toMatchObject({ kind: "scaffold", entry: { id: entry.id } });
+    }
+    expect(existsSync("src/app/login/page.tsx")).toBe(true);
+  });
+  it("内容推荐按登记目标筛选，保留别名、双语、重复查询及锚点", () => {
+    expect(publicPlatformHref("/zh/price?tag=a&tag=b#plans", "en")).toBe("/pricing?tag=a&tag=b#plans");
+    expect(publicPlatformHref("/tools/icedit-ai-image-editor", "zh-CN")).toBe("/zh-CN/tools/icedit-ai-image-editor#create");
+    expect(publicPlatformHref("/ai-video-editor", "zh-CN")).toBe("/zh-CN/ai-video-editor");
+    expect(publicPlatformHref("/ai-video-generator?mode=text-to-video#generator", "zh-CN")).toBe("/zh-CN/ai-video-generator?mode=text-to-video#generator");
+    for (const href of ["", "#generator", "/unknown", "/zh-CN/guides", "/zh/video-effects/lab?template_id=508", "https://example.com/tools", "//example.com/tools"]) {
+      expect(publicPlatformHref(href, "en"), href).toBeUndefined();
+    }
   });
 });

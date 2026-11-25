@@ -31,14 +31,14 @@ describe.skipIf(!url)("隔离 Postgres17 原生 Drizzle 迁移", () => {
     await db`insert into auth.users(id) values ('11111111-1111-4111-8111-111111111111') on conflict do nothing`;
     await db`insert into public.projects(user_id,name) values ('11111111-1111-4111-8111-111111111111', '保留数据')`;
     const second = await migrateDatabase(url!);
-    expect(first.applied).toHaveLength(4); expect(second.applied).toHaveLength(4); expect(second.pending).toEqual([]);
+    expect(first.applied).toHaveLength(5); expect(second.applied).toHaveLength(5); expect(second.pending).toEqual([]);
     expect((await db`select name from public.projects`)[0].name).toBe("保留数据");
     expect(await db`select oid from pg_class where oid='auth.users'::regclass`).toEqual(before);
-    expect((await db`select count(*) from drizzle.__drizzle_migrations`)[0].count).toBe("4");
+    expect((await db`select count(*) from drizzle.__drizzle_migrations`)[0].count).toBe("5");
     expect((await db`select count(*) from pg_constraint where connamespace='public'::regnamespace and contype='c'`)[0].count).toBe("26");
     expect((await db`select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relrowsecurity`)[0].count).toBe("13");
   });
-  it.each([1, 2, 3])("原生历史前缀%d逐步升级保留已有行与托管表", async prefix => {
+  it.each([1, 2, 3, 4])("原生历史前缀%d逐步升级保留已有行与托管表", async prefix => {
     const root = mkdtempSync(join(tmpdir(), "release-db-prefix-"));
     try {
       mkdirSync(join(root, "meta"));
@@ -51,11 +51,63 @@ describe.skipIf(!url)("隔离 Postgres17 原生 Drizzle 迁移", () => {
       await db`insert into public.projects(user_id,name) values ('22222222-2222-4222-8222-222222222222', '前缀已有数据')`;
       const managed = await db`select oid from pg_class where oid='auth.users'::regclass`;
       const before = await databaseStatus(url!);
-      expect(before.applied).toHaveLength(prefix); expect(before.pending).toHaveLength(4-prefix);
-      expect((await migrateDatabase(url!)).applied).toHaveLength(4);
+      expect(before.applied).toHaveLength(prefix); expect(before.pending).toHaveLength(5-prefix);
+      expect((await migrateDatabase(url!)).applied).toHaveLength(5);
       expect((await db`select name from public.projects`)[0].name).toBe("前缀已有数据");
       expect(await db`select oid from pg_class where oid='auth.users'::regclass`).toEqual(managed);
       expect((await migrateDatabase(url!)).pending).toEqual([]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+  it("首次投递迁移只补历史待派发预付任务，SQL 回放及事务回滚保留原数据", async () => {
+    const root = mkdtempSync(join(tmpdir(), "release-db-makeup-prefix-"));
+    const tag = "0004_makeup_initial_dispatch";
+    const migration = readFileSync(`drizzle/${tag}.sql`, "utf8");
+    try {
+      mkdirSync(join(root, "meta"));
+      const journal = JSON.parse(readFileSync("drizzle/meta/_journal.json", "utf8"));
+      journal.entries.pop();
+      writeFileSync(join(root, "meta/_journal.json"), JSON.stringify(journal));
+      for (const entry of journal.entries) writeFileSync(join(root, entry.tag + ".sql"), readFileSync("drizzle/" + entry.tag + ".sql"));
+      await migrateDatabase(url!, root, compatibility.approvedHashes.slice(0, -1));
+      const [{ id: owner }] = await db`INSERT INTO auth.users (id) VALUES (gen_random_uuid()) RETURNING id`;
+      const [{ id: lot }] = await db`INSERT INTO credit_grants (user_id,source_type,source_id,initial_amount,remaining)
+        VALUES (${owner},'admin_adjust','fixture',3,0) RETURNING id`;
+      await db`INSERT INTO credit_balances (user_id,balance) VALUES (${owner},0)`;
+      const rows = await db`INSERT INTO generations (user_id,upload_key,style_id,status,error,deleted_at)
+        VALUES (${owner},'fixture-queued','natural','queued',null,null),
+          (${owner},'fixture-running','natural','running','creative_submission_pending',null),
+          (${owner},'fixture-unpaid','natural','queued',null,null),
+          (${owner},'fixture-deleted','natural','queued',null,now())
+        RETURNING id,upload_key`;
+      for (const row of rows.filter(row => row.upload_key !== "fixture-unpaid")) {
+        await db`INSERT INTO credit_consumptions (user_id,grant_id,ref_type,ref_id,amount)
+          VALUES (${owner},${lot},'generation',${row.id},1)`;
+        await db`INSERT INTO credits_ledger (user_id,delta,reason,ref_type,ref_id)
+          VALUES (${owner},-1,'generation','generation',${row.id})`;
+      }
+
+      await expect(db.begin(async tx => {
+        await tx.unsafe(migration);
+        expect((await tx`SELECT upload_key FROM generations WHERE dispatch_due_at IS NOT NULL`))
+          .toEqual([{ upload_key: "fixture-queued" }]);
+        await tx`SELECT 1/0`;
+      })).rejects.toMatchObject({ code: "22012" });
+      expect((await databaseStatus(url!)).pending).toEqual([tag]);
+      expect((await db`SELECT count(*)::int AS count FROM generations`)[0].count).toBe(4);
+
+      expect((await migrateDatabase(url!)).applied.at(-1)).toBe(tag);
+      const due = await db`SELECT id, upload_key, dispatch_due_at FROM generations WHERE dispatch_due_at IS NOT NULL`;
+      expect(due).toEqual([{
+        id: rows[0].id, upload_key: "fixture-queued", dispatch_due_at: expect.any(Date)
+      }]);
+      await db.unsafe(migration);
+      expect(await db`SELECT id,upload_key,dispatch_due_at FROM generations WHERE dispatch_due_at IS NOT NULL`).toEqual(due);
+      expect(await db`SELECT sum(delta)::int AS net FROM credits_ledger`).toEqual([{ net: -3 }]);
+      expect(await db`SELECT count(*)::int AS count FROM credit_consumptions WHERE grant_id=${lot}`).toEqual([{ count: 3 }]);
+      expect(await db`SELECT balance FROM credit_balances WHERE user_id=${owner}`).toEqual([{ balance: 0 }]);
+      expect(await db`SELECT error FROM generations WHERE id=${rows[1].id}`).toEqual([{ error: "creative_submission_pending" }]);
+      expect((await migrateDatabase(url!)).pending).toEqual([]);
+      console.info("历史数据迁移", { backfilled: due.length, oldTasks: rows.length, consumptionRows: 3, sqlRollback: "22012" });
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
   it("已有未跟踪业务表在写历史前阻塞", async () => {
@@ -104,7 +156,7 @@ describe.skipIf(!url)("隔离 Postgres17 原生 Drizzle 迁移", () => {
   ])("合法历史但结构漂移阻塞：%s", async sql => {
     await migrateDatabase(url!); await db.unsafe(sql);
     await expect(databaseStatus(url!)).rejects.toThrow("结构");
-    expect((await db`select count(*) from drizzle.__drizzle_migrations`)[0].count).toBe("4");
+    expect((await db`select count(*) from drizzle.__drizzle_migrations`)[0].count).toBe("5");
   });
   it("并发迁移锁阻止第二个执行者", async () => {
     await db`select pg_advisory_lock(784520261105)`;
@@ -135,7 +187,7 @@ describe.skipIf(!url)("隔离 Postgres17 原生 Drizzle 迁移", () => {
       await rejected;
       expect((await db`select to_regclass('public.projects') as name`)[0].name).toBeNull();
       expect((await db`select to_regclass('drizzle.__drizzle_migrations') as name`)[0].name).toBeNull();
-      expect((await migrateDatabase(url!)).applied).toHaveLength(4);
+      expect((await migrateDatabase(url!)).applied).toHaveLength(5);
     } finally { await client.end({ timeout: 1 }); rmSync(root, { recursive: true, force: true }); }
   });
   it("缺少托管依赖不创建 auth.users", async () => {

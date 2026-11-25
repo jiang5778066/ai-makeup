@@ -1,5 +1,12 @@
 import type {GeneratorState} from './platform-generator-parameters';
-export function generatorSelectionKey(path:string,query:string){const q=new URLSearchParams(query.split('#')[0]);return JSON.stringify([path,q.get('model'),q.get('mode'),q.get('tab')])}
+import { isVideoModeToolPath } from './platform-video-mode-tools';
+export function generatorSelectionKey(path: string, query: string) {
+ const params = new URLSearchParams(query.split('#')[0]);
+ const model = params.get('model');
+ return JSON.stringify(isVideoModeToolPath(path)
+  ? [path, model]
+  : [path, model, params.get('mode'), params.get('tab')]);
+}
 type Session={state:GeneratorState;owner:number;filesReleased:boolean;hasFiles:boolean};
 // 只保存本批有界文本/参数；File和objectURL永远不进入会话内存。
 export class GeneratorSessions {

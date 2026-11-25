@@ -2850,7 +2850,7 @@ input[type="range"] {
 .platform-feature-badge { display: inline-flex; padding: 2px 8px; border-radius: 999px; font-size: 12px; line-height: 16px; background: #701a754d; color: #e879f9; }
 .platform-feature-badge.hot { background: #7f1d1d66; color: #f87171; }
 .platform-footer { padding: 32px max(24px,calc((100% - 1280px)/2)) 0; background: #080713; border: 0; }
-.platform-footer-grid { grid-template-columns: repeat(5,minmax(0,1fr)); gap: 0; max-width: 1280px; }
+.platform-footer-grid { grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 0; max-width: 1280px; }
 .platform-footer-grid h2 { margin: 0 0 32px; font-size: 18px; line-height: 28px; font-weight: 900; }
 .platform-footer-grid > div > a:not(.platform-brand) { margin: 0 0 16px; font-size: 16px; line-height: 24px; font-weight: 400; }
 .platform-footer-bottom { display: flex; align-items: center; gap: 16px; margin-top: 32px; padding: 24px 0 32px; font-size: 16px; line-height: 24px; }
@@ -2948,6 +2948,7 @@ input[type="range"] {
 .platform-home-tool-grid > .platform-home-carousel-heading { position: absolute; right: 0; top: -106px; }
 .platform-home-tool { display: block; position: relative; min-width: 0; color: white; overflow: hidden; }
 .platform-home-tool-media { position: relative; overflow: hidden; border-radius: 16px; aspect-ratio: 16/9; }
+.platform-tool-icon-preview { display: grid; width: 100%; height: 100%; place-items: center; color: #c6b3fa; background: #292039; }
 .platform-home-tool-media::after { content: ""; position: absolute; inset: 40% 0 0; background: linear-gradient(transparent,#000b); pointer-events: none; }
 .platform-home-tool-label { position: absolute; inset: auto 16px 16px; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .platform-home-tool-label h3 { font-size: 14px; font-weight: 600; line-height: 20px; }
@@ -3081,6 +3082,9 @@ input[type="range"] {
 .platform-directory-badge { position:absolute; top:8px; left:8px; z-index:1; padding:2px 10px; border-radius:6px; color:white; font-size:12px; line-height:16px; font-weight:600; }
 .platform-directory-badge-hot { background:#ef4444; }
 .platform-directory-badge-new { background:#22c55e; }
+.platform-tool-illustration-label { z-index: 1; color: #fff; background: #18221de8; }
+.platform-home-reference-guide-description { margin: 4px 2px 0; color: #b8b6c2; font-size: 12px; line-height: 1.5; }
+.platform-workspace-tools .platform-home-reference-guide .platform-home-tool-label { position: static; margin: 8px 2px 0; }
 .platform-directory-image-effects .platform-directory-card-link h2 { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .platform-directory-image-effects .platform-directory-media { height:208px; }
 .platform-directory-image-effects .platform-directory-media::after,.platform-directory-video-effects .platform-directory-media::after { content:""; position:absolute; inset:0; background:#0003; pointer-events:none; }
@@ -3393,10 +3397,10 @@ input[type="range"] {
 }
 .platform-workspace-community-grid { display: flex; gap: 16px; columns: auto; }
 .platform-workspace-community-grid > div { flex: 1; min-width: 0; }
-.platform-workspace-community-grid > div > a { display: block; position: relative; overflow: hidden; border: 1px solid #ffffff12; border-radius: 12px; margin-bottom: 16px; }
+.platform-workspace-reference { display: block; position: relative; overflow: hidden; border: 1px solid #ffffff12; border-radius: 12px; margin: 0 0 16px; }
 .platform-workspace-community-grid span.platform-home-community-arrow { position: absolute; inset: 8px 8px auto auto; display: grid; place-items: center; padding: 4px; border: 1px solid #fff; background: #0004; border-radius: 50%; width: 24px; height: 24px; }
-@media (max-width: 1279px) { .platform-workspace-community-grid { gap: 12px; } .platform-workspace-community-grid > div > a { margin-bottom: 12px; } }
-@media (max-width: 767px) { .platform-workspace-community-grid { gap: 10px; } .platform-workspace-community-grid > div > a { margin-bottom: 10px; } }
+@media (max-width: 1279px) { .platform-workspace-community-grid { gap: 12px; } .platform-workspace-reference { margin-bottom: 12px; } }
+@media (max-width: 767px) { .platform-workspace-community-grid { gap: 10px; } .platform-workspace-reference { margin-bottom: 10px; } }
 /* 首页公开媒体按真实参照预览；导航与播放控件互为兄弟元素。 */
 .platform-home-feature-card { position: relative; }
 .platform-home-card-link { position: absolute; inset: 0; z-index: 3; border-radius: inherit; }
@@ -5205,3 +5209,59 @@ input[type="range"] {
 svg.platform-brand-mark { background: none; border-radius: 0; display: block; }
 .platform-home-brand-line { display: inline-block; margin-bottom: 18px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
 .platform-brand-tagline { margin: 8px 0 0; font-size: 14px; line-height: 1.6; opacity: 0.8; }
+.platform-generator .platform-generator-workspace-mode-tool {
+  display: block;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.platform-video-mode-tool-title p {
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.platform-generator .platform-video-mode-tool-title a {
+  display: inline-flex;
+  margin-top: 12px;
+  padding: 8px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.platform-directory-guide-card {
+  min-height: 180px;
+  background: var(--background-raised, #191820);
+}
+
+.platform-directory-guide-card .platform-directory-card-link {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 180px;
+  padding: 20px;
+}
+
+.platform-home-guide-card {
+  min-width: 0;
+  border: 1px solid #393745;
+  border-radius: 14px;
+  background: #191820;
+}
+
+.platform-home-guide-card a {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 160px;
+  padding: 18px;
+  color: inherit;
+}
+
+.platform-home-guide-card h3,
+.platform-home-guide-card p { margin: 0; }
+.platform-home-guide-card p { color: #c4c0ce; }
+.platform-home-guide-card span { display: flex; align-items: center; gap: 4px; color: #ddd1ff; }
+.platform-home-guide-card a:hover h3 { text-decoration: underline; }

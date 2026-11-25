@@ -23,14 +23,11 @@ export const homepagePreviews: Record<string, string> = {
   "/platform/homepage/c02eca414fa1188c.jpg": "/platform/homepage/3f04f0c723069651.mp4",
   "/platform/homepage/8fc1c6550844869e.jpg": "/platform/homepage/0d88322bb4c4a425.mp4",
   "/platform/homepage/642924f3f7008e08.jpg": "/platform/homepage/4d56d59d900fe6ca.mp4",
-  "/platform/homepage/6ba6ac7defa1087a.jpg": "/platform/homepage/2d80535b188e053b.mp4",
   "/platform/homepage/645bbd55fae4162a.jpg": "/platform/homepage/f85814f37a50c388.mp4",
   "/platform/homepage/ae580270479931f1.jpg": "/platform/homepage/a5d3fa77c020c6b2.mp4",
-  "/platform/homepage/159ac2c5fbacbd8d.png": "/platform/homepage/2c1cb824c5f03320.mp4",
   "/platform/homepage/4568ae38b907a261.jpg": "/platform/homepage/1a7b89673b264e49.mp4",
   "/platform/homepage/b144b807522dedb9.jpg": "/platform/homepage/b4129b9a77570405.mp4",
   "/platform/homepage/e3d6e4020f547d13.jpg": "/platform/homepage/df448abf0799b64e.mp4",
   "/platform/homepage/21b089f16ed02c9e.webp": "/platform/homepage/2dd7c3cabc995ee4.mp4",
-  "/platform/homepage/326083b8db576559.jpg": "/platform/homepage/638f67caf5db40df.mp4",
-  "/platform/homepage/e54793b9ea334af0.png": "/platform/homepage/4db94f50835a61de.mp4"
+  "/platform/homepage/326083b8db576559.jpg": "/platform/homepage/638f67caf5db40df.mp4"
 };

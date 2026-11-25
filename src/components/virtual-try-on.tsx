@@ -398,6 +398,9 @@ export function VirtualTryOn({
       });
       if (response.status === 401) { submitted = false; await loginWithDraft(source); return; }
       if (!response.ok) {
+        if (response.status === 503 && (await response.json().catch(() => null))?.code === "generation_disabled") {
+          throw new Error("generation_disabled");
+        }
         if (response.status >= 500) throw new Error("uncertain_submission");
         submitted = false;
         setError(translated(locale, "Could not start generation. Check your credits before trying a new request.", "生成请求未能启动，请检查额度后手动发起新请求。")); return;
@@ -407,7 +410,10 @@ export function VirtualTryOn({
       const description = MAKEUP_PARTS.filter((part) => config[part]?.enabled).map((part) => `${PART_NAMES[part][locale]} ${config[part]!.intensity}%`).join(" · ");
       query.start({ version: 1, generationId, tool: "virtual_try_on", path, createdAt: Date.now(), style: { id: "virtual-custom", name: translated(locale, "Custom makeup", "自定义妆容"), description } });
     } catch (exportError) {
-      if (submitted) setUncertain(true);
+      if (exportError instanceof Error && exportError.message === "generation_disabled") {
+        setError(translated(locale, "Saving HD results is currently unavailable.", "高清结果保存暂未开放。"));
+      }
+      else if (submitted) setUncertain(true);
       else if (exportError instanceof Error && exportError.message === "auth_required") await loginWithDraft(source);
       else setError(translated(locale, "Could not check your balance or upload the photo. Please try again.", "余额检查或照片上传失败，请稍后重试。"));
     } finally { clearTimeout(timeout); submittingRef.current = false; setUploading(false); }

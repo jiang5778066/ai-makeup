@@ -7,7 +7,11 @@ export async function POST() {
     return NextResponse.json({ code: "unauthorized" }, { status: 401 });
   }
 
-  const { deleteUserData } = await import("@/lib/account-deletion");
-  const result = await deleteUserData(user.id);
-  return NextResponse.json({ deleted: true, ...result });
+  try {
+    const { deleteUserData } = await import("@/lib/account-deletion");
+    const result = await deleteUserData(user.id);
+    return NextResponse.json(result.body, { status: result.httpStatus });
+  } catch {
+    return NextResponse.json({ deleted: false, code: "account_data_cleanup_incomplete" }, { status: 503 });
+  }
 }

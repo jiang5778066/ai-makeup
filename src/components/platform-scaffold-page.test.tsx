@@ -1,60 +1,161 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PlatformScaffoldPage } from "./platform-scaffold-page";
 import { platformEntry } from "@/lib/platform-navigation";
-vi.mock("./site-shell", () => ({ SiteShell: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-const navigation = vi.hoisted(() => ({ pathname: "/zh-CN/ai-video-generator", query: "" }));
-vi.mock("next/navigation", () => ({ usePathname: () => navigation.pathname, useSearchParams: () => new URLSearchParams(navigation.query) }));
-afterEach(() => { navigation.pathname = "/zh-CN/ai-video-generator"; navigation.query = ""; });
-describe("工具预览入口", () => {
-  it("保留全部查询和锚点，明确不可用而不提供生成按钮", () => {
-    window.history.replaceState({}, "", "/zh/ai-video-generator?model=wan-3-0&mode=image-to-video&custom=keep#generator");
-    render(<PlatformScaffoldPage locale="zh-CN" currentPath="/ai-video-generator" entry={platformEntry("video-generator")}/>);
-    expect(screen.getByText("wan-3-0")).toBeVisible();
-    expect(screen.getByText("image-to-video")).toBeVisible();
-    expect(screen.getByText(/custom=keep#generator/)).toBeVisible();
-    expect(screen.getByText("当前不可用")).toBeVisible();
-    expect(screen.queryByRole("button", { name: /生成/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /返回工作台/ })).toHaveAttribute("href", "/zh-CN/home");
+import { PlatformScaffoldPage } from "./platform-scaffold-page";
+
+vi.mock("./site-shell", () => ({ SiteShell: ({ children }: { children: ReactNode }) => <>{children}</> }));
+const navigation = vi.hoisted(() => ({ pathname: "", query: "" }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => navigation.pathname,
+  useSearchParams: () => new URLSearchParams(navigation.query)
+}));
+
+function setUrl(url: string, method: "replaceState" | "pushState" = "replaceState") {
+  window.history[method]({}, "", url);
+  navigation.pathname = window.location.pathname;
+  navigation.query = window.location.search;
+}
+
+function expectAddress(url: string) {
+  expect(window.location.href).toBe(new URL(url, window.location.origin).href);
+}
+
+afterEach(() => {
+  setUrl("/");
+});
+
+describe("占位页文案与导航", () => {
+  it.each([
+    ["en", "Sample Tool", "Currently unavailable", "Back to workspace", ""],
+    ["zh-CN", "示例工具", "当前不可用", "返回工作台", "/zh-CN"]
+  ] as const)("%s 直达占位页显示本地化标题和返回入口，地址参数只供导航", (locale, title, unavailable, back, prefix) => {
+    const path = "/tools/sample-tool";
+    const query = "model=private-model&mode=private-mode&custom=private-value";
+    const url = `${prefix}${path}?${query}#generator`;
+    setUrl(url);
+    const entry = { id: "sample-tool", pathname: path, label: { en: "Sample Tool", "zh-CN": "示例工具" }, status: "scaffold" } as const;
+    render(<PlatformScaffoldPage locale={locale} currentPath={path} entry={entry} initialQuery={query}/>);
+
+    expect(screen.getByRole("heading", { level: 1, name: title })).toBeVisible();
+    expect(screen.getByText(unavailable)).toBeVisible();
+    expect(screen.getByRole("link", { name: back })).toHaveAttribute("href", `${prefix}/home`);
+    const main = screen.getByRole("main");
+    expect(main).toHaveAttribute("id", "generator");
+    expect(main).not.toHaveTextContent(/当前入口|Destination|模型|Model|模式|Mode|private-model|private-mode|private-value|\/tools\/sample-tool/);
+    expect(screen.queryByRole("button", { name: /生成|Generate/ })).not.toBeInTheDocument();
+    expectAddress(url);
   });
-  it("同 pathname 添加与移除查询时，入口及字段跟随客户端导航而非初始 props", () => {
-    window.history.replaceState({}, "", "/zh-CN/ai-video-generator");
-    const { rerender } = render(<PlatformScaffoldPage locale="zh-CN" currentPath="/ai-video-generator" entry={platformEntry("video-generator")}/>);
-    const next = "/zh-CN/ai-video-generator?model=wan-3-0&mode=image-to-video&tag=a&tag=b#preview";
-    window.history.pushState({}, "", next); navigation.query = "model=wan-3-0&mode=image-to-video&tag=a&tag=b";
-    rerender(<PlatformScaffoldPage locale="zh-CN" currentPath="/ai-video-generator" entry={platformEntry("video-generator")}/>);
-    expect(screen.getByText(next)).toBeVisible(); expect(screen.getByText("wan-3-0")).toBeVisible();
-    expect(screen.getByText("image-to-video")).toBeVisible();
-    window.history.pushState({}, "", "/zh-CN/ai-video-generator"); navigation.query = "";
-    rerender(<PlatformScaffoldPage locale="zh-CN" currentPath="/ai-video-generator" entry={platformEntry("video-generator")}/>);
-    expect(screen.queryByText("wan-3-0")).not.toBeInTheDocument(); expect(screen.queryByText("image-to-video")).not.toBeInTheDocument();
+
+  it("同路径从 1200 更新到 508 时采用第一个模板参数，未知或空首值显示未支持说明", () => {
+    const path = "/video-effects/lab";
+    const initialUrl = `${path}?template_id=1200#generator`;
+    setUrl(initialUrl);
+    const page = () => <PlatformScaffoldPage locale="en" currentPath={path} entry={platformEntry("template-1200")} initialQuery="template_id=1200"/>;
+    const { rerender } = render(page());
+    expect(screen.getByRole("heading", { name: "Christmas(Heart)" })).toBeVisible();
+
+    const nextUrl = `${path}?template_id=508&template_id=1200&tag=a&tag=b#generator`;
+    setUrl(nextUrl, "pushState");
+    rerender(page());
+    expect(screen.getByRole("heading", { name: "AI Angel Halo" })).toBeVisible();
+    expect(screen.queryByText("508", { exact: true })).not.toBeInTheDocument();
+    expect(screen.getByRole("main")).not.toHaveTextContent(/Destination|template_id|tag=a|#generator/);
+    expectAddress(nextUrl);
+
+    for (const query of ["template_id=unknown", "template_id=&template_id=508", ""]) {
+      const url = `${path}${query ? `?${query}` : ""}#generator`;
+      setUrl(url, "pushState");
+      rerender(page());
+      expect(screen.getByRole("heading", { name: "Missing or unsupported template" })).toBeVisible();
+      expectAddress(url);
+    }
   });
-  it("仅锚点与原生历史事件也更新当前入口", () => {
-    window.history.replaceState({}, "", "/zh-CN/ai-video-generator?tag=a&tag=b");
-    navigation.query = "tag=a&tag=b";
-    render(<PlatformScaffoldPage locale="zh-CN" currentPath="/ai-video-generator" entry={platformEntry("video-generator")}/>);
-    window.history.pushState({}, "", "/zh-CN/ai-video-generator?tag=a&tag=b#after");
+
+  it("原生历史事件更新模板，锚点保留在地址栏", () => {
+    const path = "/zh-CN/video-effects/lab";
+    setUrl(`${path}?template_id=508#generator`);
+    render(<PlatformScaffoldPage locale="zh-CN" currentPath="/video-effects/lab" entry={platformEntry("template-508")}/>);
+    expect(screen.getByRole("heading", { name: "AI 天使光环" })).toBeVisible();
+
+    const hashUrl = `${path}?template_id=508#preview`;
+    window.history.replaceState({}, "", hashUrl);
     fireEvent(window, new HashChangeEvent("hashchange"));
-    expect(screen.getByText("/zh-CN/ai-video-generator?tag=a&tag=b#after")).toBeVisible();
-    window.history.replaceState({}, "", "/zh-CN/ai-video-generator?tag=a&tag=b#before");
+    expect(screen.getByRole("heading", { name: "AI 天使光环" })).toBeVisible();
+    expectAddress(hashUrl);
+
+    const historyUrl = `${path}?template_id=1200&template_id=508#generator`;
+    window.history.replaceState({}, "", historyUrl);
     fireEvent(window, new PopStateEvent("popstate"));
-    expect(screen.getByText("/zh-CN/ai-video-generator?tag=a&tag=b#before")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "圣诞爱心" })).toBeVisible();
+    expect(screen.getByRole("main")).not.toHaveTextContent(/当前入口|template_id|#generator/);
+    expectAddress(historyUrl);
   });
-  it("同路径客户端模板变化时标题与字段采用同一首值规则，不沿用旧模板", () => {
-    navigation.pathname = "/video-effects/lab"; navigation.query = "template_id=1200";
-    window.history.replaceState({}, "", "/video-effects/lab?template_id=1200");
-    const { rerender } = render(<PlatformScaffoldPage locale="en" currentPath="/video-effects/lab" entry={platformEntry("template-1200")}/>);
-    navigation.query = "template_id=508&template_id=1200"; window.history.pushState({}, "", `/video-effects/lab?${navigation.query}`);
-    rerender(<PlatformScaffoldPage locale="en" currentPath="/video-effects/lab" entry={platformEntry("template-1200")}/>);
-    expect(screen.getByRole("heading", { name: "Video Effect 508" })).toBeVisible(); expect(screen.getByText("508", { exact: true })).toBeVisible();
-    navigation.query = "template_id=unknown"; window.history.pushState({}, "", `/video-effects/lab?${navigation.query}`);
-    rerender(<PlatformScaffoldPage locale="en" currentPath="/video-effects/lab" entry={platformEntry("template-1200")}/>);
+
+  it.each([
+    ["en", "", "Christmas(Heart)", "AI Angel Halo", "Currently unavailable"],
+    ["zh-CN", "/zh-CN", "圣诞爱心", "AI 天使光环", "当前不可用"]
+  ] as const)("%s 同一文档的查询更新、历史后退与前进同步页签标题", async (locale, prefix, first, second, unavailable) => {
+    const path = `${prefix}/video-effects/lab`;
+    const initialUrl = `${path}?template_id=1200#generator`;
+    const nextUrl = `${path}?template_id=508&template_id=1200#generator`;
+    const firstTitle = `${first} · ${unavailable} | FrameKoi`;
+    const secondTitle = `${second} · ${unavailable} | FrameKoi`;
+    setUrl(initialUrl);
+    const page = () => <PlatformScaffoldPage locale={locale} currentPath="/video-effects/lab" entry={platformEntry("template-1200")} initialQuery="template_id=1200"/>;
+    const { rerender } = render(page());
+    const main = screen.getByRole("main");
+    expect(screen.getByRole("heading", { name: first })).toBeVisible();
+    expect(document.title).toBe(firstTitle);
+    expect(document.head.querySelectorAll("title")).toHaveLength(1);
+
+    setUrl(nextUrl, "pushState");
+    rerender(page());
+    expect(screen.getByRole("heading", { name: second })).toBeVisible();
+    expect(document.title).toBe(secondTitle);
+    expectAddress(nextUrl);
+
+    window.history.back();
+    await waitFor(() => {
+      expectAddress(initialUrl);
+      expect(screen.getByRole("heading", { name: first })).toBeVisible();
+      expect(document.title).toBe(firstTitle);
+    });
+
+    window.history.forward();
+    await waitFor(() => {
+      expectAddress(nextUrl);
+      expect(screen.getByRole("heading", { name: second })).toBeVisible();
+      expect(document.title).toBe(secondTitle);
+      expect(document.head.querySelectorAll("title")).toHaveLength(1);
+    });
+    expect(screen.getByRole("main")).toBe(main);
+  });
+
+  it("缺失或无效首值由原路由处理，离开模板路径后保留目标页签标题", () => {
+    const path = "/video-effects/lab";
+    setUrl(`${path}?template_id=1200`);
+    const page = () => <PlatformScaffoldPage locale="en" currentPath={path} entry={platformEntry("template-1200")}/>;
+    const { rerender } = render(page());
+
+    setUrl(`${path}?template_id=508`);
+    rerender(page());
+    const previousTitle = "AI Angel Halo · Currently unavailable | FrameKoi";
+    expect(document.title).toBe(previousTitle);
+
+    setUrl(`${path}?template_id=&template_id=508`);
+    rerender(page());
     expect(screen.getByRole("heading", { name: "Missing or unsupported template" })).toBeVisible();
-  });
-  it("模板参数不会被通用外壳丢弃", () => {
-    window.history.replaceState({}, "", "/video-effects/lab?template_id=508#preview");
-    render(<PlatformScaffoldPage locale="en" currentPath="/video-effects/lab" entry={platformEntry("template-508")}/>);
-    expect(screen.getByText("508")).toBeVisible();
-    expect(screen.getByText("Currently unavailable")).toBeVisible();
+    expect(document.title).toBe(previousTitle);
+    expect(document.head.querySelectorAll("title")).toHaveLength(1);
+
+    setUrl("/video-effects?template_id=508");
+    const destinationTitle = document.createElement("title");
+    destinationTitle.textContent = "Explore Video Effects | FrameKoi";
+    document.head.append(destinationTitle);
+    rerender(page());
+    expect(document.title).toBe("Explore Video Effects | FrameKoi");
+    expect([...document.head.querySelectorAll("title")]).toEqual([destinationTitle]);
+    destinationTitle.remove();
   });
 });

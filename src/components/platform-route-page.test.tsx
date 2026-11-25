@@ -34,6 +34,11 @@ describe("页面实际分发和SEO身份", () => {
     expect(screen.getByRole("heading", { name: "ai-makeup" })).toBeInTheDocument();
     expect(() => PlatformRoutePage({ path: "/unknown/tool", locale: "en" })).toThrow("NEXT_NOT_FOUND");
   });
+  it.each(["en", "zh-CN"] as const)("%s 缺少正文的快捷入口直接访问仍触发 404", (locale) => {
+    for (const path of ["/ai-video-editor", "/guides", "/guides/ai-image-to-video", "/guides/ai-image-creation", "/blog"]) {
+      expect(() => PlatformRoutePage({ path, locale })).toThrow("NEXT_NOT_FOUND");
+    }
+  });
   it("五个目录实际分发新正文，双语SEO不再返回不可用或美妆身份", () => {
     for (const locale of ["en", "zh-CN"] as const) for (const path of ["/tools", "/video-effects", "/image-effects", "/ai-image-models", "/ai-video-models"]) {
       const view = render(<PlatformRoutePage path={path} locale={locale}/>);
@@ -55,7 +60,24 @@ describe("页面实际分发和SEO身份", () => {
   });
 });
 
-it("四专用页面双语分发与SEO准确并传递重复查询",()=>{for(const locale of ["en","zh-CN"]as const)for(const path of ["/ai-image-generator","/ai-video-generator","/ai-image-models/gpt-image-2","/ai-image-models/nano-banana-pro"]){const view=render(<PlatformRoutePage path={path} locale={locale} searchParams={{model:["gpt-image-2","other"]}}/>);expect(screen.getByRole("heading")).toHaveTextContent(`${path}:生成器:model=gpt-image-2&model=other`);const metadata=platformRouteMetadata(path,locale);expect(metadata.title).not.toMatch(/当前不可用|Currently unavailable/);expect(metadata.description).toMatch(path==='/ai-image-generator'||path==='/ai-video-generator'?/生成尚未开放|Generation is not open/:path==='/ai-image-models/gpt-image-2'?/本站图片能力以生成面板为准|Site image availability/:/生成服务尚未开放|Generation is not available/);view.unmount();}});
+it("四个生成器入口保留双语分发、摘要和重复查询", () => {
+  const expectedDescriptions = [
+    ["/ai-image-generator", { en: /available modes/, "zh-CN": /当前可用模式/ }],
+    ["/ai-video-generator", { en: /available modes/, "zh-CN": /当前可用模式/ }],
+    ["/ai-image-models/gpt-image-2", { en: /Site image availability/, "zh-CN": /本站图片能力以生成面板为准/ }],
+    ["/ai-image-models/nano-banana-pro", { en: /Generation is not available/, "zh-CN": /生成服务尚未开放/ }],
+  ] as const;
+  for (const locale of ["en", "zh-CN"] as const) {
+    for (const [path, descriptions] of expectedDescriptions) {
+      const view = render(<PlatformRoutePage path={path} locale={locale} searchParams={{ model: ["gpt-image-2", "other"] }}/>);
+      expect(screen.getByRole("heading")).toHaveTextContent(`${path}:生成器:model=gpt-image-2&model=other`);
+      const metadata = platformRouteMetadata(path, locale);
+      expect(metadata.title).not.toMatch(/当前不可用|Currently unavailable/);
+      expect(metadata.description).toMatch(descriptions[locale]);
+      view.unmount();
+    }
+  }
+});
 
 it("Wan五路双语分发身份与URL首值原样交接，未实现模型仍scaffold",()=>{for(const locale of ["en","zh-CN"]as const)for(const slug of ["wan-2-2","wan-2-5","wan-2-6","wan-3-0","wan-fusionX"]){const path="/ai-video-models/"+slug,view=render(<PlatformRoutePage path={path} locale={locale} searchParams={{duration:["10","30"]}}/>);expect(screen.getByRole("heading")).toHaveTextContent(`${locale}:${path}:Wan:duration=10&duration=30`);expect(platformRouteMetadata(path,locale).description).toMatch(/生成暂不可用|generation is not available/);view.unmount();}});
 

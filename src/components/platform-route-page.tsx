@@ -19,10 +19,19 @@ import { videoModelPages } from "@/lib/platform-video-model-data";
 import { PlatformVideoModelPage } from "./platform-video-model-page";
 import { rootGeneratorPages } from "@/lib/platform-root-generator-data";
 import { PlatformRootGeneratorPage } from "./platform-root-generator-page";
+import { templateGuide } from "@/lib/platform-template-guides";
 
 import { PlatformDreamfacePage } from "./platform-dreamface-page";
+import { isVideoModeToolPath, videoModeToolMetadata } from "@/lib/platform-video-mode-tools";
+import { imageEditPath } from "@/lib/platform-image-edit-data";
+import { PlatformImageEditPage, imageEditMetadata } from "@/components/platform-image-edit-page";
+import { isVideoGuidePath, videoGuideMetadata } from "@/lib/platform-video-guides";
+import { PlatformVideoGuide } from "./platform-video-guide";
 
 export function platformRouteMetadata(path: string, locale: Locale, searchParams: PlatformSearchParams = {}) {
+  if (imageEditPath(path)) return imageEditMetadata(path, locale);
+  if (isVideoModeToolPath(path)) return videoModeToolMetadata(path, locale);
+  if (isVideoGuidePath(path)) return videoGuideMetadata(path, locale);
   if (path === "/ai-image-generator" || path === "/ai-video-generator") return coreToolMetadata(path, locale);
   const route = resolveHomepageRoute(path, searchParams);
   if (route?.kind === "landing" || route?.kind === "workspace") return platformHomepageMetadata(locale, route.kind === "workspace");
@@ -35,12 +44,22 @@ export function platformRouteMetadata(path: string, locale: Locale, searchParams
   if (route?.kind === "wan") return { title: wanTitle(route.path, locale), description: locale === "zh-CN" ? `${wanTitle(route.path, locale)}：公开模型资料、示例与参数预览。视频生成暂不可用。` : `${wanTitle(route.path, locale)}: public model information, examples and settings. Video generation is not available.`, alternates: { canonical: `${locale === "zh-CN" ? "/zh-CN" : ""}${route.path}` } };
   if (route?.kind === "generator") { const page = generatorPages[route.path]; const siteImage=page.kind==='image'&&page.family!=='nano',siteVideo=route.path==='/ai-video-generator'; return { title: `${page.title[locale]}`, description: locale === "zh-CN" ? `${page.title[locale]}：公开模型资料与本地参数、文件预览。${siteImage?'本站图片能力以生成面板为准。':siteVideo?'本站视频能力以生成面板为准。':'生成服务尚未开放。'}` : `${page.title[locale]}: public model information and local parameter and file previews. ${siteImage?'Site image availability is shown in the generation panel.':siteVideo?'Site video availability is shown in the generation panel.':'Generation is not available yet.'}`, alternates: { canonical: `${locale === "zh-CN" ? "/zh-CN" : ""}${route.path}` } }; }
   if (route?.kind === "directory") { const page = directoryContent[route.path]; return { title: `${page.title[locale]}`, description: page.description[locale], alternates: { canonical: `${locale === "zh-CN" ? "/zh-CN" : ""}${route.path}` } }; }
-  if (route?.kind === "scaffold") return { title: `${route.entry.label[locale]} · ${locale === "zh-CN" ? "当前不可用" : "Currently unavailable"}`, robots: { index: false, follow: true } };
+  if (route?.kind === "scaffold") {
+    const guide = route.entry.templateId ? templateGuide(route.entry.templateId, locale) : null;
+    return {
+      // 查询模板的标题由同一 React 分支在服务端渲染和原生历史切换时维护。
+      title: guide ? null : `${route.entry.label[locale]} · ${locale === "zh-CN" ? "当前不可用" : "Currently unavailable"}`,
+      ...(guide ? { description: `${guide.summary} ${locale === "zh-CN" ? "专用模板生成服务尚未开放。" : "Dedicated template generation is not available yet."}` } : {}),
+      robots: { index: false, follow: true }
+    };
+  }
   const slug = slugFromPath(path);
   return slug ? metadataForPage(getLandingPage(slug, locale), locale, path) : {};
 }
 export function PlatformRoutePage({ path, locale, searchParams = {} }: { path: string; locale: Locale; searchParams?: PlatformSearchParams }) {
+  if (imageEditPath(path)) return <PlatformImageEditPage path={path} locale={locale} query={searchParams}/>;
   const route = resolveHomepageRoute(path, searchParams);
+  if (route?.kind === "video-guide") return <PlatformVideoGuide path={route.path} locale={locale}/>;
   if (route?.kind === "dreamface") return <PlatformDreamfacePage locale={locale} initialQuery={platformSearchQuery(searchParams).toString()}/>;
   if (route?.kind === "workspace") return <PlatformWorkspacePage locale={locale} currentPath={path}/>;
   if (route?.kind === "root-generator") return <PlatformRootGeneratorPage key={route.path} path={route.path} locale={locale}/>;

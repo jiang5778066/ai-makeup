@@ -9,6 +9,21 @@ export interface MediaObjectStorage {
  signPut(key:string,mime:string,expiresSeconds:number):Promise<string>;
  signGet(key:string,expiresSeconds:number):Promise<string>;
 }
+export type DeletableMediaObjectStorage = MediaObjectStorage & { remove(key: string): Promise<void> };
+
+const mediaKeyUuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+const mediaKeyHead = new RegExp(`^media/(staging|inputs|results)/(${mediaKeyUuid})/(${mediaKeyUuid})(.*)$`);
+const mediaInputTail = new RegExp(`^/[a-f0-9]{64}/${mediaKeyUuid}\\.(png|jpeg|webp)$`);
+type MediaKeyKind = 'staging' | 'inputs' | 'results';
+
+export function parseMediaObjectKey(key: string): { kind: MediaKeyKind; owner: string; recordId: string } {
+ const match = mediaKeyHead.exec(key);
+ if (!match || match[0] !== key) throw new MediaFault('invalid_media_key');
+ const [, kind, owner, recordId, tail] = match;
+ if ((kind === 'staging' && tail === '') || (kind === 'inputs' && mediaInputTail.test(tail)) ||
+     (kind === 'results' && /^\/[a-f0-9]{64}\.(png|jpeg|webp|mp4)$/.test(tail))) return { kind, owner, recordId };
+ throw new MediaFault('invalid_media_key');
+}
 export interface MediaResultStorage {
  store(task:TaskRecord):Promise<StoredResult>;
  sign(key:string,mime:string):Promise<{url:string;mimeType:string;expiresAt:string}>;
@@ -39,14 +54,19 @@ export function createMediaResultStorage(objects:MediaObjectStorage,download:(ur
  };
 }
 
-import {isStorageConfigured,privateObjectStream,putPrivateObjectOnce,presignGetUrl,presignPutUrl,R2_BUCKET_ORIGINALS,R2_BUCKET_RESULTS} from './storage';
-export function createR2MediaObjectStorage():MediaObjectStorage{
+import {deleteObject,isStorageConfigured,privateObjectStream,putPrivateObjectOnce,presignGetUrl,presignPutUrl,R2_BUCKET_ORIGINALS,R2_BUCKET_RESULTS} from './storage';
+export function createR2MediaObjectStorage():DeletableMediaObjectStorage{
  const bucket=(key:string)=>{
   if(!isStorageConfigured())throw new MediaFault('media_storage_unconfigured',503);
   if(!/^media\/(staging|inputs|results)\/[\w/-]+(?:\.[a-z]+)?$/.test(key)||key.includes('..'))throw new MediaFault('invalid_media_key');
   return key.startsWith('media/results/')?R2_BUCKET_RESULTS:R2_BUCKET_ORIGINALS;
  };
  return {
+ async remove(key){
+  if(!isStorageConfigured())throw new MediaFault('media_storage_unconfigured',503);
+  const {kind}=parseMediaObjectKey(key);
+  await deleteObject(kind==='results'?R2_BUCKET_RESULTS:R2_BUCKET_ORIGINALS,key);
+ },
  async read(key){return privateObjectStream(bucket(key),key)},
  async putImmutable(key,bytes,mime){if(!key.startsWith('media/inputs/')&&!key.startsWith('media/results/'))throw new MediaFault('media_sealed_key_required');return putPrivateObjectOnce(bucket(key),key,bytes,mime)},
  async signPut(key,mime,expires){if(!key.startsWith('media/staging/'))throw new MediaFault('media_staging_required');return presignPutUrl({bucket:bucket(key),key,contentType:mime,expiresIn:Math.min(300,expires)})},

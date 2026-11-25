@@ -12,8 +12,8 @@ function schedulePreviews() {
   previewRequests.forEach((request, node) => request.setActive(selected.has(node)));
 }
 
-type Props = { poster: string; src: string; locale: Locale; hero?: boolean; trigger?: "visible" | "hover"; nativeControls?: boolean };
-export function HomepageVideo({ poster, src, locale, hero = false, trigger = "visible", nativeControls = false }: Props) {
+type Props = { poster: string; src: string; locale: Locale; hero?: boolean; trigger?: "visible" | "hover"; nativeControls?: boolean; previewTitle?: string };
+export function HomepageVideo({ poster, src, locale, hero = false, trigger = "visible", nativeControls = false, previewTitle }: Props) {
   const video = useRef<HTMLVideoElement>(null);
   const generation = useRef(0);
   const manual = useRef<((play: boolean) => void) | null>(null);
@@ -94,12 +94,15 @@ export function HomepageVideo({ poster, src, locale, hero = false, trigger = "vi
       previewRequests.delete(node); stop(); schedulePreviews();
     };
   }, [src, trigger]);
+  const zh = locale === "zh-CN";
+  const action = playing ? (zh ? "暂停展示视频" : "Pause showcase video") : (zh ? "播放展示视频" : "Play showcase video");
+  const label = previewTitle ? `${action}${zh ? "：" : ": "}${previewTitle}` : action;
   return <div className={hero ? "platform-home-video platform-home-video-hero" : "platform-home-video"} data-playing={playing}>
     {/* 海报在未取源、减少动态或播放被阻止时保持可见。控件与导航链接并列，避免嵌套交互。 */}
     {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={poster} alt="" aria-hidden="true" loading={hero ? "eager" : "lazy"} draggable={false} />
     <video ref={video} poster={poster} controls={nativeControls} muted loop playsInline preload="none" aria-label={locale === "zh-CN" ? "公开参照展示视频" : "Public reference showcase video"} />
-    <button type="button" className="platform-home-play" aria-label={playing ? (locale === "zh-CN" ? "暂停展示视频" : "Pause showcase video") : (locale === "zh-CN" ? "播放展示视频" : "Play showcase video")} onClick={event => {
+    <button type="button" className="platform-home-play" aria-label={label} onClick={event => {
       event.preventDefault(); event.stopPropagation(); manual.current?.(!playing);
     }}>{playing ? <Pause size={14} /> : <Play size={14} />}</button>
   </div>;

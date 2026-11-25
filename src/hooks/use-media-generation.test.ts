@@ -2,7 +2,7 @@ import {it,expect,vi} from 'vitest';
 import {renderHook,act} from '@testing-library/react';
 import {useMediaGeneration} from './use-media-generation';
 import type {MediaDraft} from '@/lib/media-client';
-vi.mock('@/lib/platform-account-session',()=>({usePlatformAccount:()=>({status:'signed_in',user:{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'},epoch:1})}));
+vi.mock('@/lib/platform-account-session',()=>({usePlatformAccount:()=>({status:'signed_in',user:{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'},epoch:1}),getPlatformAccountEpoch:()=>1,expirePlatformAccount:vi.fn()}));
 it('hook原样采用账户epoch，替换文件后的旧上传不能生成quote',async()=>{
  let finish!:(r:Response)=>void;const pending=new Promise<Response>(r=>{finish=r});const fetcher=vi.fn(async(url:RequestInfo|URL)=>String(url).endsWith('capabilities')?new Response(JSON.stringify({capabilities:[{mode:'image_to_image',model:'gpt-image-2',enabled:true,parameters:{quality:['1k'],size:['2:3'],n:[1]}}]})):pending);
  const draft:MediaDraft={model:'gpt-image-2',mode:'image_to_image',prompt:'合成',locale:'en',files:[new File(['a'],'a.png',{type:'image/png'})],selectionVersion:1};

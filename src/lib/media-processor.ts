@@ -6,6 +6,18 @@ type Options={singleStep?:boolean;signal?:AbortSignal};
 /** 持久状态是唯一恢复起点；通知和浏览器生命周期不授予执行权。 */
 export function createMediaProcessor(store:MediaStore,providers:MediaProviders,storage:MediaResultStorage,options:Options={}){
  const outcome=async(t:TaskRecord,r:ProviderOutcome,submissionResponse=false)=>{
+  if(t.result_locator&&t.error_code==='media_download_expired'){
+   const freshResult=r.kind==='complete'&&r.taskId&&r.taskId.length<=512&&r.taskId===t.provider_task_id
+    &&r.locator&&r.locator.length<=4096&&r.locator!==t.result_locator;
+   if(!freshResult){
+    // 显式身份冲突仍交给仓储拒绝并审计，其余未取得新地址的响应继续查原ID。
+    const conflictingId=(r.kind==='accepted'||r.kind==='complete')&&r.taskId&&t.provider_task_id&&r.taskId!==t.provider_task_id?r.taskId:undefined;
+    return store.transition(t,{
+     status:'reconciling',error:'media_download_expired',stage:'query',
+     taskId:conflictingId,locator:conflictingId&&r.kind==='complete'?r.locator:undefined
+    });
+   }
+  }
   if(r.kind==='definitive_failure'){
    if(t.result_locator)return store.transition(t,{status:'reconciling',error:'provider_status_conflict',stage:'storage'});
    if(t.provider_task_id&&r.taskId!==t.provider_task_id)return store.transition(t,{status:'reconciling',error:'provider_identity_conflict',stage:'query'});
@@ -41,7 +53,8 @@ export function createMediaProcessor(store:MediaStore,providers:MediaProviders,s
     // 单次认证step只执行提交或一次查询；locator必须先落库，下一tick才下载存储。
     if(options.singleStep)return true;
    }
-   if(t?.credit_state==='reserved'&&t.result_locator){
+   // 过期地址只用于比对刷新响应。
+   if(t?.credit_state==='reserved'&&t.result_locator&&t.error_code!=='media_download_expired'){
     const storing=t;
     try{check();const result=await storage.store(storing);check();t=await store.complete(storing,result)}
     catch(e){t=await store.transition(storing,{status:'reconciling',error:e instanceof MediaFault&&e.code==='media_download_expired'?'media_download_expired':'storage_unavailable',stage:'storage'})}

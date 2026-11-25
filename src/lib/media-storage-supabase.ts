@@ -2,14 +2,13 @@ import {MEDIA_VIDEO_MAX_BYTES} from './media-video-contract';
 import {createClient} from '@supabase/supabase-js';
 import {MediaFault,mediaUuid} from './media-contracts';
 import {readBounded} from './media-security';
-import type {MediaObjectStorage} from './media-storage';
+import {parseMediaObjectKey,type DeletableMediaObjectStorage} from './media-storage';
 import type {MediaUploadAuthorization} from './media-upload';
 export type SupabaseMediaStorageConfig={url:string;projectRef:string;serviceKey:string;privateBucketsApproved:boolean;resultMaxBytes?:number;buckets:{staging:string;inputs:string;results:string}};
 type Dependencies={fetch?:typeof fetch;now?:()=>number};
-const uuid='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
 const imageMime=['image/png','image/jpeg','image/webp'];
 /** 仅服务端装配；私有bucket状态由独立服务验收批准，本模块不创建或更改bucket。 */
-export function createSupabaseMediaObjectStorage(config:SupabaseMediaStorageConfig,deps:Dependencies={}):MediaObjectStorage{
+export function createSupabaseMediaObjectStorage(config:SupabaseMediaStorageConfig,deps:Dependencies={}):DeletableMediaObjectStorage{
  const fail=(code:string):never=>{throw new MediaFault(code,503)};
  const buckets=Object.freeze({...config.buckets}),resultMax=config.resultMaxBytes??MEDIA_VIDEO_MAX_BYTES;
  if(!Number.isSafeInteger(resultMax)||resultMax<1||resultMax>MEDIA_VIDEO_MAX_BYTES)fail('media_storage_unconfigured');
@@ -22,14 +21,10 @@ export function createSupabaseMediaObjectStorage(config:SupabaseMediaStorageConf
  };
  const sdk=createClient(config.url,config.serviceKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},global:{fetch:safeFetch}});
  const classify=(key:string)=>{
-  const match=new RegExp(`^media/(staging|inputs|results)/(${uuid})/(${uuid})(.*)$`).exec(key);
-  if(!match)throw new MediaFault('invalid_media_key');
-  const kind=match[1],tail=match[4];
-  if(kind!=='staging'&&kind!=='inputs'&&kind!=='results')throw new MediaFault('invalid_media_key');
+  const {kind,owner}=parseMediaObjectKey(key);
   const bucket=buckets[kind];
   if(typeof bucket!=='string'||!/^[a-z0-9][a-z0-9-]{1,62}$/.test(bucket))throw new MediaFault('invalid_media_key');
-  if(kind==='staging'?tail!=='':kind==='inputs'?!new RegExp(`^/[a-f0-9]{64}/${uuid}\\.(png|jpeg|webp)$`).test(tail):!/^\/[a-f0-9]{64}\.(png|jpeg|webp|mp4)$/.test(tail))throw new MediaFault('invalid_media_key');
-  return {kind,bucket,owner:match[2]};
+  return {kind,bucket,owner};
  };
  const target=(raw:string,path:string)=>{const u=new URL(raw);if(u.origin!==config.url||u.pathname!==path||u.username||u.password||u.hash||[...u.searchParams.keys()].join(',')!=='token'||!u.searchParams.get('token'))fail('media_storage_sign_failed');return u.href};
  const read=async(key:string):Promise<AsyncIterable<Uint8Array>>=>{
@@ -53,6 +48,14 @@ export function createSupabaseMediaObjectStorage(config:SupabaseMediaStorageConf
  };
  return {
   read,signUpload,
+  async remove(key){
+   const {bucket}=classify(key);
+   try{
+    // 原生批量删除成功时只返回实际移除的对象。空数组表示请求中的对象已不存在。
+    const {data,error}=await sdk.storage.from(bucket).remove([key]);
+    if(error||!Array.isArray(data))return fail('media_storage_delete_failed');
+   }catch{return fail('media_storage_delete_failed')}
+  },
   async putImmutable(key,bytes,mime){
    const t=classify(key);if(t.kind==='staging'||!(t.kind==='inputs'?imageMime:[...imageMime,'video/mp4']).includes(mime)||bytes.length>(t.kind==='inputs'?8388608:resultMax))throw new MediaFault('media_sealed_key_required');
    try{

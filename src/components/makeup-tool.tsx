@@ -190,6 +190,9 @@ export function MakeupTool({
       });
       if (response.status === 401) { submitted = false; await loginWithDraft(); return; }
       if (!response.ok) {
+        if (response.status === 503 && (await response.json().catch(() => null))?.code === "generation_disabled") {
+          throw new Error("generation_disabled");
+        }
         if (response.status >= 500) throw new Error("uncertain_submission");
         submitted = false;
         setErrorMessage(t(locale, "Could not start generation. Check your credits and try a new request when ready.", "生成请求未能启动，请检查额度后手动发起新请求。")); return;
@@ -199,7 +202,10 @@ export function MakeupTool({
       const selected = styles.find((style) => style.id === styleId) ?? styles[0];
       query.start({ version: 1, generationId, tool: "full_face", path, createdAt: Date.now(), style: { id: selected.id, name: selected.name, description: selected.description } });
     } catch (error) {
-      if (submitted) setUncertain(true);
+      if (error instanceof Error && error.message === "generation_disabled") {
+        setErrorMessage(t(locale, "Makeup generation is currently unavailable.", "美妆生成暂未开放。"));
+      }
+      else if (submitted) setUncertain(true);
       else if (error instanceof Error && error.message === "auth_required") await loginWithDraft();
       else if (!controller.signal.aborted) setErrorMessage(t(locale, "Could not check your balance or upload the photo. Please try again.", "余额检查或照片上传失败，请稍后重试。"));
       else setErrorMessage(t(locale, "The request was cancelled or timed out. Please try again.", "请求已取消或超时，请稍后重试。"));

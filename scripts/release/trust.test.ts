@@ -37,7 +37,7 @@ it("仓库外调用默认迁移预检仍读取固定历史，不在调用cwd找S
     sql.begin = async (mode, fn) => { if(mode !== "read only") throw Error("write"); return fn(sql); };
     migrationOnClient(sql, "status").then(value => console.log(JSON.stringify(value))).catch(() => process.exitCode=1);`;
   const out = await command(process.execPath, ["--import", join(REPOSITORY_ROOT, "node_modules/tsx/dist/loader.mjs"), "-e", code], process.env, f.root);
-  expect(JSON.parse(out)).toEqual({ applied: [], pending: ["0001_production_readiness", "0002_d1_creation_visibility", "0002_d2_checkout_attempts", "0003_e1_media_tasks"] });
+  expect(JSON.parse(out)).toEqual({ applied: [], pending: ["0001_production_readiness", "0002_d1_creation_visibility", "0002_d2_checkout_attempts", "0003_e1_media_tasks", "0004_makeup_initial_dispatch"] });
 });
 
 it.each(["--assume-unchanged", "--skip-worktree"])("不能用%s隐藏未提交源码", async flag => {

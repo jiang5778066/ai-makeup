@@ -65,3 +65,19 @@ it('仅明确官方Asset Already Exists冲突可重读，未知400不进入比�
  const calls:string[]=[];const f=vi.fn(async(_url:RequestInfo|URL,init?:RequestInit)=>{calls.push(init?.method??'GET');return init?.method==='POST'?json({statusCode:'400',message:'Asset Already Exists'},400):new Response(new Uint8Array([1]))});
  const s=createSupabaseMediaObjectStorage(config,{fetch:f});await expect(s.putImmutable(result,Buffer.from([1]),'image/png')).resolves.toBeUndefined();expect(calls).toEqual(['POST','GET']);
 });
+
+it('删除仅提交已分类键，重复删除允许空结果，桶故障保持失败',async()=>{
+ const f=vi.fn(async(raw:RequestInfo|URL,init?:RequestInit)=>{
+  const path=new URL(String(raw)).pathname;
+  expect(init?.method).toBe('DELETE');
+  expect(JSON.parse(String(init?.body))).toEqual({prefixes:[path.endsWith('/media-staging')?staging:result]});
+  if(path.endsWith('/media-staging'))return json([]);
+  return json({message:config.serviceKey},503);
+ });
+ const s=createSupabaseMediaObjectStorage(config,{fetch:f});
+ await expect(s.remove(staging)).resolves.toBeUndefined();
+ await expect(s.remove(staging)).resolves.toBeUndefined();
+ await expect(s.remove(result)).rejects.toThrow('media_storage_delete_failed');
+ await expect(s.remove(`${sealed}\n`)).rejects.toThrow('invalid_media_key');
+ expect(f).toHaveBeenCalledTimes(3);
+});

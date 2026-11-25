@@ -1,5 +1,5 @@
 // 逐卡对应公开参照展示；来源、转换和体积见C1素材清单。
-export const directoryMedia: Readonly<Record<string, Readonly<{ poster: string; src?: string }>>> = {
+export const directoryMedia: Readonly<Record<string, Readonly<{ poster: string; src?: string; illustration?: boolean }>>> = {
   "tools-01": {
     "poster": "/platform/directories/tools-01.webp"
   },
@@ -38,10 +38,7 @@ export const directoryMedia: Readonly<Record<string, Readonly<{ poster: string; 
     "poster": "/platform/directories/tools-10.webp",
     "src": "/platform/directories/tools-10.mp4"
   },
-  "tools-11": {
-    "poster": "/platform/directories/tools-11.webp",
-    "src": "/platform/directories/tools-11.mp4"
-  },
+  "tools-11": { "poster": "" },
   "tools-12": {
     "poster": "/platform/directories/tools-12.webp"
   },
@@ -122,56 +119,70 @@ export const directoryMedia: Readonly<Record<string, Readonly<{ poster: string; 
     "src": "/platform/directories/video-effects-05.mp4"
   },
   "video-effects-06": {
-    "poster": "/platform/directories/video-effects-06.webp",
-    "src": "/platform/directories/video-effects-06.mp4"
+    "poster": "/platform/directories/framekoi-earth-zoom-out.webp",
+    "illustration": true
   },
   "video-effects-07": {
     "poster": "/platform/directories/video-effects-07.webp",
     "src": "/platform/directories/video-effects-07.mp4"
   },
   "video-effects-08": {
-    "poster": "/platform/directories/video-effects-08.webp",
-    "src": "/platform/directories/video-effects-08.mp4"
+    "poster": "/platform/directories/framekoi-ai-angel-wings.webp",
+    "illustration": true
   },
   "video-effects-09": {
     "poster": "/platform/directories/video-effects-09.webp",
     "src": "/platform/directories/video-effects-09.mp4"
   },
   "image-effects-01": {
-    "poster": "/platform/directories/image-effects-01.webp"
+    "poster": "/platform/directories/framekoi-hair-style-illustration.webp",
+    "illustration": true
   },
   "image-effects-02": {
-    "poster": "/platform/directories/image-effects-02.webp"
+    "poster": "/platform/directories/framekoi-photo-restoration-illustration.webp",
+    "illustration": true
   },
   "image-effects-03": {
-    "poster": "/platform/directories/image-effects-03.webp"
+    "poster": "/platform/directories/framekoi-image-style-illustration.webp",
+    "illustration": true
   },
   "image-effects-04": {
-    "poster": "/platform/directories/image-effects-04.webp"
+    "poster": "/platform/directories/framekoi-age-progression-illustration.webp",
+    "illustration": true
   },
   "image-effects-05": {
     "poster": "/platform/directories/image-effects-05.webp"
   },
   "image-effects-06": {
-    "poster": "/platform/directories/image-effects-06.webp"
+    "poster": "/platform/directories/framekoi-buzz-cut-filter-illustration.webp",
+    "illustration": true
   },
   "image-effects-07": {
-    "poster": "/platform/directories/image-effects-07.webp"
+    "poster": "/platform/directories/framekoi-hair-color-illustration.webp",
+    "illustration": true
   },
   "image-effects-08": {
-    "poster": "/platform/directories/image-effects-08.webp"
+    "poster": "/platform/directories/framekoi-bald-filter-illustration.webp",
+    "illustration": true
   },
   "image-effects-09": {
-    "poster": "/platform/directories/image-effects-09.webp"
+    "poster": "/platform/directories/framekoi-beard-filter-illustration.webp",
+    "illustration": true
   },
   "image-effects-10": {
-    "poster": "/platform/directories/image-effects-10.webp"
+    "poster": "/platform/directories/framekoi-paper-cutout-collage-illustration.webp",
+    "illustration": true
   },
   "image-effects-11": {
     "poster": "/platform/directories/image-effects-11.webp"
   },
   "image-effects-12": {
-    "poster": "/platform/directories/image-effects-12.webp"
+    "poster": "/platform/directories/framekoi-eye-color-illustration.webp",
+    "illustration": true
+  },
+  "image-effects-13": {
+    "poster": "/platform/directories/framekoi-christmas-photo-illustration.webp",
+    "illustration": true
   },
   "ai-image-models-01": {
     "poster": "/platform/directories/ai-image-models-01.webp"

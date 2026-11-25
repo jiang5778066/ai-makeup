@@ -6,7 +6,7 @@ import { HomepagePreview, HomepageCta, HomepageModelCard, HomepageToolCard } fro
 import { HomepageEffects, HomepageFaq, HomepageScenes } from "./platform-homepage-interactions";
 import { HomepageVideo, HomepageImageSequence } from "./platform-homepage-media";
 import { PlatformLink } from "./platform-link";
-import { homepageEntry } from "@/lib/platform-homepage";
+import { publicPlatformEntry } from "@/lib/platform-navigation";
 import { brand } from "@/lib/brand";
 import { FrameKoiMark } from "./platform-brand";
 import { SiteShell } from "./site-shell";
@@ -28,5 +28,8 @@ export function PlatformLandingPage({ locale, currentPath }: { locale: Locale; c
 
 function HomepageFeatureCard({ locale, kind }: { locale: Locale; kind: "video" | "image" }) {
   const zh = locale === "zh-CN"; const video = kind === "video";
-  return <div data-preview-card className="platform-home-feature-card"><PlatformLink className="platform-home-card-link" entry={homepageEntry(video ? "video-generator" : "image-generator")} locale={locale}><span className="platform-home-sr-only">{video ? (zh ? "AI 视频生成器" : "AI video generator") : (zh ? "AI 图片生成器" : "AI image generator")}</span></PlatformLink><div className="platform-home-feature-media">{video ? <HomepagePreview src={generatorImages[0]} locale={locale}/> : <HomepageImageSequence images={generatorImages.slice(1)} locale={locale}/>}</div><div><h3>{video ? (zh ? "AI 视频生成器" : "AI video generator") : (zh ? "AI 图片生成器" : "AI image generator")}</h3><p>{video ? (zh ? "从文字或照片开始，规划主体动作与镜头运动。" : "Start with words or a photo. Plan what moves in the shot and how the camera follows.") : (zh ? "写下主体、构图和风格，再挑选需要的参考图片。" : "Describe the subject, framing, and style, then choose a reference image if you need one.")}</p><ArrowUpRight size={20}/></div></div>;
+  const entry = publicPlatformEntry(video ? "video-generator" : "image-generator");
+  if (!entry) return null;
+  const title = video ? (zh ? "AI 视频生成器" : "AI video generator") : (zh ? "AI 图片生成器" : "AI image generator");
+  return <div data-preview-card className="platform-home-feature-card"><PlatformLink className="platform-home-card-link" entry={entry} locale={locale}><span className="platform-home-sr-only">{title}</span></PlatformLink><div className="platform-home-feature-media">{video ? <HomepagePreview src={generatorImages[0]} locale={locale}/> : <HomepageImageSequence images={generatorImages.slice(1)} locale={locale}/>}</div><div><h3>{title}</h3><p>{video ? (zh ? "从文字或照片开始，规划主体动作与镜头运动。" : "Start with words or a photo. Plan what moves in the shot and how the camera follows.") : (zh ? "写下主体、构图和风格，再挑选需要的参考图片。" : "Describe the subject, framing, and style, then choose a reference image if you need one.")}</p><ArrowUpRight size={20}/></div></div>;
 }

@@ -13,7 +13,7 @@ it("四根介绍页独立分派，不以查询伪造provider或解锁其它scaff
   }
   expect(resolveHomepageRoute("/hunyuanvideo-generator-unknown")).toBeNull();
   expect(resolveHomepageRoute("/tools/ai-animal-generator")).toBeNull();
-  expect(resolveHomepageRoute("/tools/ai-animate-image-generator")).toMatchObject({ kind: "scaffold" });
+  expect(resolveHomepageRoute("/tools/ai-animate-image-generator")).toMatchObject({ kind: "video-guide" });
 });
 
 describe("平台首页入口与路由身份", () => {
@@ -33,9 +33,23 @@ describe("平台首页入口与路由身份", () => {
   it("已建立外壳能到达但仍明确未完成，不能把所有pending解锁", () => {
     expect(platformEntry("home").status).toBe("ready");
     expect(platformEntry("video-generator").status).toBe("ready");
-    expect(platformEntry("video-editor").status).toBe("pending");
+    expect(resolveHomepageRoute("/ai-video-editor")).toMatchObject({ kind: "local-video-editor" });
+    expect(platformEntry("video-editor").status).toBe("ready");
     expect(platformEntry("vheer").status).toBe("ready");
     expect(resolveHomepageRoute("/ai-video-generator")).toMatchObject({ kind: "generator", path: "/ai-video-generator" });
+  });
+  it("视频特效资料页可达且首页卡片标明示意图与分镜提示词用途", async () => {
+    const { landingVideoTools, videoEffects, workspaceVideoTools } = await import("./platform-homepage-data");
+    expect(videoEffects.filter(card => card.illustration).map(card => card.id)).toEqual(["earth-zoom-out", "ai-angel-video-generator"]);
+    expect(workspaceVideoTools.find(card => card.id === "earth-zoom-out")?.illustration).toBe(true);
+    for (const card of [...videoEffects.filter(item => item.illustration), ...workspaceVideoTools.filter(item => item.illustration)]) {
+      expect(card.description.en).toMatch(/storyboard|prompt/i);
+      expect(card.description["zh-CN"]).toMatch(/分镜|提示词/);
+      expect(entryHref(platformEntry(card.id), "zh-CN")).toBe(`/zh-CN/video-effects/${card.id}`);
+    }
+    const routes = ["/video-effects/earth-zoom-out", "/video-effects/ai-angel-video-generator"];
+    expect(routes.map(path => entryHref(platformEntry(path.split("/").at(-1)!), "en"))).toEqual(routes);
+    expect(landingVideoTools.length).toBeGreaterThan(0);
   });
   it("模板身份按真实首个查询值解析，未知和缺失模板不冒充1200", () => {
     expect(resolveHomepageRoute("/video-effects/lab", { template_id: "508" })).toMatchObject({ kind: "scaffold", entry: { id: "template-508" } });

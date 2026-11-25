@@ -9,6 +9,7 @@ import {
   presignPutUrl
 } from "@/lib/storage";
 import { rateLimit, requestIp } from "@/lib/rate-limit";
+import { isGenerationEnabled } from "@/lib/launch-flags";
 
 type SignRequest = {
   contentType?: string;
@@ -20,6 +21,10 @@ export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ code: "unauthorized" }, { status: 401 });
+  }
+
+  if (!isGenerationEnabled()) {
+    return NextResponse.json({ code: "generation_disabled" }, { status: 503 });
   }
 
   if (!isStorageConfigured()) {

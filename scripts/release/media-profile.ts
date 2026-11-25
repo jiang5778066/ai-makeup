@@ -11,6 +11,7 @@ const future=(v:unknown,now:number)=>typeof v==='string'&&Number.isFinite(Date.p
 /** 只验证受审配置合同；批准引用必须来自独立验收，不能用本校验代替真实服务证明。 */
 export function validateMediaGenerationProfile(env:Record<string,string|undefined>,target:Target,now=Date.now()){
  if(env.DISABLE_CHECKOUT!=='1'||![undefined,'0'].includes(env.ENABLE_CHECKOUT)||env.DISABLE_GENERATION!=='1'||env.CREATIONS_VISIBILITY_V1!=='1'||![undefined,'0','1'].includes(env.MEDIA_CREATE_ENABLED)||![undefined,'0','1'].includes(env.MEDIA_STEP_ENABLED))reject();
+ if(![undefined,'0'].includes(env.ENABLE_GENERATION))reject();
  for(const name of ['MEDIA_ROUTER_API_KEY','MEDIA_SUPABASE_SERVICE_KEY','MEDIA_PROVIDER_ACCOUNT_REF'])if(!env[name]?.trim())reject();
  if(!/^key:[0-9]+\/group:[0-9]+$/.test(env.MEDIA_PROVIDER_ACCOUNT_REF??''))reject();
  if(!/^(?:[a-f0-9]{2}){32,64}$/i.test(env.MEDIA_QUOTE_HMAC_HEX??''))reject();

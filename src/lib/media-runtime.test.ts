@@ -44,7 +44,19 @@ it('存储失败保原ID与预留，下一次仅存储而不重新生成',async(
 });
 it('原结果URL过期只GET同provider ID刷新，不重POST且保留预留直至存储完成',async()=>{
  const deps=resources(),r=createMediaRuntime({config,...deps}),h=createMediaHandlers({...r,currentUser:async()=>({id:user}),limit:()=>true,emit:async()=>{}});const q=await(await h.quotes(req('quotes',payload))).json();await h.create(req('tasks',{...payload,quoteToken:q.quoteToken}));const run=createMediaProcessor(r.store,r.providers,r.storage);
- await run(id);deps.transport.request.mockResolvedValueOnce({status:403,contentType:'image/png',body:(async function*(){yield Buffer.alloc(0)})()});await run(id);expect((await deps.store.read(user,id))?.error_code).toBe('media_download_expired');expect((await deps.store.read(user,id))?.credit_state).toBe('reserved');await run(id);expect(deps.http.mock.calls.map(c=>c[0].method)).toEqual(['POST','GET','GET']);expect((await deps.store.read(user,id))?.status).toBe('done');
+ await run(id);
+ deps.transport.request.mockResolvedValueOnce({status:403,contentType:'image/png',body:(async function*(){yield Buffer.alloc(0)})()});
+ await run(id);
+ expect(await deps.store.read(user,id)).toMatchObject({error_code:'media_download_expired',credit_state:'reserved'});
+ await run(id);
+ expect(await deps.store.read(user,id)).toMatchObject({error_code:'media_download_expired',credit_state:'reserved'});
+ expect(deps.transport.request).toHaveBeenCalledTimes(1);
+ const freshLocator='https://results.example.com/a.png?synthetic=renewed';
+ deps.http.mockResolvedValueOnce({status:200,body:Buffer.from(JSON.stringify({task_id:'provider-original',status:'completed',result_urls:[freshLocator]}))});
+ await run(id);
+ expect(deps.http.mock.calls.map(([request])=>request.method)).toEqual(['POST','GET','GET','GET']);
+ expect(deps.transport.request.mock.calls.map(([url]:unknown[])=>String(url))).toEqual(['https://results.example.com/a.png',freshLocator]);
+ expect(await deps.store.read(user,id)).toMatchObject({status:'done',credit_state:'settled',result_locator:freshLocator});
 });
 import {createHash} from 'node:crypto';
 import {createMediaInputs} from './media-inputs';

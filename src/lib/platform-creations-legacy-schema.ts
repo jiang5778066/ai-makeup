@@ -1,10 +1,11 @@
 import { getTableColumns, sql } from "drizzle-orm";
 import { generations, type NewGeneration } from "@/db/schema";
 
-// 旧字段直接派生自同一schema，不复制列类型或注册第二张迁移表。
-export const legacyGenerationFields = Object.fromEntries(Object.entries(getTableColumns(generations)).filter(([key]) => key !== "deletedAt")) as Omit<ReturnType<typeof getTableColumns<typeof generations>>, "deletedAt">;
+// 旧库读取只投影原字段。新受理可显式写入首次投递时间。
+const { deletedAt: _deletedAt, dispatchDueAt: _dispatchDueAt, initialRunId: _initialRunId, ...legacyGenerationFields } = getTableColumns(generations);
+export { legacyGenerationFields };
 type Executor = Pick<typeof import("@/db/client").db, "execute">;
-export const insertLegacyGeneration = async (db: Executor, values: Omit<NewGeneration, "deletedAt">) => {
+export const insertLegacyGeneration = async (db: Executor, values: Omit<NewGeneration, "deletedAt" | "dispatchDueAt" | "initialRunId">) => {
   const entries = Object.entries(values).filter(([key, value]) => value !== undefined && Object.hasOwn(legacyGenerationFields, key));
   const columns = entries.map(([key]) => legacyGenerationFields[key as keyof typeof legacyGenerationFields]);
   const names = sql.join(columns.map(column => sql.identifier(column.name)), sql`, `);

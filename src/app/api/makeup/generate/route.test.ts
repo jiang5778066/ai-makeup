@@ -3,9 +3,17 @@ import { PgDialect } from "drizzle-orm/pg-core";
 
 const mockGetCurrentUser = vi.fn();
 const mockDeductCredits = vi.fn();
+const mockBalance = vi.fn();
 const mockInngestSend = vi.fn();
 const mockExecute = vi.fn();
 const mockUpdate = vi.fn();
+const mockUploadExists = vi.fn();
+
+vi.mock("@/lib/account-data-lock", () => ({ lockAccountData: vi.fn() }));
+vi.mock("@/lib/storage", async (original) => ({
+  ...await original<typeof import("@/lib/storage")>(),
+  legacyUploadExists: (...args: unknown[]) => mockUploadExists(...args)
+}));
 
 vi.mock("@/lib/supabase/server", () => ({
   getCurrentUser: () => mockGetCurrentUser()
@@ -18,7 +26,8 @@ vi.mock("@/lib/credits", () => ({
       this.name = "InsufficientCreditsError";
     }
   },
-  deductCredits: (...args: unknown[]) => mockDeductCredits(...args)
+  deductCredits: (...args: unknown[]) => mockDeductCredits(...args),
+  getBalance: (...args: unknown[]) => mockBalance(...args)
 }));
 
 vi.mock("@/inngest/client", () => ({
@@ -27,7 +36,7 @@ vi.mock("@/inngest/client", () => ({
 
 vi.mock("@/db/client", () => ({
   db: {
-    execute: (...args: unknown[]) => mockExecute(...args),
+    transaction: (operation: (tx: { execute: typeof mockExecute }) => unknown) => operation({ execute: mockExecute }),
     update: () => ({ set: () => ({ where: () => mockUpdate() }) })
   }
 }));
@@ -41,7 +50,8 @@ function jsonRequest(body: unknown) {
 }
 
 function insertedValues() {
-  expect(mockExecute).toHaveBeenCalledOnce();
+  expect(mockExecute).toHaveBeenCalledTimes(2);
+  expect(new PgDialect().sqlToQuery(mockExecute.mock.calls[1][0]).sql).toContain("UPDATE generations SET dispatch_due_at");
   // 编译真实helper交给数据库的SQL，按列与占位符对应关系核验绑定值。
   const query = new PgDialect().sqlToQuery(mockExecute.mock.calls[0][0]);
   expect(query.sql).not.toContain("deleted_at");
@@ -58,17 +68,40 @@ function insertedValues() {
 beforeEach(() => {
   mockGetCurrentUser.mockReset();
   mockDeductCredits.mockReset();
+  mockBalance.mockReset().mockResolvedValue(3);
   mockInngestSend.mockReset();
   mockExecute.mockReset();
   mockUpdate.mockReset();
+  mockUploadExists.mockReset().mockResolvedValue(true);
   mockExecute.mockResolvedValue([{ id: "gen_test" }]);
+  vi.stubEnv("ENABLE_GENERATION", "1");
+  vi.stubEnv("DISABLE_GENERATION", "0");
 });
 
 afterEach(() => {
   vi.resetModules();
+  vi.unstubAllEnvs();
 });
 
 describe("POST /api/makeup/generate", () => {
+  it.each([[undefined, undefined], ["1", "1"]])("未启用生成时在读取账号或存储前拒绝新任务（%s / %s）", async (enable, disable) => {
+    vi.stubEnv("ENABLE_GENERATION", enable);
+    vi.stubEnv("DISABLE_GENERATION", disable);
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      jsonRequest({ uploadKey: "user_test/x.jpg", consent: true, styleId: "natural" })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(payload.code).toBe("generation_disabled");
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    expect(mockExecute).not.toHaveBeenCalled();
+    expect(mockDeductCredits).not.toHaveBeenCalled();
+    expect(mockInngestSend).not.toHaveBeenCalled();
+  });
+
   it("rejects unauthenticated requests", async () => {
     mockGetCurrentUser.mockResolvedValue(null);
     const { POST } = await import("./route");
@@ -107,8 +140,7 @@ describe("POST /api/makeup/generate", () => {
 
   it("returns 402 when credits are insufficient", async () => {
     mockGetCurrentUser.mockResolvedValue({ id: "user_test" });
-    const { InsufficientCreditsError } = await import("@/lib/credits");
-    mockDeductCredits.mockRejectedValue(new InsufficientCreditsError());
+    mockBalance.mockResolvedValue(0);
     const { POST } = await import("./route");
 
     const response = await POST(
@@ -118,13 +150,22 @@ describe("POST /api/makeup/generate", () => {
 
     expect(response.status).toBe(402);
     expect(payload.code).toBe("insufficient_credits");
-    expect(insertedValues()).toMatchObject({ user_id: "user_test", upload_key: "user_test/x.jpg" });
+    expect(mockExecute).not.toHaveBeenCalled();
     expect(mockInngestSend).not.toHaveBeenCalled();
+  });
+
+  it("首次投递失败时仍用 202 返回已持久化的原任务", async () => {
+    mockGetCurrentUser.mockResolvedValue({ id: "user_test" });
+    mockInngestSend.mockRejectedValueOnce(new Error("synthetic_enqueue_failure"));
+    const { POST } = await import("./route");
+    const response = await POST(jsonRequest({ uploadKey: "user_test/x.jpg", consent: true }));
+    expect(response.status).toBe(202);
+    expect(await response.json()).toEqual({ generationId: "gen_test", status: "queued" });
+    expect(mockDeductCredits).not.toHaveBeenCalled();
   });
 
   it("queues a generation and returns 202 on the happy path", async () => {
     mockGetCurrentUser.mockResolvedValue({ id: "user_test" });
-    mockDeductCredits.mockResolvedValue(undefined);
     const { POST } = await import("./route");
 
     const response = await POST(
@@ -146,6 +187,7 @@ describe("POST /api/makeup/generate", () => {
       intensity: 72, locale: "zh-CN", status: "queued"
     });
     expect(mockInngestSend).toHaveBeenCalledWith({
+      id: "makeup-initial-gen_test",
       name: "makeup/generate.requested",
       data: { generationId: "gen_test" }
     });
@@ -153,7 +195,6 @@ describe("POST /api/makeup/generate", () => {
 
   it("stores a normalized camera virtual try-on configuration", async () => {
     mockGetCurrentUser.mockResolvedValue({ id: "user_test" });
-    mockDeductCredits.mockResolvedValue(undefined);
     const { POST } = await import("./route");
 
     const response = await POST(

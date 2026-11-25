@@ -1,5 +1,6 @@
 import type { Locale } from "./i18n";
-export type HomepageCard = { id: string; label: Record<Locale, string>; image: string; icon?: string; description: Record<Locale, string> };
+import type { PlatformMode } from "./platform-navigation";
+export type HomepageCard = { id: string; label: Record<Locale, string>; image: string; illustration?: boolean; referenceGuide?: boolean; icon?: string; description: Record<Locale, string>; videoMode?: Extract<PlatformMode, "image-to-video" | "text-to-video"> };
 export const heroPoster = "/platform/homepage/0dabbc3e546fa297.jpg";
 export const heroVideo = "/platform/homepage/c4774ab8e6578381.mp4";
 export const generatorImages = [
@@ -167,18 +168,20 @@ export const landingVideoTools: HomepageCard[] = [
   },
   {
     "id": "image-to-video",
+    "videoMode": "image-to-video",
     "label": {
       "zh-CN": "AI图生视频",
       "en": "AI Image to Video"
     },
     "image": "/platform/homepage/07ffbc01ba2fa472.jpg",
     "description": {
-      "zh-CN": "为静态图片添加 AI 动效和电影感运镜，生成动态视频。",
+      "zh-CN": "查看用于静态图片动效和镜头运动的模式与参数。",
       "en": "Explore movement and cinematic camera motion for still images."
     }
   },
   {
     "id": "text-to-video",
+    "videoMode": "text-to-video",
     "label": {
       "zh-CN": "AI文生视频",
       "en": "AI Text to Video"
@@ -216,13 +219,13 @@ export const landingVideoTools: HomepageCard[] = [
   {
     "id": "landscape-to-portrait-video-converter-ai",
     "label": {
-      "zh-CN": "AI 横屏转竖屏视频转换器",
-      "en": "Landscape to Portrait Video"
+      "zh-CN": "横屏转竖屏预览",
+      "en": "Landscape to portrait preview"
     },
-    "image": "/platform/homepage/b191b9e2c20bb26b.jpg",
+    "image": "",
     "description": {
-      "zh-CN": "探索适配 Reels 和 Shorts 的 9:16 竖屏短片。",
-      "en": "Explore vertical formats for Reels and Shorts."
+      "zh-CN": "用本地视频预览 9:16 或 4:5 的竖屏构图。",
+      "en": "Preview 9:16 or 4:5 framing with a local video."
     }
   }
 ];
@@ -254,13 +257,15 @@ export const videoEffects: HomepageCard[] = [
   {
     "id": "earth-zoom-out",
     "label": {
-      "zh-CN": "地球缩放效果",
+      "zh-CN": "地球拉远",
       "en": "Earth Zoom Out"
     },
-    "image": "/platform/homepage/6ba6ac7defa1087a.jpg",
+    "image": "/platform/directories/framekoi-earth-zoom-out.webp",
+    "illustration": true,
+    "referenceGuide": true,
     "description": {
-      "zh-CN": "",
-      "en": ""
+      "zh-CN": "分镜与提示词资料页。专用生成尚未验证。",
+      "en": "Storyboard and prompt guide. Dedicated generation is unverified."
     }
   },
   {
@@ -290,13 +295,15 @@ export const videoEffects: HomepageCard[] = [
   {
     "id": "ai-angel-video-generator",
     "label": {
-      "zh-CN": "AI天使翅膀",
+      "zh-CN": "AI 天使翅膀",
       "en": "AI Angel Wings"
     },
-    "image": "/platform/homepage/159ac2c5fbacbd8d.png",
+    "image": "/platform/directories/framekoi-ai-angel-wings.webp",
+    "illustration": true,
+    "referenceGuide": true,
     "description": {
-      "zh-CN": "",
-      "en": ""
+      "zh-CN": "分镜与提示词资料页。专用生成尚未验证。",
+      "en": "Storyboard and prompt guide. Dedicated generation is unverified."
     }
   }
 ];
@@ -304,14 +311,15 @@ export const imageEffects: HomepageCard[] = [
   {
     "id": "ai-hair-style-changer",
     "label": {
-      "zh-CN": "AI 发型更换器",
+      "zh-CN": "AI 发型更换",
       "en": "AI Hairstyle Changer"
     },
-    "image": "/platform/homepage/e2c1668b999d96af.png",
+    "image": "/platform/directories/framekoi-hair-style-illustration.webp",
     "description": {
       "zh-CN": "",
       "en": ""
-    }
+    },
+    "illustration": true
   },
   {
     "id": "old-photo-restoration",
@@ -319,7 +327,8 @@ export const imageEffects: HomepageCard[] = [
       "zh-CN": "老照片修复",
       "en": "Old Photo Restoration"
     },
-    "image": "/platform/homepage/3ebc265f39999230.jpg",
+    "image": "/platform/directories/framekoi-photo-restoration-illustration.webp",
+    "illustration": true,
     "description": {
       "zh-CN": "",
       "en": ""
@@ -331,7 +340,8 @@ export const imageEffects: HomepageCard[] = [
       "zh-CN": "图像风格转换器",
       "en": "Image Style Converter"
     },
-    "image": "/platform/homepage/a40193c2818693a7.jpeg",
+    "image": "/platform/directories/framekoi-image-style-illustration.webp",
+    "illustration": true,
     "description": {
       "zh-CN": "",
       "en": ""
@@ -352,26 +362,28 @@ export const imageEffects: HomepageCard[] = [
   {
     "id": "ai-hair-color-changer",
     "label": {
-      "zh-CN": "AI 头发换色器",
+      "zh-CN": "AI 发色更换",
       "en": "AI Hair Color Changer"
     },
-    "image": "/platform/homepage/4d6e4cac641c6ca8.png",
+    "image": "/platform/directories/framekoi-hair-color-illustration.webp",
     "description": {
       "zh-CN": "",
       "en": ""
-    }
+    },
+    "illustration": true
   },
   {
     "id": "beard-filter",
     "label": {
-      "zh-CN": "Beard Filter",
+      "zh-CN": "胡须滤镜",
       "en": "Beard Filter"
     },
-    "image": "/platform/homepage/224fdd4890f009d3.webp",
+    "image": "/platform/directories/framekoi-beard-filter-illustration.webp",
     "description": {
       "zh-CN": "",
       "en": ""
-    }
+    },
+    "illustration": true
   }
 ];
 export const workspaceModels: HomepageCard[] = [
@@ -492,13 +504,15 @@ export const workspaceVideoTools: HomepageCard[] = [
   {
     "id": "earth-zoom-out",
     "label": {
-      "zh-CN": "地球缩放效果",
+      "zh-CN": "地球拉远",
       "en": "Earth Zoom Out"
     },
-    "image": "/platform/homepage/e54793b9ea334af0.png",
+    "image": "/platform/directories/framekoi-earth-zoom-out.webp",
+    "illustration": true,
+    "referenceGuide": true,
     "description": {
-      "zh-CN": "",
-      "en": ""
+      "zh-CN": "分镜与提示词资料页。专用生成尚未验证。",
+      "en": "Storyboard and prompt guide. Dedicated generation is unverified."
     }
   }
 ];
@@ -518,14 +532,15 @@ export const workspaceImageTools: HomepageCard[] = [
   {
     "id": "change-eye-color",
     "label": {
-      "zh-CN": "瞳色更换器",
+      "zh-CN": "瞳色更换",
       "en": "Eye Color Changer"
     },
-    "image": "/platform/homepage/2d4d2f0b8e5a762f.png",
+    "image": "/platform/directories/framekoi-eye-color-illustration.webp",
     "description": {
       "zh-CN": "",
       "en": ""
-    }
+    },
+    "illustration": true
   },
   {
     "id": "image-editor",
@@ -545,7 +560,8 @@ export const workspaceImageTools: HomepageCard[] = [
       "zh-CN": "图片风格转换",
       "en": "Image Style Converter"
     },
-    "image": "/platform/homepage/a40193c2818693a7.jpeg",
+    "image": "/platform/directories/framekoi-image-style-illustration.webp",
+    "illustration": true,
     "description": {
       "zh-CN": "",
       "en": ""
@@ -566,14 +582,15 @@ export const workspaceImageTools: HomepageCard[] = [
   {
     "id": "christmas-ai-photo-generator",
     "label": {
-      "zh-CN": "Christmas AI Photo",
-      "en": "Christmas AI Photo"
+      "zh-CN": "AI 圣诞照片生成器",
+      "en": "Christmas AI Photo Generator"
     },
-    "image": "/platform/homepage/624af2b83fe5bb7b.webp",
+    "image": "/platform/directories/framekoi-christmas-photo-illustration.webp",
     "description": {
       "zh-CN": "",
       "en": ""
-    }
+    },
+    "illustration": true
   }
 ];
 export const homepageScenes = [
@@ -680,8 +697,8 @@ export const homepageCapabilities = [
       "en": "Control the shot, beyond the prompt"
     },
     "description": {
-      "zh-CN": "像导演一样规划景别、角度、镜头运动与场景节奏，观察蒙太奇、长镜头、滑动变焦和转场如何讲述故事。下方为公开参考视频展示；本项目通用视频生成尚未接通。",
-      "en": "Plan framing, angles, camera movement and pacing. This is a public reference showcase; general video generation is not connected."
+      "zh-CN": "从公开参考视频中观察景别、角度、镜头运动和场景节奏。生成模式以视频工具面板为准。",
+      "en": "Explore framing, angles, camera movement and pacing in public reference videos. Check the video tool for available generation modes."
     },
     "image": "/platform/homepage/33bda2cf01709537.jpg"
   },

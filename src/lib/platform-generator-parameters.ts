@@ -1,8 +1,26 @@
 import { generatorModels, generatorPages, type GeneratorConfig, type GeneratorMode, type GeneratorModel, type GeneratorPath } from './platform-generator-data';
+import { isVideoModeToolPath, videoModeTools } from './platform-video-mode-tools';
+import { MEDIA_PROMPT_LIMIT, mediaCapabilities } from './media-catalog';
+
+const imageToVideoInput = mediaCapabilities().find(capability => capability.mode === 'image_to_video')!.input;
+const siteVideoReference = {
+ max: imageToVideoInput.count,
+ accept: imageToVideoInput.mimeTypes.join(','),
+ maxBytes: imageToVideoInput.maxBytes,
+ localByteLimit: true
+};
 export type GeneratorParameters = {resolution?:string;ratio?:string;duration?:number;sound?:boolean;multishot?:boolean;enhance?:boolean;submode?:'reference'|'keyframes';flavor?:string};
 export type GeneratorState = {path:GeneratorPath;mode:GeneratorMode;model:string;prompt:string;parameters:GeneratorParameters;issues:string[]};
 export function generatorModel(id:string) { return generatorModels.find(m=>m.id===id||m.referenceId===id); }
-export function generatorConfig(state:Pick<GeneratorState,'model'|'mode'>) { return generatorModel(state.model)?.modes[state.mode]; }
+export function generatorConfig(state:Pick<GeneratorState,'model'|'mode'> & Partial<Pick<GeneratorState,'path'>>) {
+ const model = generatorModel(state.model);
+ const config = model?.modes[state.mode];
+ if (!state.path || !isVideoModeToolPath(state.path)) return config;
+ if (model?.kind !== 'video' || !config || model.id !== videoModeTools[state.path].defaultModel) {
+  return model?.kind === 'video' ? config : undefined;
+ }
+ return { ...config, promptLimit: MEDIA_PROMPT_LIMIT, reference: state.mode === 'image' ? siteVideoReference : undefined };
+}
 export function normalizeParameters(model:GeneratorModel,mode:GeneratorMode,old:GeneratorParameters={}):GeneratorParameters {
  const config=model.modes[mode];if(!config)return {};
  const pick=(list:string[],value?:string)=>list.includes(value??'')?value:list[0];
@@ -12,16 +30,18 @@ export function normalizeParameters(model:GeneratorModel,mode:GeneratorMode,old:
  return {resolution:pick(config.resolutions,old.resolution),ratio:pick(config.ratios,old.ratio),duration,sound:config.sound?old.sound??false:undefined,multishot:config.multishot?old.multishot??false:undefined,enhance:config.enhance?old.enhance??true:undefined,submode:config.keyframes?old.submode??'reference':undefined,flavor:config.flavors?pick(config.flavors,old.flavor):undefined};
 }
 export function stateIssues(state:GeneratorState):string[] {
- const model=generatorModel(state.model),page=generatorPages[state.path];const config=model?.kind===page.kind?model.modes[state.mode]:undefined;
+ const model=generatorModel(state.model),page=generatorPages[state.path];const config=model?.kind===page.kind?generatorConfig(state):undefined;
  return [...(!model||model.kind!==page.kind?['unknown-model']:!config?['unsupported-mode']:[]),...(config&&state.prompt.length>config.promptLimit?['prompt-too-long']:[])];
 }
 export function initializeGenerator(path:GeneratorPath,query:string):GeneratorState {
  const q=new URLSearchParams(query),page=generatorPages[path];const rawMode=q.get('mode'),tab=q.get('tab');
  const modes:Record<string,GeneratorMode>=page.kind==='image'?{'text-to-image':'text','image-to-image':'image'}:{'text-to-video':'text','image-to-video':'image'};
  const defaultText=path==='/ai-image-generator'||path==='/ai-video-generator';
- const mode=modes[rawMode??'']??(tab==='text'?'text':tab==='image'?'image':defaultText?'text':'image');const requested=q.get('model');const match=requested?generatorModel(requested):null;
+ // 工具路径固定生成模式，查询仍由导航保留以兼容历史链接。
+ const tool = isVideoModeToolPath(path) ? videoModeTools[path] : undefined;
+ const mode=tool?.mode??modes[rawMode??'']??(tab==='text'?'text':tab==='image'?'image':defaultText?'text':'image');const requested=q.get('model');const match=requested?generatorModel(requested):null;
  const dedicated=page.family==='gpt'||page.family==='nano'||page.family==='wan';const variant=page.defaultModel==='wan-3-0'&&['wan-3-0','wan-3-0-pro','wan-3-0-prime','wan-3-0-prime-pro'].includes(match?.id??'');const model=dedicated?(variant?match!.id:page.defaultModel):match?.id??requested??page.defaultModel;
- const issues=[...(rawMode&&!modes[rawMode]?['unknown-mode']:[]),...(modes[rawMode??'']&&tab&&modes[rawMode!]!==tab?['mode-tab-conflict']:[]),...(dedicated&&requested&&!variant&&match?.id!==page.defaultModel?['path-model-conflict']:[]),...(requested&&(!match||match.kind!==page.kind)?['unknown-model']:[])];
+ const issues=[...(!tool&&rawMode&&!modes[rawMode]?['unknown-mode']:[]),...(!tool&&modes[rawMode??'']&&tab&&modes[rawMode!]!==tab?['mode-tab-conflict']:[]),...(dedicated&&requested&&!variant&&match?.id!==page.defaultModel?['path-model-conflict']:[]),...(requested&&(!match||match.kind!==page.kind)?['unknown-model']:[])];
  const selected=generatorModel(model);const state:GeneratorState={path,model,mode,prompt:'',parameters:selected?normalizePageParameters(path,selected,mode):{},issues:[]};state.issues=[...issues,...stateIssues(state)];return state;
 }
 export function changeGeneratorModel(state:GeneratorState,id:string):GeneratorState {

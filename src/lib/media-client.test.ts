@@ -7,6 +7,59 @@ const ready=()=>({version:1,pricingAvailable:true,capabilities:[{mode:'text_to_i
 const deferred=<T,>()=>{let resolve!:(v:T)=>void;const promise=new Promise<T>(r=>{resolve=r});return {promise,resolve}};
 const setup=(fetcher:typeof fetch)=>{sessionStorage.clear();const c=new MediaGenerationController(createMediaClient(fetcher,['svlhstoiirtsutmmanrn.supabase.co']),sessionStorage);c.account(user,1);c.draft(draft);c.selectTuple();c.consent(true);return c};
 const response=(b:unknown,status=200)=>new Response(JSON.stringify(b),{status});
+
+it('媒体 GET 遇到认证 503 后仍可查询原 ID，明确 401 才清除恢复记录',async()=>{
+ sessionStorage.clear();
+ const original=JSON.stringify({version:1,userId:user,savedAt:Date.now(),taskId:user});
+ sessionStorage.setItem('media-generation-recovery',original);
+ const denied=vi.fn();
+ const fetcher=vi.fn<(url:RequestInfo|URL,init?:RequestInit)=>Promise<Response>>()
+  .mockResolvedValueOnce(response({code:'account_unavailable'},503))
+  .mockResolvedValueOnce(response({taskId:user,status:'waiting',creditState:'reserved'}))
+  .mockResolvedValueOnce(response({code:'unauthorized'},401));
+ const controller=new MediaGenerationController(createMediaClient(fetcher),sessionStorage,()=>1,denied);
+ controller.account(user,1);
+ await controller.recover();
+ expect(controller.snapshot()).toMatchObject({status:'stopped',task:{taskId:user},error:'account_unavailable'});
+ expect(sessionStorage.getItem('media-generation-recovery')).toBe(original);
+ expect(denied).not.toHaveBeenCalled();
+ await controller.recover();
+ expect(controller.snapshot()).toMatchObject({status:'pending',task:{taskId:user},error:null});
+ await controller.recover();
+ expect(controller.snapshot().task).toBeNull();
+ expect(denied).toHaveBeenCalledExactlyOnceWith(1);
+ expect(sessionStorage.getItem('media-generation-recovery')).toBeNull();
+ expect(fetcher.mock.calls.map(([url,init])=>[url,init?.method])).toEqual(
+  Array.from({length:3},()=>[`/api/media/tasks/${user}`,'GET']),
+ );
+ controller.dispose();
+});
+
+it('创建遇到认证 503 时保留已有幂等键和原始提交，显式重放后继续按原 ID 查询',async()=>{
+ const posts: {key:string|null;body:BodyInit|null|undefined}[]=[];
+ const fetcher=vi.fn(async(url:RequestInfo|URL,init?:RequestInit)=>{
+  const path=String(url);
+  if(path.endsWith('/capabilities'))return response(ready());
+  if(path.endsWith('/quotes'))return response({quoteToken:'fixture',credits:2,expiresAt:new Date(Date.now()+300000).toISOString()});
+  if(path.endsWith('/tasks')){
+   posts.push({key:new Headers(init?.headers).get('idempotency-key'),body:init?.body});
+   if(posts.length===1)return response({code:'account_unavailable'},503);
+  }
+  return response({taskId:user,status:'waiting',creditState:'reserved'});
+ });
+ const controller=setup(fetcher);
+ await controller.capabilities();await controller.quote();await controller.confirm();
+ expect(controller.snapshot().status).toBe('unknown');
+ expect(readMediaRecovery(sessionStorage,user)?.key).toBe(posts[0].key);
+ await controller.confirm();
+ expect(posts).toHaveLength(1);
+ await controller.recover();
+ expect(posts).toEqual([posts[0],posts[0]]);
+ await controller.recover();
+ expect(fetcher.mock.calls.at(-1)).toEqual([`/api/media/tasks/${user}`,expect.objectContaining({method:'GET'})]);
+ controller.dispose();
+});
+
 it('报价确认后双击只一次新建，正常响应仍完成；刷新包不含token/URL',async()=>{
  const create=deferred<Response>();const fetcher=vi.fn(async(url:RequestInfo|URL)=>String(url).endsWith('capabilities')?response(ready()):String(url).endsWith('quotes')?response({quoteToken:'synthetic-token',credits:2,expiresAt:new Date(Date.now()+300000).toISOString()}):create.promise);
  const c=setup(fetcher);await c.capabilities();await c.quote();expect(c.snapshot().status).toBe('confirm');const first=c.confirm();await c.confirm();expect(fetcher.mock.calls.filter(x=>String(x[0]).endsWith('/tasks'))).toHaveLength(1);const stored=sessionStorage.getItem('media-generation-recovery')!;expect(stored).not.toMatch(/synthetic-token|quoteToken|https:|uploadUrl/);create.resolve(response({taskId:user,status:'waiting',creditState:'reserved'}));await first;expect(c.snapshot().task?.taskId).toBe(user);expect(c.snapshot().status).toBe('pending');c.dispose();
@@ -55,4 +108,139 @@ it('旧5秒未知提交刷新仅保留原请求供核对，不重新报价或POS
 it('成片签名过期只按原ID重新取签名，不新建或再扣费',async()=>{
  const reads:string[]=[];const f=vi.fn(async(url:RequestInfo|URL,init?:RequestInit)=>{expect(init?.method).toBe('GET');reads.push(String(url));return response({taskId:user,status:'done',creditState:'settled',result:{url:`https://results.example.com/result?version=${reads.length}`,mimeType:'video/mp4',expiresAt:new Date(Date.now()+900000).toISOString()}})});
  sessionStorage.setItem('media-generation-recovery',JSON.stringify({version:1,userId:user,savedAt:Date.now(),taskId:user}));const c=new MediaGenerationController(createMediaClient(f),sessionStorage);c.account(user,1);await c.recover();await c.recover();expect(reads).toEqual([`/api/media/tasks/${user}`,`/api/media/tasks/${user}`]);expect(c.snapshot().task?.creditState).toBe('settled');c.dispose();
+});
+
+it.each(['text_to_image','text_to_video','image_to_video'] as const)('%s 多次核验和账户网络错误后，只由用户恢复原任务',async mode=>{
+ const video=mode.endsWith('_video'),model=video?'grok-imagine-video-1.5':'gpt-image-2';
+ const input='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+ const release=deferred<Response>();
+ const fetcher=vi.fn(async(url:RequestInfo|URL,init?:RequestInit)=>{
+  const path=String(url);
+  if(path.endsWith('/capabilities'))return response({capabilities:[{mode,model,enabled:true,parameters:video?{durationSeconds:[1],resolution:['480p']}:{quality:['1k'],size:['2:3'],n:[1]}}]});
+  if(path.endsWith('/inputs/sign'))return response(uploadFixture(input));
+  if(init?.method==='PUT')return response({});
+  if(path.endsWith('/complete'))return response({inputId:input,status:'ready'});
+  if(path.endsWith('/quotes'))return response({quoteToken:'fixture',credits:3,expiresAt:new Date(Date.now()+100000).toISOString()});
+  if(path.endsWith('/tasks'))return response({taskId:user,status:'waiting',creditState:'reserved'});
+  return fetcher.mock.calls.filter(([url])=>String(url).endsWith(`/tasks/${user}`)).length===1
+   ?release.promise:response({taskId:user,status:'waiting',creditState:'reserved'});
+ });
+ const controller=setup(fetcher);
+ controller.draft({...draft,mode,model,files:mode==='image_to_video'?[new File(['合成帧'],'frame.png',{type:'image/png'})]:[]});
+ controller.selectTuple();
+ controller.consent(true);
+ await controller.capabilities();
+ await controller.quote();
+ await controller.confirm();
+ const original=sessionStorage.getItem('media-generation-recovery');
+ const reading=controller.recover();
+ const readSignal=fetcher.mock.calls.at(-1)?.[1]?.signal;
+ controller.account(null,2,true);
+ expect(readSignal?.aborted).toBe(true);
+ expect(controller.snapshot()).toMatchObject({task:null,selected:false,consent:false,quote:null,capabilities:[]});
+ await controller.recover();
+ controller.account(null,3,true);
+ controller.account(user,3);
+ controller.account(null,4,true);
+ controller.account(user,4);
+ release.resolve(response({taskId:user,status:'done',creditState:'settled',result:{url:'https://fixtures.invalid/old.png'}}));
+ await reading;
+ expect(controller.snapshot()).toMatchObject({status:'stopped',task:{taskId:user},selected:false,consent:false});
+ expect(sessionStorage.getItem('media-generation-recovery')).toBe(original);
+ await controller.capabilities();
+ await controller.quote();
+ await controller.confirm();
+ await controller.recover();
+ expect(fetcher.mock.calls.filter(([url])=>String(url).endsWith('/tasks'))).toHaveLength(1);
+ expect(fetcher.mock.calls.filter(([url])=>String(url).endsWith(`/tasks/${user}`))).toHaveLength(2);
+ controller.dispose();
+});
+
+it('输入、迟到报价与能力在同一账号核验时失效',async()=>{
+ const input='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+ const quote=deferred<Response>();
+ const capability=deferred<Response>();
+ let reads=0;
+ const fetcher=vi.fn(async(url:RequestInfo|URL,init?:RequestInit)=>{
+  const path=String(url);
+  if(path.endsWith('/capabilities'))return ++reads===1?response({
+   capabilities:[{mode:'image_to_image',model:'gpt-image-2',enabled:true,parameters:{quality:['1k'],size:['2:3'],n:[1]}}],
+  }):capability.promise;
+  if(path.endsWith('/inputs/sign'))return response(uploadFixture(input));
+  if(init?.method==='PUT')return response({});
+  if(path.endsWith('/complete'))return response({inputId:input,status:'ready'});
+  return quote.promise;
+ });
+ const controller=setup(fetcher);
+ controller.draft({...draft,mode:'image_to_image',files:[new File(['合成图'],'a.png',{type:'image/png'})]});
+ controller.selectTuple();
+ controller.consent(true);
+ await controller.capabilities();
+ const quoting=controller.quote();
+ await vi.waitFor(()=>expect(fetcher.mock.calls.at(-1)?.[0]).toBe('/api/media/quotes'));
+ const quoteSignal=fetcher.mock.calls.at(-1)?.[1]?.signal;
+ const reading=controller.capabilities();
+ const capabilitySignal=fetcher.mock.calls.at(-1)?.[1]?.signal;
+ controller.account(null,2,true);
+ controller.account(user,2);
+ expect(quoteSignal?.aborted).toBe(true);
+ expect(capabilitySignal?.aborted).toBe(true);
+ capability.resolve(response(ready()));
+ quote.resolve(response({quoteToken:'fixture',credits:3,expiresAt:new Date(Date.now()+100000).toISOString()}));
+ await Promise.all([reading,quoting]);
+ expect(controller.snapshot()).toMatchObject({capabilities:[],quote:null,selected:false,consent:false});
+ expect(controller.inputNeedsSelection()).toBe(true);
+ controller.draft({...draft,mode:'image_to_image',files:[new File(['新合成图'],'b.png',{type:'image/png'})],selectionVersion:2});
+ expect(controller.inputNeedsSelection()).toBe(false);
+ controller.dispose();
+});
+
+it('任务查询收到 HTTP 401 时清除恢复记录并通知账号会话',async()=>{
+ const fetcher=vi.fn(async()=>new Response(null,{status:401}));
+ const expire=vi.fn();
+ sessionStorage.setItem('media-generation-recovery',JSON.stringify({version:1,userId:user,savedAt:Date.now(),taskId:user}));
+ const controller=new MediaGenerationController(createMediaClient(fetcher),sessionStorage,()=>1,expire);
+ controller.account(user,1);
+ await controller.recover();
+ expect(expire).toHaveBeenCalledWith(1);
+ expect(controller.snapshot()).toMatchObject({task:null,quote:null,error:'unauthorized'});
+ expect(sessionStorage.getItem('media-generation-recovery')).toBeNull();
+ await controller.recover();
+ expect(fetcher).toHaveBeenCalledTimes(1);
+ controller.dispose();
+});
+
+it.each(['waiting','unknown'] as const)('全局退出与重登合并为一次渲染时也清除 %s 的内存状态',async status=>{
+ let revision=0;
+ const storage={
+  accountRevision:()=>revision,
+  getItem:(key:string)=>sessionStorage.getItem(key),
+  setItem:(key:string,value:string)=>sessionStorage.setItem(key,value),
+  removeItem:(key:string)=>sessionStorage.removeItem(key),
+ };
+ const fetcher=vi.fn(async(url:RequestInfo|URL)=>{
+  const path=String(url);
+  if(path.endsWith('/capabilities'))return response(ready());
+  if(path.endsWith('/quotes'))return response({quoteToken:'fixture',credits:3,expiresAt:new Date(Date.now()+100000).toISOString()});
+  if(status==='unknown')throw new Error('替身丢失提交响应');
+  return response({taskId:user,status:'waiting',creditState:'reserved'});
+ });
+ const controller=new MediaGenerationController(createMediaClient(fetcher),storage);
+ controller.account(user,1);
+ controller.draft(draft);
+ controller.selectTuple();
+ controller.consent(true);
+ await controller.capabilities();
+ await controller.quote();
+ await controller.confirm();
+ expect(controller.snapshot().status).toBe(status==='waiting'?'pending':'unknown');
+ revision++;
+ sessionStorage.removeItem('media-generation-recovery');
+ // 组件没渲染中间的退出状态，只收到同账号的新会话。
+ controller.account(user,3);
+ expect(controller.snapshot()).toMatchObject({status:'idle',task:null,refreshUnknown:false,quote:null,consent:false});
+ expect(controller.originalSubmission()).toBeUndefined();
+ await controller.recover();
+ expect(fetcher.mock.calls.filter(([url])=>String(url).includes('/tasks'))).toHaveLength(1);
+ controller.dispose();
 });

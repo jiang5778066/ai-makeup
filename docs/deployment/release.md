@@ -120,7 +120,7 @@ Supabase使用官方Root 2021 CA验证证书链和主机名，不关闭TLS验证
 
 普通 `npm test` 不依赖历史 decoder 报告或系统 FFmpeg。所有原真实视频断言保留在 `media-video-decoder.integration.test.ts`；只有显式传入 `TEST_VIDEO_DECODER_CONFIG` 的已批准绝对路径、版本及哈希时运行，无配置则明确跳过真实集成套件。普通 decoder 单元测试仍覆盖身份、容器、帧数、参数、busy、abort、timeout、close 与恢复；runtime 单测使用注入 decoder，在显式本机配置下同套断言再走真实 decoder。本机 8.1 证据不批准 Linux 安装、生产 binary 或 RSS 上限。
 
-现有 `website-db` 范围必须保持 `MEDIA_CREATE_ENABLED` 与 `ENABLE_CHECKOUT` 非 1，`DISABLE_CHECKOUT=1`、`DISABLE_GENERATION=1`。发布适配器在读取快照时强制核对；D1 作品仍须兼容迁移、权限与独立验收，不能通过设置开关替代。完整代码发布不表示真实生成、收费或全部业务已经可用。
+现有 `website-db` 范围要求 `MEDIA_CREATE_ENABLED`、`ENABLE_GENERATION`、`ENABLE_CHECKOUT` 均不为 `1`，并配置 `DISABLE_CHECKOUT=1`、`DISABLE_GENERATION=1`。`media-generation` 范围要求省略 `ENABLE_GENERATION` 或设为 `0`，同时保留 `DISABLE_GENERATION=1`。发布适配器在读取快照时核对。D1 作品仍须兼容迁移、权限与独立验收，不能通过设置开关替代。完整代码发布不表示真实生成、收费或全部业务已经可用。
 
 审验执行命令（Node 24、两个固定锁、不升级依赖）：
 

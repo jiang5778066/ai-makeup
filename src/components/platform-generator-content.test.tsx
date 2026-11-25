@@ -4,6 +4,32 @@ import {PlatformGeneratorContent} from './platform-generator-content';
 import {generatorContent} from '@/lib/platform-generator-content-data';
 vi.mock('./platform-homepage-media',()=>({HomepageVideo:()=>null}));
 describe('逐题中文FAQ与正文专属结构',()=>{
+ it.each([
+  ['en', 'Check the generation panel for available modes', 'View generation panel'],
+  ['zh-CN', '可用模式以生成面板为准', '查看生成面板'],
+ ] as const)('%s 视频底部引导使用同页生成面板查询当前开放模式', (locale, hint, label) => {
+  const { container } = render(<PlatformGeneratorContent family="video" locale={locale} onPrompt={vi.fn()}/>);
+  const footer = container.querySelector<HTMLElement>('.platform-generator-bottom-cta')!;
+  expect(footer.querySelector('p')).toHaveTextContent(hint);
+  expect(within(footer).getByRole('link', { name: label })).toHaveAttribute('href', '#generator');
+ });
+ it.each(['en', 'zh-CN'] as const)('%s 视频工具推荐链接到已开放指南，其余条目保留状态', (locale) => {
+  const onPrompt = vi.fn();
+  render(<PlatformGeneratorContent family="video" locale={locale} onPrompt={onPrompt}/>);
+  const zh = locale === 'zh-CN';
+  const imageTool = screen.getByRole('heading', { name: zh ? 'AI 图片转视频' : 'AI Image to Video' }).closest('article')!;
+  expect(within(imageTool).getByRole('link')).toHaveAttribute('href', `${zh ? '/zh-CN' : ''}/tools/ai-image-to-video`);
+  const animationGuide = screen.getByRole('heading', { name: zh ? '视频转动画' : 'Video to animation' }).closest('article')!;
+  expect(within(animationGuide).getByRole('link')).toHaveAttribute('href', `${zh ? '/zh-CN' : ''}/tools/video-to-animation-converter`);
+  expect(within(animationGuide).getByText(zh ? '查看指南' : 'Read guide')).toBeVisible();
+  for (const card of generatorContent.video[locale][6].cards) {
+   const article = screen.getByRole('heading', { name: card.title }).closest('article')!;
+   expect(within(article).getByText(zh ? '指南页面待开放' : 'Guide page not available yet')).toBeVisible();
+   expect(within(article).queryByRole('link')).not.toBeInTheDocument();
+   expect(within(article).queryByRole('button')).not.toBeInTheDocument();
+  }
+  expect(onPrompt).not.toHaveBeenCalled();
+ });
  it('八题逐项回答对应主题，单开、关闭和英文原答案保持',()=>{
   const terms=['OpenAI','海报','文字','光照','动漫','背景','一致','非英文'];
   const cards=generatorContent.gpt['zh-CN'].at(-2)!.cards;
@@ -20,7 +46,7 @@ describe('逐题中文FAQ与正文专属结构',()=>{
   fireEvent.keyDown(tabs[4],{key:'Home'});expect(tabs[0]).toHaveFocus();fireEvent.keyDown(tabs[0],{key:'End'});expect(tabs[4]).toHaveFocus();
  });
  it('Nano保留三组图文、分段、图片内角标，末尾说明独立完整；标题有渐变范围',()=>{
-  render(<PlatformGeneratorContent family="nano" locale="en" onPrompt={vi.fn()}/>);const section=document.querySelector('.platform-generator-section-nano-1')!;
+  render(<PlatformGeneratorContent family="nano" locale="en" previewModel="Nano Banana Pro" onPrompt={vi.fn()}/>);const section=document.querySelector('.platform-generator-section-nano-1')!;
   expect(section.querySelector('h2 .platform-generator-gradient')).toHaveTextContent('What Is Nano Banana Pro?');
   expect(section.querySelectorAll('.platform-generator-nano-feature')).toHaveLength(3);
   expect(section.querySelectorAll('figure figcaption')).toHaveLength(3);

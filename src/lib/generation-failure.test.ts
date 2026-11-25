@@ -6,18 +6,16 @@ const mockRefund = vi.fn();
 
 vi.mock("@/db/client", () => ({
   db: {
-    select: () => ({ from: () => ({ where: () => mockSelectWhere() }) }),
-    update: () => ({
-      set: (values: unknown) => {
-        mockUpdateSet(values);
-        return { where: vi.fn() };
-      }
+    transaction: (callback: (tx: unknown) => unknown) => callback({
+      select: () => ({ from: () => ({ where: () => Object.assign(Promise.resolve([{ userId: "user_1" }]), { for: () => mockSelectWhere() }) }) }),
+      update: () => ({ set: (values: unknown) => { mockUpdateSet(values); return { where: vi.fn() }; } })
     })
   }
 }));
 
+vi.mock("@/lib/account-data-lock", () => ({ lockAccountData: vi.fn() }));
 vi.mock("@/lib/credits", () => ({
-  refundGenerationCredits: (...args: unknown[]) => mockRefund(...args)
+  refundGenerationCreditsInTransaction: (...args: unknown[]) => mockRefund(...args)
 }));
 
 beforeEach(() => {
@@ -29,14 +27,14 @@ beforeEach(() => {
 
 describe("failed generation settlement", () => {
   it("refunds the original lot and marks the generation refunded", async () => {
-    mockSelectWhere.mockResolvedValue([{ id: "gen_1", userId: "user_1", status: "running" }]);
+    mockSelectWhere.mockResolvedValue([{ userId: "user_1", status: "running", error: null, initialRunId: null, dispatchDueAt: null }]);
     mockRefund.mockResolvedValue("refunded");
     const { failAndRefundGeneration } = await import("./generation-failure");
 
     const result = await failAndRefundGeneration("gen_1", "fal_timeout");
 
     expect(result).toBe("refunded");
-    expect(mockRefund).toHaveBeenCalledWith("user_1", "gen_1");
+    expect(mockRefund).toHaveBeenCalledWith(expect.anything(), "user_1", "gen_1");
     expect(mockUpdateSet).toHaveBeenCalledWith(
       expect.objectContaining({ status: "refunded", error: "fal_timeout" })
     );

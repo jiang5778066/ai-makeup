@@ -1,36 +1,31 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { accountConfigured } from "@/lib/platform-account-http";
+import { createRequestSession, isExpiredCookie, verifyAccountSession } from "./request-session";
 
 export async function updateSession(request: NextRequest, requestHeaders = request.headers) {
-  let response = NextResponse.next({ request: { headers: requestHeaders } });
-
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    return { response, user: null };
+  if (!accountConfigured()) {
+    return { response: NextResponse.next({ request: { headers: requestHeaders } }), user: null };
   }
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(toSet) {
-          toSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request: { headers: requestHeaders } });
-          toSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        }
-      }
+  const { client, cookieWrites } = createRequestSession(request.cookies.getAll());
+  const session = await verifyAccountSession(client);
+  const writes = cookieWrites(session.status === "unavailable");
+  const forwarded = new Headers(requestHeaders);
+  if (writes.length) {
+    for (const write of writes) {
+      if (isExpiredCookie(write)) request.cookies.delete(write.name);
+      else request.cookies.set(write.name, write.value);
     }
-  );
+    const cookie = request.headers.get("cookie");
+    if (cookie) forwarded.set("cookie", cookie);
+    else forwarded.delete("cookie");
+  }
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-  return { response, user };
+  const response = NextResponse.next({ request: { headers: forwarded } });
+  for (const { name, value, options } of writes) response.cookies.set(name, value, options);
+  if (writes.length) {
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.append("Vary", "Cookie");
+  }
+  return { response, user: session.status === "signed_in" ? session.user : null };
 }

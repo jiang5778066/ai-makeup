@@ -91,14 +91,21 @@ let runtime:MediaRuntime|undefined;
 export function getMediaRuntime():MediaRuntime{
  if(runtime)return runtime;
  const config=readMediaRuntimeConfig(process.env);
- let objects:MediaObjectStorage|undefined;
- try{if(config.storageApprovalRef){if(config.storageBackend==='r2'&&isStorageConfigured())objects=createR2MediaObjectStorage();else if(config.storageBackend==='supabase'&&config.supabaseStorage)objects=createSupabaseMediaObjectStorage({...config.supabaseStorage,url:process.env.NEXT_PUBLIC_SUPABASE_URL??'',serviceKey:process.env.MEDIA_SUPABASE_SERVICE_KEY??''},{fetch:boundedMediaFetch(fetch)})}}catch{/* 错项目或缺私有存储批准时保持关闭，不输出凭据。 */}
+ const objects=getConfiguredMediaObjectStorage(config);
  const imageDecoder=config.decoderApprovalRef?createSharpMediaDecoder():undefined;
  const decoder:MediaDecoder|undefined=imageDecoder?async(bytes,mime)=>{checkMediaExecution();const result=await imageDecoder(bytes,mime);checkMediaExecution();return result}:undefined;
  const transport=config.transportApprovalRef&&hostsValid(config.resultHosts)?createPinnedMediaTransport({hosts:config.resultHosts}):undefined;
  let videoDecoder:MediaDecoder|undefined;
  try{if(config.videoDecoder?.approvalRef){const decodeVideo=createVideoMediaDecoder(config.videoDecoder);videoDecoder=async(bytes,mime)=>decodeVideo(bytes,mime,mediaExecutionSignal())}}catch{/* 视频二进制不符只关闭视频，不影响图片和原ID查询。 */}
  runtime=createMediaRuntime({config,objects,decoder,videoDecoder,transport,stepSecret:process.env.MEDIA_STEP_SECRET,executionReady:config.executionBackend==='inngest'?Boolean(process.env.INNGEST_EVENT_KEY&&process.env.INNGEST_SIGNING_KEY):config.executionBackend==='database-step'&&process.env.MEDIA_STEP_ENABLED==='1'});return runtime;
+}
+
+export function getConfiguredMediaObjectStorage(config=readMediaRuntimeConfig(process.env)){
+ if(!config.storageApprovalRef)return;
+ try{
+  if(config.storageBackend==='r2'&&isStorageConfigured())return createR2MediaObjectStorage();
+  if(config.storageBackend==='supabase'&&config.supabaseStorage)return createSupabaseMediaObjectStorage({...config.supabaseStorage,url:process.env.NEXT_PUBLIC_SUPABASE_URL??'',serviceKey:process.env.MEDIA_SUPABASE_SERVICE_KEY??''},{fetch:boundedMediaFetch(fetch)});
+ }catch{/* 错项目或缺私有存储批准时保持关闭，不输出凭据。 */}
 }
 
 export function databaseStepApprovalsValid(config:MediaRuntimeConfig,now=Date.now()){

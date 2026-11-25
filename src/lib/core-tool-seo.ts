@@ -6,12 +6,12 @@ import { brand, brandShareImage } from "./brand";
 type CoreToolPath = "/ai-image-generator" | "/ai-video-generator" | "/tools/image-to-image-ai";
 const copy: Record<CoreToolPath, Record<Locale, { title: string; description: string }>> = {
   "/ai-image-generator": {
-    en: { title: "AI Image Generator: Text & Reference Images", description: "Plan an image from a text prompt or reference photo. Explore settings and preview local files on FrameKoi. Generation is not open yet." },
-    "zh-CN": { title: "AI 图片生成器：文字与参考图", description: "从提示词或参考照片开始，了解图片设置并预览本地文件。FrameKoi 图片生成尚未开放。" }
+    en: { title: "AI Image Generator: Text & Reference Images", description: "Plan an image from a text prompt or reference photo. Preview local files on FrameKoi and check the generation panel for available modes." },
+    "zh-CN": { title: "AI 图片生成器：文字与参考图", description: "在 FrameKoi 用提示词或参考照片构思图片，预览本地文件，并在生成面板查看当前可用模式。" }
   },
   "/ai-video-generator": {
-    en: { title: "AI Video Generator: Text & Image to Video", description: "Explore text-to-video and photo-to-video settings. Plan subject movement and camera motion with FrameKoi. Generation is not open yet." },
-    "zh-CN": { title: "AI 视频生成器：文生视频与图生视频", description: "了解文生视频和照片转视频的设置，规划主体动作与镜头运动。FrameKoi 视频生成尚未开放。" }
+    en: { title: "AI Video Generator: Text & Image to Video", description: "Plan an AI video with a prompt or first-frame image on FrameKoi. Explore text-to-video and image-to-video settings and check the panel for available modes." },
+    "zh-CN": { title: "AI 视频生成器：文生视频与图生视频", description: "在 FrameKoi 用提示词或首帧图片构思视频，了解文生视频和图生视频参数，并在生成面板查看当前可用模式。" }
   },
   "/tools/image-to-image-ai": {
     en: { title: "Image to Image AI: Reference Photos & Prompts", description: "Choose a reference photo and describe what you want to change. Explore image-to-image settings on FrameKoi. Generation is not open yet." },

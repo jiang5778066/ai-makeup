@@ -1,6 +1,6 @@
 import {mediaGenerate,mediaScan} from './media-functions';
 import { legacyGenerationFields } from "@/lib/platform-creations-legacy-schema";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { generations } from "@/db/schema";
 import { prepareMakeup, makeupReferenceUrl } from "@/lib/ai/makeup";
 import { submitImageTask } from "@/lib/ai/creative-center";
@@ -14,6 +14,8 @@ import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3
 import { R2_BUCKET_ORIGINALS } from "@/lib/storage";
 import { reserveDailyAiSpend } from "@/lib/ai-budget";
 import { failAndRefundGeneration } from "@/lib/generation-failure";
+import { reserveApprovedMakeup } from "@/lib/makeup-accounting";
+import { claimDueMakeupDispatches, claimInitialMakeupRun, sendInitialMakeupEvents } from "@/lib/makeup-dispatch";
 
 declare global {
   var __r2UploadClient: S3Client | undefined;
@@ -81,84 +83,79 @@ export const makeupGenerate = inngest.createFunction(
     concurrency: { limit: 1, key: "event.data.generationId" },
     triggers: [{ event: "makeup/generate.requested" }],
     onFailure: async ({ event, step }) => {
-      const original = event.data.event as { data?: { generationId?: string } };
+      const original = event.data.event as { data?: { generationId?: string; imageResume?: ImageJobResume } };
       const generationId = original.data?.generationId;
       if (!generationId) return { status: "missing_generation_id" };
-      const { db } = await import("@/db/client");
-      const [generation] = await db.select(legacyGenerationFields).from(generations).where(eq(generations.id, generationId));
-      // 提交结果未知时保留额度，等待原任务核对，不能退款后再次生成。
-      if (generation?.error === "creative_submission_pending") return { status: "awaiting_provider_reconciliation" };
-      if (generation?.error === "creative_result_pending") return { status: "awaiting_result_storage" };
       const failure = event.data.error as { message?: string } | undefined;
       return step.run("refund-terminal-failure", () =>
-        failAndRefundGeneration(generationId, failure?.message ?? "generation_failed")
+        failAndRefundGeneration(generationId, failure?.message ?? "generation_failed", {
+          initialRunId: original.data?.imageResume ? undefined : event.data.run_id
+        })
       );
     }
   },
-  async ({ event, step }) => {
+  async ({ event, step, runId }) => {
     const { generationId, imageResume } = event.data as { generationId: string; imageResume?: ImageJobResume };
 
     const gen = await step.run("load-generation", async () => {
       const { db } = await import("@/db/client");
-      const [row] = await db.select(legacyGenerationFields).from(generations).where(eq(generations.id, generationId));
-      if (!row) throw new Error("generation_missing");
-      return row;
+      const [row] = await db.select(legacyGenerationFields).from(generations).where(and(
+        eq(generations.id, generationId),
+        sql`to_jsonb(${generations})->>'deleted_at' IS NULL`
+      ));
+      return row ?? null;
     });
 
+    if (!gen) return { status: "missing_generation" };
     if (["done", "failed", "refunded"].includes(gen.status)) return { status: gen.status };
-    // 新到的重复事件不能创建新快照，已有任务应恢复原执行或其继续事件。
-    if (!imageResume && ["creative_submission_pending", "creative_result_pending"].includes(gen.error ?? "")) {
-      return { status: "awaiting_original_execution" };
+    if (imageResume && (gen.mode !== "full_face" || gen.status !== "running")) {
+      return { status: "unexpected_continuation" };
+    }
+    if (!imageResume) {
+      // 供应商状态只能由原运行或继续事件推进。
+      if (["creative_submission_pending", "creative_result_pending"].includes(gen.error ?? "")) {
+        return { status: "awaiting_original_execution" };
+      }
+      const claimed = await step.run("claim-initial-makeup-run", () => claimInitialMakeupRun(generationId, runId));
+      if (!claimed) return { status: "another_initial_run_owns_task" };
+      const moderation = await step.run("moderate", () => moderateImage(gen.uploadKey));
+      if (!moderation.ok) {
+        const settled = await step.run("mark-rejected", async () =>
+          failAndRefundGeneration(generationId, `moderation:${moderation.reason}`)
+        );
+        return { status: settled, reason: moderation.reason };
+      }
+    }
+
+    const renderedUploadKey = gen.renderedUploadKey;
+    if (gen.mode === "virtual_try_on") {
+      if (!renderedUploadKey) throw new Error("rendered_upload_missing");
+      const renderedModeration = await step.run("moderate-rendered", () =>
+        moderateImage(renderedUploadKey)
+      );
+      if (!renderedModeration.ok) {
+        const settled = await step.run("refund-rendered-rejection", () =>
+          failAndRefundGeneration(generationId, `moderation:${renderedModeration.reason}`)
+        );
+        return { status: settled, reason: renderedModeration.reason };
+      }
     }
 
     if (!imageResume) {
-      await step.run("mark-moderating", async () => {
-        const { db } = await import("@/db/client");
-        await db
-          .update(generations)
-          .set({ status: "moderating", updatedAt: new Date() })
-          .where(eq(generations.id, generationId));
-      });
-
-      const moderation = await step.run("moderate", () => moderateImage(gen.uploadKey));
-      if (!moderation.ok) {
-        await step.run("mark-rejected", async () => {
-          await failAndRefundGeneration(generationId, `moderation:${moderation.reason}`);
-        });
-        return { status: "refunded", reason: moderation.reason };
-      }
+      const approved = await step.run("reserve-approved-makeup", () => reserveApprovedMakeup(generationId, gen.userId));
+      if (approved !== "running") return { status: approved };
     }
 
-    if (gen.mode === "virtual_try_on") {
-      if (!gen.renderedUploadKey) throw new Error("rendered_upload_missing");
-      const renderedModeration = await step.run("moderate-rendered", () =>
-        moderateImage(gen.renderedUploadKey!)
-      );
-      if (!renderedModeration.ok) {
-        await step.run("refund-rendered-rejection", () =>
-          failAndRefundGeneration(
-            generationId,
-            `moderation:${renderedModeration.reason}`
-          )
-        );
-        return { status: "refunded", reason: renderedModeration.reason };
-      }
-      await step.run("mark-running", async () => {
-        const { db } = await import("@/db/client");
-        await db
-          .update(generations)
-          .set({ status: "running", updatedAt: new Date() })
-          .where(eq(generations.id, generationId));
-      });
+    if (gen.mode === "virtual_try_on" && renderedUploadKey) {
       const resultKey = await step.run("store-virtual-result", () =>
-        copyRenderedUploadToResults(generationId, gen.renderedUploadKey!)
+        copyRenderedUploadToResults(generationId, renderedUploadKey)
       );
       await step.run("finalize-virtual", async () => {
         const { db } = await import("@/db/client");
         await db
           .update(generations)
           .set({ status: "done", resultKey, error: null, updatedAt: new Date() })
-          .where(eq(generations.id, generationId));
+          .where(and(eq(generations.id, generationId), eq(generations.status, "running")));
       });
       return { status: "done", resultKey };
     }
@@ -184,14 +181,6 @@ export const makeupGenerate = inngest.createFunction(
       return { status: "refunded", reason: "daily_ai_spend_cap_reached" };
     }
 
-    await step.run("mark-running", async () => {
-      const { db } = await import("@/db/client");
-      await db
-        .update(generations)
-        .set({ status: "running", updatedAt: new Date() })
-        .where(eq(generations.id, generationId));
-    });
-
     const referenceUrl = imageResume ? "" : await step.run("reference-image-url", () => makeupReferenceUrl(gen.uploadKey));
     let aiResult: string | ImageJobResume;
     try {
@@ -207,7 +196,7 @@ export const makeupGenerate = inngest.createFunction(
           // 先原子登记提交意图：步骤重放或并发事件均不能重复提交付费请求。
           const claimed = await db.update(generations)
             .set({ error: "creative_submission_pending", updatedAt: new Date() })
-            .where(and(eq(generations.id, generationId), isNull(generations.error)))
+            .where(and(eq(generations.id, generationId), eq(generations.status, "running"), isNull(generations.error)))
             .returning({ id: generations.id });
           if (!claimed.length) return { status: "submission_unknown" };
           return submitImageTask(submission, referenceUrl);
@@ -229,7 +218,7 @@ export const makeupGenerate = inngest.createFunction(
     }
     await step.run("mark-provider-completed", async () => {
       const { db } = await import("@/db/client");
-      await db.update(generations).set({ error: "creative_result_pending", updatedAt: new Date() }).where(eq(generations.id, generationId));
+      await db.update(generations).set({ error: "creative_result_pending", updatedAt: new Date() }).where(and(eq(generations.id, generationId), eq(generations.status, "running")));
     });
 
     const resultImageUrl = aiResult;
@@ -242,11 +231,20 @@ export const makeupGenerate = inngest.createFunction(
       await db
         .update(generations)
         .set({ status: "done", resultKey, error: null, updatedAt: new Date() })
-        .where(eq(generations.id, generationId));
+        .where(and(eq(generations.id, generationId), eq(generations.status, "running")));
     });
 
     return { status: "done", resultKey };
   }
 );
 
-export const functions = [makeupGenerate,mediaGenerate,mediaScan];
+export const makeupDispatchScan = inngest.createFunction(
+  { id: "makeup-initial-dispatch-scan", retries: 1, triggers: [{ cron: "* * * * *" }] },
+  async ({ step }) => {
+    const dispatches = await step.run("claim-due-makeup-dispatches", claimDueMakeupDispatches);
+    await step.run("send-due-makeup-events", () => sendInitialMakeupEvents(dispatches));
+    return { scheduled: dispatches.length };
+  }
+);
+
+export const functions = [makeupGenerate,makeupDispatchScan,mediaGenerate,mediaScan];

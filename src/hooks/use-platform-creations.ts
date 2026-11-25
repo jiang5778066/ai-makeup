@@ -4,15 +4,20 @@ import type { CreationDTO, CreationFilter, CreationPage } from "@/lib/platform-c
 import { isCreationActive } from "@/lib/platform-creations-types";
 import { expirePlatformAccount, getPlatformAccountEpoch } from "@/lib/platform-account-session";
 import { downloadCreation } from "@/lib/platform-creations-download";
+type CreationOperation = "refresh" | "download" | "remove";
+type CreationOperationErrors = Record<string, Partial<Record<CreationOperation, boolean>>>;
 const owns = (owner: { active: boolean; epoch: number }) => owner.active && owner.epoch === getPlatformAccountEpoch();
 export const usePlatformCreations = (filter: CreationFilter) => {
   const [items, setItems] = useState<CreationDTO[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [listError, setListError] = useState(false);
+  const [operationErrors, setOperationErrors] = useState<CreationOperationErrors>({});
   const [notice, setNotice] = useState<string | null>(null);
+  const [operationNotice, setOperationNotice] = useState<"removed" | "downloaded" | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [pollAttempt, setPollAttempt] = useState(0);
+  const refreshRequests = useRef(new Map<string, symbol>());
   const scope = useRef({ active: true, epoch: getPlatformAccountEpoch(), controllers: new Set<AbortController>(), loading: false, busy: false });
   useEffect(() => { const owner = scope.current; owner.active = true; return () => { owner.active = false; owner.controllers.forEach(c => c.abort()); owner.controllers.clear(); }; }, []);
   const request = useCallback(async (url: string, method = "GET", outer?: AbortSignal) => {
@@ -45,13 +50,17 @@ export const usePlatformCreations = (filter: CreationFilter) => {
   }, [request]);
   const load = useCallback(async (next: string | null = null) => {
     const owner = scope.current; if (owner.loading || !owns(owner)) return;
-    owner.loading = true; setLoading(true); setError(null); setNotice(null);
+    owner.loading = true; setLoading(true); setNotice(null);
     try {
       const query = new URLSearchParams({ filter, limit: "12" }); if (next) query.set("cursor", next);
       const page: CreationPage = await request(`/api/creations?${query}`);
       if (!Array.isArray(page.items) || page.items.some(item => item.version !== 1)) throw new Error("invalid_page");
-      if (owns(owner)) { setItems(current => next ? [...current, ...page.items.filter(item => !current.some(existing => existing.id === item.id))] : page.items); setCursor(page.nextCursor); }
-    } catch { if (owns(owner)) setError("load"); }
+      if (owns(owner)) {
+        setItems(current => next ? [...current, ...page.items.filter(item => !current.some(existing => existing.id === item.id))] : page.items);
+        setCursor(page.nextCursor);
+        setListError(false);
+      }
+    } catch { if (owns(owner)) setListError(true); }
     finally { owner.loading = false; if (owns(owner)) setLoading(false); }
   }, [filter, request]);
   useEffect(() => { const timer = setTimeout(() => { void load(); }, 0); return () => clearTimeout(timer); }, [load]);
@@ -83,26 +92,43 @@ export const usePlatformCreations = (filter: CreationFilter) => {
     timer = setTimeout(() => { void query(); }, 2000);
     return () => { stopped = true; controller.abort(); clearTimeout(timer); };
   }, [ids, read, pollAttempt]);
+  const setOperationError = (id: string, operation: CreationOperation, failed: boolean) => {
+    setOperationErrors(current => {
+      if (Boolean(current[id]?.[operation]) === failed) return current;
+      return { ...current, [id]: { ...current[id], [operation]: failed } };
+    });
+  };
   const refresh = async (id: string) => {
-    if (!owns(scope.current)) return;
-    setError(null);
-    try { const item = await read(id); if (owns(scope.current)) setItems(current => current.map(existing => existing.id === id ? item : existing)); }
-    catch { if (owns(scope.current)) setError("refresh"); }
+    const owner = scope.current;
+    if (!owns(owner)) return;
+    const requestId = Symbol();
+    const requests = refreshRequests.current;
+    requests.set(id, requestId);
+    const isLatest = () => requests.get(id) === requestId;
+    setOperationError(id, "refresh", false);
+    try {
+      const item = await read(id);
+      if (isLatest() && owns(owner)) setItems(current => current.map(existing => existing.id === id ? item : existing));
+    } catch {
+      if (isLatest() && owns(owner)) setOperationError(id, "refresh", true);
+    } finally {
+      if (isLatest()) requests.delete(id);
+    }
   };
   const remove = async (id: string) => {
     const owner = scope.current; if (!owns(owner) || owner.busy) return;
-    owner.busy = true; setBusy(id); setError(null);
-    try { await request(`/api/creations/${encodeURIComponent(id)}`, "DELETE"); if (owns(owner)) { setItems(current => current.filter(item => item.id !== id)); setNotice("removed"); } }
-    catch { if (owns(owner)) setError("remove"); }
+    owner.busy = true; setBusy(id); setOperationError(id, "remove", false);
+    try { await request(`/api/creations/${encodeURIComponent(id)}`, "DELETE"); if (owns(owner)) { setItems(current => current.filter(item => item.id !== id)); setOperationNotice("removed"); } }
+    catch { if (owns(owner)) setOperationError(id, "remove", true); }
     finally { owner.busy = false; if (owns(owner)) setBusy(null); }
   };
   const download = async (id: string) => {
     const owner = scope.current; if (!owns(owner) || owner.busy) return;
-    owner.busy = true; const controller = new AbortController(); owner.controllers.add(controller); setBusy(id); setError(null);
+    owner.busy = true; const controller = new AbortController(); owner.controllers.add(controller); setBusy(id); setOperationError(id, "download", false);
     const timeout = setTimeout(() => controller.abort(), 60000);
-    try { await downloadCreation(id, read, controller.signal); if (owns(owner)) setNotice("downloaded"); }
-    catch { if (owns(owner)) setError("download"); }
+    try { await downloadCreation(id, read, controller.signal); if (owns(owner)) setOperationNotice("downloaded"); }
+    catch { if (owns(owner)) setOperationError(id, "download", true); }
     finally { clearTimeout(timeout); owner.controllers.delete(controller); owner.busy = false; if (owns(owner)) setBusy(null); }
   };
-  return { items, cursor, loading, error, notice, busy, load, refresh, remove, download, resume: () => { setNotice(null); setPollAttempt(n => n + 1); } };
+  return { items, cursor, loading, listError, operationErrors, notice, operationNotice, busy, load, refresh, remove, download, resume: () => { setNotice(null); setPollAttempt(n => n + 1); } };
 };

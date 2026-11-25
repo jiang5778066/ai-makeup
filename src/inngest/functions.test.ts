@@ -4,6 +4,7 @@ import type { ImageSubmission } from "@/lib/ai/creative-center";
 import type { ImageJobResume, ImageJobSteps } from "@/lib/ai/image-job";
 
 type Context = {
+  runId: string;
   event: { data: { generationId: string; imageResume?: ImageJobResume } };
   step: ImageJobSteps & { sendEvent: ReturnType<typeof vi.fn> };
 };
@@ -14,12 +15,13 @@ type FailureContext = {
 const mocks = vi.hoisted(() => ({
   handler: undefined as ((context: Context) => Promise<unknown>) | undefined,
   failure: undefined as ((context: FailureContext) => Promise<unknown>) | undefined,
-  select: vi.fn(), claim: vi.fn(), set: vi.fn(),
+  select: vi.fn(), claim: vi.fn(), set: vi.fn(), initialClaim: vi.fn(),
   prepare: vi.fn(), reference: vi.fn(), moderate: vi.fn(), reserve: vi.fn(),
   upload: vi.fn(), submit: vi.fn(), query: vi.fn(), recover: vi.fn(), refund: vi.fn()
 }));
 vi.mock("./client", () => ({ inngest: {
-  createFunction: (options: { onFailure: typeof mocks.failure }, handler: typeof mocks.handler) => {
+  createFunction: (options: { id: string; onFailure?: typeof mocks.failure }, handler: typeof mocks.handler) => {
+    if (options.id !== "makeup-generate") return {};
     mocks.handler = handler;
     mocks.failure = options.onFailure;
     return {};
@@ -36,6 +38,8 @@ vi.mock("@/lib/ai/makeup", () => ({ prepareMakeup: mocks.prepare, makeupReferenc
 vi.mock("@/lib/moderation", () => ({ moderateImage: mocks.moderate }));
 vi.mock("@/lib/ai-budget", () => ({ reserveDailyAiSpend: mocks.reserve }));
 vi.mock("@/lib/generation-failure", () => ({ failAndRefundGeneration: mocks.refund }));
+vi.mock("@/lib/makeup-accounting", () => ({ reserveApprovedMakeup: vi.fn().mockResolvedValue("running") }));
+vi.mock("@/lib/makeup-dispatch", () => ({ claimInitialMakeupRun: mocks.initialClaim, claimDueMakeupDispatches: vi.fn().mockResolvedValue([]), sendInitialMakeupEvents: vi.fn() }));
 vi.mock("@/lib/ai/creative-center", () => ({ submitImageTask: mocks.submit, queryImageTask: mocks.query, recoverImageTask: mocks.recover }));
 vi.mock("@aws-sdk/client-s3", async (original) => ({
   ...await original<typeof import("@aws-sdk/client-s3")>(),
@@ -48,11 +52,13 @@ const generation = { id: "gen-1", status: "queued", mode: "full_face", locale: "
 function context(imageResume?: ImageJobResume): Context {
   return {
     event: { data: { generationId: "gen-1", ...(imageResume ? { imageResume } : {}) } },
+    runId: "run-1",
     step: { run: async (_name, callback) => callback(), sleep: vi.fn().mockResolvedValue(undefined), sendEvent: vi.fn().mockResolvedValue({}) }
   };
 }
 beforeEach(() => {
   for (const value of Object.values(mocks)) if (vi.isMockFunction(value)) value.mockReset();
+  mocks.initialClaim.mockResolvedValue(true);
   mocks.select.mockResolvedValue([{ ...generation }]);
   mocks.claim.mockResolvedValue([{ id: "gen-1" }]);
   mocks.prepare.mockResolvedValue(submission);
@@ -76,6 +82,7 @@ describe("创作中心队列接线", () => {
     expect(ctx.step.sendEvent).toHaveBeenCalledWith("continue-image-task", { name: "makeup/generate.requested", data: { generationId: "gen-1", imageResume: { submission, taskId: "img_task_1" } } });
   });
   it("恢复事件只查原任务，避免重复审核、预算预留与付费提交", async () => {
+    mocks.select.mockResolvedValue([{ ...generation, status: "running", error: "creative_submission_pending" }]);
     await mocks.handler!(context({ submission, taskId: "img_task_1" }));
     expect(mocks.submit).not.toHaveBeenCalled();
     expect(mocks.reserve).not.toHaveBeenCalled();
@@ -96,9 +103,9 @@ describe("创作中心队列接线", () => {
     expect(mocks.refund).toHaveBeenCalledWith("gen-1", "creative_task_failed");
   });
   it("队列终止但供应商任务仍不确定时保留额度待核对", async () => {
-    mocks.select.mockResolvedValue([{ ...generation, error: "creative_submission_pending" }]);
-    await expect(mocks.failure!({ event: { data: { event: { data: { generationId: "gen-1" } }, error: { message: "network_timeout" } } }, step: context().step })).resolves.toMatchObject({ status: "awaiting_provider_reconciliation" });
-    expect(mocks.refund).not.toHaveBeenCalled();
+    mocks.refund.mockResolvedValue("awaiting_provider_reconciliation");
+    await expect(mocks.failure!({ event: { data: { event: { data: { generationId: "gen-1" } }, error: { message: "network_timeout" } } }, step: context().step })).resolves.toBe("awaiting_provider_reconciliation");
+    expect(mocks.refund).toHaveBeenCalledOnce();
   });
   it("完成后按真实图片格式存入 R2 并结束任务", async () => {
     mocks.query.mockResolvedValue({ status: "completed", resultImageUrl: "https://cdn.test/result.jpg" });
@@ -111,9 +118,9 @@ describe("创作中心队列接线", () => {
   });
 
   it("供应商已出图但存储失败时保留原结果，禁止自动退款重生", async () => {
-    mocks.select.mockResolvedValue([{ ...generation, error: "creative_result_pending" }]);
-    await expect(mocks.failure!({ event: { data: { event: { data: { generationId: "gen-1" } }, error: { message: "fetch_result_failed:503" } } }, step: context().step })).resolves.toMatchObject({ status: "awaiting_result_storage" });
-    expect(mocks.refund).not.toHaveBeenCalled();
+    mocks.refund.mockResolvedValue("awaiting_result_storage");
+    await expect(mocks.failure!({ event: { data: { event: { data: { generationId: "gen-1" } }, error: { message: "fetch_result_failed:503" } } }, step: context().step })).resolves.toBe("awaiting_result_storage");
+    expect(mocks.refund).toHaveBeenCalledOnce();
   });
 
   it("重复外部事件遇到已有提交时不覆盖原快照或重新预检", async () => {

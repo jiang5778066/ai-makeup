@@ -6,6 +6,7 @@ import type { Locale } from "@/lib/i18n";
 import { homepageFaqs } from "@/lib/platform-homepage-copy";
 import { homepageScenes, imageEffects, videoEffects } from "@/lib/platform-homepage-data";
 import { homepageEntry } from "@/lib/platform-homepage";
+import { publicPlatformEntry } from "@/lib/platform-navigation";
 import { HomepageCardImage, HomepageCta, HomepageToolCard } from "./platform-homepage-cards";
 import { PlatformLink } from "./platform-link";
 
@@ -21,7 +22,7 @@ export function HomepageEffects({ locale }: { locale: Locale }) {
         event.preventDefault(); const next = event.key === "Home" ? 0 : event.key === "End" ? 1 : 1 - i; setTab(next); buttons.current[next]?.focus();
       }}>{i === 0 ? <Video size={16} /> : <ImageIcon size={16} />}{label}</button>)}</div>
     </div>
-    <div role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}><div className="platform-home-effects-grid">{(tab === 0 ? videoEffects : imageEffects).map(card => <HomepageToolCard key={card.id} card={card} locale={locale} />)}</div>
+    <div role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}><div className="platform-home-effects-grid">{(tab === 0 ? videoEffects : imageEffects).map(card => <HomepageToolCard key={card.id} card={card} locale={locale} showcase />)}</div>
       <div className="platform-home-align-end"><HomepageCta id={tab === 0 ? "video-effects" : "image-effects"} locale={locale} secondary>{locale === "zh-CN" ? `查看全部${labels[tab]}` : `View all ${labels[tab]}`}</HomepageCta></div>
     </div>
   </div></section>;
@@ -33,7 +34,7 @@ export function HomepageScenes({ locale }: { locale: Locale }) {
   const actions = locale === "zh-CN" ? ["创建社交视频", "创建产品视频", "创建广告视频", "创作故事视频", "创建教育视频"] : ["Create social videos", "Create product videos", "Create ad videos", "Create story videos", "Create educational videos"];
   return <section className="platform-home-scenes" data-home-section="scenes"><div className="platform-home-container"><h2>{locale === "zh-CN" ? "为每一种场景生成 AI 视频" : "AI video for every use case"}</h2>
     <div className="platform-home-scene-buttons" role="group" aria-label={locale === "zh-CN" ? "使用场景" : "Use cases"}>{homepageScenes.map((item, i) => <button key={item.label.en} type="button" aria-pressed={i === selected} onClick={() => setSelected(i)}>{item.label[locale]}</button>)}</div>
-    <div className="platform-home-scene-content"><div><h3>{scene.title[locale]}</h3><p>{scene.description[locale]}</p><PlatformLink entry={homepageEntry("video-generator", { mode: "image-to-video" })} locale={locale} className="platform-home-cta">{actions[selected]}<ArrowRight size={16} /></PlatformLink></div>
+    <div className="platform-home-scene-content"><div><h3>{scene.title[locale]}</h3><p>{scene.description[locale]}</p>{publicPlatformEntry("video-generator") && <PlatformLink entry={homepageEntry("video-generator", { mode: "image-to-video" })} locale={locale} className="platform-home-cta">{actions[selected]}<ArrowRight size={16} /></PlatformLink>}</div>
       <figure key={selected}><HomepageCardImage src={scene.image} alt={scene.caption[locale]} /><figcaption><p>{scene.caption[locale]}</p><span aria-hidden="true"><Sparkles size={56}/></span></figcaption></figure>
     </div>
   </div></section>;

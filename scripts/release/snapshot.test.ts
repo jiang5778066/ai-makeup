@@ -45,7 +45,7 @@ it("平台临时OIDC令牌和部署地址不进入应用配置快照", () => {
   expect(() => assertSameSnapshot(first, second)).not.toThrow();
 });
 
-it.each([{MEDIA_CREATE_ENABLED:"1"},{ENABLE_CHECKOUT:"1"},{DISABLE_CHECKOUT:"0"},{DISABLE_GENERATION:"0"}])("网站数据库范围不能意外开启真实生成或收费：%j", patch => {
+it.each([{MEDIA_CREATE_ENABLED:"1"},{ENABLE_GENERATION:"1"},{ENABLE_CHECKOUT:"1"},{DISABLE_CHECKOUT:"0"},{DISABLE_GENERATION:"0"}])("网站数据库范围不能意外开启真实生成或收费：%j", patch => {
   const env = {...cloud(), RELEASE_PROFILE:"website-db", DISABLE_CHECKOUT:"1", DISABLE_GENERATION:"1", ...patch};
   expect(() => snapshotRuntime(env, sha)).toThrow("保持生成与收费关闭");
 });

@@ -1,10 +1,27 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { SiteShell } from "./site-shell";
+import { TrustPage } from "./trust-page";
 
 afterEach(() => { document.body.style.overflow = ""; window.history.replaceState({}, "", "/"); });
 
 describe("两套平台外壳", () => {
+  it("横向导航提供社区快捷入口", () => {
+    render(<SiteShell locale="en" currentPath="/"><main>Page content</main></SiteShell>);
+    const nav = screen.getByRole("navigation", { name: "Primary navigation" });
+    expect(within(nav).getByRole("link", { name: "Community" })).toHaveAttribute("href", "/explore");
+    expect(within(nav).getByRole("link", { name: "Tools" })).toHaveAttribute("href", "/tools");
+    expect(within(nav).getByRole("link", { name: "Pricing" })).toHaveAttribute("href", "/pricing");
+  });
+  it("功能菜单提供视频选区预览的正式入口", () => {
+    render(<SiteShell locale="zh-CN" currentPath="/"><main>页面内容</main></SiteShell>);
+    const nav = screen.getByRole("navigation", { name: "主导航" });
+    fireEvent.keyDown(within(nav).getByRole("button", { name: "功能" }), { key: "ArrowDown" });
+    const menu = screen.getByRole("region", { name: "功能" });
+    expect(within(menu).getByRole("link", { name: /视频编辑.*在本机预览视频片段/ })).toHaveAttribute("href", "/zh-CN/ai-video-editor");
+    expect(within(menu).getByRole("link", { name: /图片风格转换/ })).toHaveAttribute("href", "/zh-CN/image-style-converter");
+    expect(within(menu).getByRole("link", { name: /GPT Image 2/ })).toHaveAttribute("href", "/zh-CN/ai-image-models/gpt-image-2");
+  });
   it("宣传页提供横向导航及可键盘展开的分组功能菜单", () => {
     render(<SiteShell locale="zh-CN" currentPath="/"><main>页面内容</main></SiteShell>);
     expect(screen.getAllByRole("link", { name: "FrameKoi 首页" })[0]).toHaveAttribute("href", "/zh-CN");
@@ -30,11 +47,35 @@ describe("两套平台外壳", () => {
     const scaffold = within(nav).getByRole("link", { name: "AI 视频生成器" });
     expect(scaffold).toHaveAttribute("href", "/zh-CN/ai-video-generator");
     expect(scaffold).not.toHaveAttribute("title", "即将推出");
-    const pending = screen.getByRole("link", { name: "AI 创作指南" });
-    expect(pending).toHaveAttribute("href", "/zh-CN/guides");
-    fireEvent.click(pending);
-    expect(screen.getByRole("status")).toHaveTextContent("即将推出");
+    expect(within(nav).getByRole("link", { name: "我的作品" })).toHaveAttribute("href", "/zh-CN/my-creations");
+    expect(within(nav).getByRole("link", { name: "图片特效" })).toHaveAttribute("href", "/zh-CN/image-effects");
+    expect(within(nav).getByRole("link", { name: "图片风格转换" })).toHaveAttribute("href", "/zh-CN/image-style-converter");
+    expect(within(nav).getByRole("link", { name: "口型同步" })).toHaveAttribute("href", "/zh-CN/tools/ai-lip-sync-video-generator");
+    expect(nav.querySelector('a[href="/zh-CN/ai-age-progression"]')).not.toBeInTheDocument();
     expect(screen.getByText("页面内容")).toBeInTheDocument();
+  });
+  it.each(["en", "zh-CN"] as const)("%s 页脚保留政策和可读资料页，隐藏尚未开放的分组", (locale) => {
+    render(<SiteShell locale={locale} currentPath="/"><main>页面内容</main></SiteShell>);
+    const footer = screen.getByRole("contentinfo");
+    const prefix = locale === "zh-CN" ? "/zh-CN" : "";
+    const paths = [...footer.querySelectorAll("a")].map((link) => link.getAttribute("href"));
+    expect(paths).toEqual(expect.arrayContaining(["/login", ...["/about", "/refund", "/content-moderation-policy", "/tools"].map((path) => prefix + path)]));
+    for (const path of ["/video-effects/earth-zoom-out", "/video-effects/ai-angel-video-generator"]) expect(paths).toContain(prefix + path);
+    expect(paths.some((path) => /\/(guides|blog)(?:[\/#?]|$)/.test(path ?? ""))).toBe(false);
+    expect(within(footer).queryByRole("heading", { name: /AI Guides & Learning|AI 指南与学习/ })).not.toBeInTheDocument();
+    expect(within(footer).getByRole("heading", { name: locale === "en" ? "Video Effects" : "视频特效" })).toBeInTheDocument();
+  });
+  it.each(["en", "zh-CN"] as const)("%s 三个政策目标各有独立正文", (locale) => {
+    const titles = locale === "zh-CN"
+      ? ["关于 FrameKoi", "退款政策", "可接受使用与内容审核政策"]
+      : ["About FrameKoi", "Refund Policy", "Acceptable Use & Content Moderation"];
+    for (const [index, section] of (["about", "refund", "content-moderation-policy"] as const).entries()) {
+      const view = render(<TrustPage section={section} locale={locale}/>);
+      const main = screen.getByRole("main");
+      expect(within(main).getByRole("heading", { level: 1, name: titles[index] })).toBeInTheDocument();
+      expect(main.querySelectorAll("article > p").length).toBeGreaterThan(3);
+      view.unmount();
+    }
   });
   it("抽屉锁定背景、循环焦点，遮罩及 Escape 均关闭并恢复焦点", async () => {
     render(<SiteShell locale="zh-CN" currentPath="/ai-makeup"><button>页面按钮</button></SiteShell>);
@@ -42,6 +83,10 @@ describe("两套平台外壳", () => {
     trigger.focus(); fireEvent.click(trigger);
     const dialog = screen.getByRole("dialog", { name: "导航菜单" });
     expect(document.body.style.overflow).toBe("hidden");
+    expect(within(dialog).getByRole("link", { name: "视频特效" })).toHaveAttribute("href", "/zh-CN/video-effects");
+    expect(within(dialog).getByRole("link", { name: "视频编辑" })).toHaveAttribute("href", "/zh-CN/ai-video-editor");
+    expect(within(dialog).getByRole("link", { name: "口型同步" })).toHaveAttribute("href", "/zh-CN/tools/ai-lip-sync-video-generator");
+    expect(within(dialog).getByRole("link", { name: "社区" })).toHaveAttribute("href", "/zh-CN/explore");
     const close = within(dialog).getByRole("button", { name: "关闭导航" });
     await waitFor(() => expect(close).toHaveFocus());
     fireEvent.keyDown(dialog, { key: "Tab", shiftKey: true });

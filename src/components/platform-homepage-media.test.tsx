@@ -1,10 +1,12 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import Link from "next/link";
 import { HomepageToolCard } from "./platform-homepage-cards";
 import { landingVideoTools, workspaceVideoTools, workspaceImageTools } from "@/lib/platform-homepage-data";
 import { HomepageVideo, HomepageImageSequence } from "./platform-homepage-media";
+import { HomepageEffects } from "./platform-homepage-interactions";
+import { PlatformGeneratorContent } from "./platform-generator-content";
 
 describe("首页公开视频预览", () => {
   let intersections: { node?: Element; emit: (visible: boolean) => void; disconnect: () => void }[];
@@ -27,6 +29,41 @@ describe("首页公开视频预览", () => {
   });
   afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(); });
   const preview = (trigger: "visible" | "hover" = "visible") => <HomepageVideo poster="/poster.jpg" src="/preview.mp4" locale="zh-CN" trigger={trigger} />;
+
+  it.each(["en", "zh-CN"] as const)("%s 首页视频指南可达且不加载原参考视频", (locale) => {
+    const prefix = locale === "en" ? "" : "/zh-CN";
+    const { container } = render(<HomepageEffects locale={locale}/>);
+    const panel = within(screen.getByRole("tabpanel"));
+    for (const [path, name] of [
+      ["/tools/ai-kissing-video-generator", locale === "en" ? "Kiss scene" : "亲吻场景"],
+      ["/tools/ai-hug-video-generator", locale === "en" ? "Hug scene" : "拥抱场景"]
+    ]) {
+      const link = panel.getByRole("link", { name: new RegExp(name) });
+      expect(link.getAttribute("href")?.split("#")[0]).toBe(prefix + path);
+      expect(link.querySelector("video,img")).toBeNull();
+    }
+    expect(container.querySelector('a[href*="/video-effects/earth-zoom-out"]')).toBeInTheDocument();
+  });
+
+  it.each(["en", "zh-CN"] as const)("%s 视频生成器推荐保留首帧工具预览，指南链接到正式路径", async (locale) => {
+    const prefix = locale === "en" ? "" : "/zh-CN";
+    const onPrompt = vi.fn();
+    const { container } = render(<PlatformGeneratorContent family="video" locale={locale} onPrompt={onPrompt}/>);
+    for (const path of ["/tools/character-animation", "/tools/ai-lip-sync-video-generator"]) {
+      const link = [...container.querySelectorAll("a")].find(a => a.getAttribute("href")?.split("#")[0] === prefix + path);
+      expect(link).toBeInTheDocument();
+      expect(link?.closest("article")?.querySelector("video,img")).toBeNull();
+    }
+    const imageTool = container.querySelector<HTMLAnchorElement>(`a[href="${prefix}/tools/ai-image-to-video"]`)!.closest("article")!;
+    const video = imageTool.querySelector("video")!;
+    const title = within(imageTool).getByRole("heading").textContent;
+    const button = within(imageTool).getByRole("button", { name: locale === "en" ? `Play showcase video: ${title}` : `播放展示视频：${title}` });
+    expect(button.closest("a")).toBeNull();
+    act(() => intersections.find(({ node }) => node === video)!.emit(true));
+    await act(async () => fireEvent.click(button));
+    expect(button).toHaveAccessibleName(locale === "en" ? `Pause showcase video: ${title}` : `暂停展示视频：${title}`);
+    expect(onPrompt).not.toHaveBeenCalled();
+  });
 
   it("原生控件默认关闭，明确开启后原生暂停不被悬停聚焦改回播放", async () => {
     const view=render(preview());expect(view.container.querySelector("video")).not.toHaveAttribute("controls");view.unmount();
@@ -127,13 +164,19 @@ describe("首页公开视频预览", () => {
     const { container } = render(preview()); await act(async () => intersections[0].emit(true));
     reduced = true; act(() => preferenceListener()); expect(container.querySelector("video")).not.toHaveAttribute("src");
   });
-  it("宣传唇形同步只有图片，工作台对应卡为已观察视频，图片工具保持图片", () => {
+  it("指南卡不用外部预览，让可用舞蹈链接与视频控件各自独立", () => {
     const landing = renderToStaticMarkup(<HomepageToolCard card={landingVideoTools.find(card => card.id === "lip-sync")!} locale="zh-CN" detailed/>);
     const workspace = renderToStaticMarkup(<HomepageToolCard card={workspaceVideoTools.find(card => card.id === "lip-sync")!} locale="zh-CN"/>);
+    const dance = renderToStaticMarkup(<HomepageToolCard card={landingVideoTools.find(card => card.id === "dance")!} locale="zh-CN" detailed/>);
     const image = renderToStaticMarkup(<HomepageToolCard card={workspaceImageTools[0]} locale="zh-CN"/>);
-    expect(landing).not.toContain("<video"); expect(workspace).toContain("<video"); expect(image).not.toContain("<video");
-    expect(workspace).toContain('href="/zh-CN/tools/ai-lip-sync-video-generator"');
-    expect(workspace).not.toMatch(/<a[^>]*>[^]*<button[^]*<\/a>/);
+    for (const guide of [landing, workspace]) {
+      expect(guide).toContain('href="/zh-CN/tools/ai-lip-sync-video-generator"');
+      expect(guide).not.toContain("<video");
+    }
+    expect(image).not.toContain("<video");
+    expect(dance).toContain('href="/zh-CN/ai-dance"');
+    expect(dance).toContain("<video");
+    expect(dance).not.toMatch(/<a[^>]*>[^]*<button[^]*<\/a>/);
   });
 
   it("图片主卡可见时按顺序循环，暂停和卸载会清理计时器", () => {

@@ -26,7 +26,13 @@ export const preflight = (c: ReleaseConfig) => {
 export const runtimeRequired = ["DATABASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_SITE_URL", "R2_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCKET_ORIGINALS", "R2_BUCKET_RESULTS", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION", "ROUTER_CREATIVE_API_KEY", "INNGEST_EVENT_KEY", "INNGEST_SIGNING_KEY", "CREEM_API_KEY", "CREEM_WEBHOOK_SECRET", "CREEM_PRODUCT_CREDITS_100"] as const;
 export const validateRuntime = (env: Record<string, string | undefined>) => {
   if (env.RELEASE_PROFILE && !["full", "website-db", "media-generation"].includes(env.RELEASE_PROFILE)) throw new Error("发布范围无效");
-  if (env.RELEASE_PROFILE === "website-db" && (env.MEDIA_CREATE_ENABLED === "1" || env.ENABLE_CHECKOUT === "1" || env.DISABLE_CHECKOUT !== "1" || env.DISABLE_GENERATION !== "1")) throw new Error("网站数据库发布必须保持生成与收费关闭");
+  if (env.RELEASE_PROFILE === "website-db" && (
+    env.MEDIA_CREATE_ENABLED === "1" ||
+    env.ENABLE_GENERATION === "1" ||
+    env.ENABLE_CHECKOUT === "1" ||
+    env.DISABLE_CHECKOUT !== "1" ||
+    env.DISABLE_GENERATION !== "1"
+  )) throw new Error("网站数据库发布必须保持生成与收费关闭");
   const required = ["website-db", "media-generation"].includes(env.RELEASE_PROFILE??"") ? runtimeRequired.slice(0, 4) : runtimeRequired;
   for (const key of required) if (!env[key]?.trim() || /placeholder|your[_-]|example\./i.test(env[key]!)) throw new Error(`运行环境缺少有效配置：${key}`);
   if (env.NEXT_PUBLIC_SUPABASE_URL !== `https://${TARGET.supabaseRef}.supabase.co` || env.NEXT_PUBLIC_SITE_URL !== `https://${TARGET.domain}`) throw new Error("运行环境目标不匹配");

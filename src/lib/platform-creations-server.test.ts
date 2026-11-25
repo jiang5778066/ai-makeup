@@ -7,7 +7,10 @@ const fixture=vi.hoisted(()=>{
  return {runtime,submit,source:vi.fn((..._args:unknown[])=>({}))};
 });
 vi.mock('./media-runtime',()=>({getMediaRuntime:()=>fixture.runtime,readMediaRuntimeConfig:()=>({executionBackend:'inngest'})}));
-vi.mock('./supabase/server',()=>({getCurrentUser:async()=>({id:'synthetic'})}));
+vi.mock('./supabase/server',()=>({
+ getCurrentUser:async()=>({id:'synthetic'}),
+ getCurrentAccountSession:async()=>({status:'signed_in',user:{id:'synthetic'}})
+}));
 vi.mock('./platform-account-http',async importOriginal=>({...await importOriginal<typeof import('./platform-account-http')>(),accountConfigured:()=>true}));
 vi.mock('./media-creations-source',()=>({createUnifiedCreationSource:fixture.source}));
 import {mediaHandlers} from './media-tasks';

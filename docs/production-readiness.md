@@ -40,7 +40,7 @@ Optional:
 ## Kill Switches
 
 - `DISABLE_CHECKOUT=1` returns `checkout_disabled` from checkout.
-- `DISABLE_GENERATION=1` returns `generation_disabled` from generation.
+- 旧美妆与实时试妆高清保存默认关闭。仅 `ENABLE_GENERATION=1` 显式启用，`DISABLE_GENERATION=1` 优先关闭。关闭时，已认证的新任务请求返回 `503 generation_disabled`，已有任务仍可查询和继续处理。
 - `DAILY_AI_SPEND_CAP_CENTS` is enforced atomically before a generation job starts.
 - 每次生成按 `AI_GENERATION_ESTIMATE_CENTS` 和创作中心实时模型价格的较大值预留预算。
 
