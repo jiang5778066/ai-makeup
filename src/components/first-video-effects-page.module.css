@@ -140,34 +140,6 @@
   content: "";
 }
 
-.storyboard[data-effect="earth-zoom-out"] .frame {
-  background: linear-gradient(155deg, #212847, #403260 58%, #c28d9d);
-}
-
-.storyboard[data-effect="earth-zoom-out"] .frame::before,
-.storyboard[data-effect="earth-zoom-out"] .frame::after {
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 54%;
-  background: #494883;
-  clip-path: polygon(0 70%, 21% 38%, 38% 63%, 63% 0, 100% 53%, 100% 100%, 0 100%);
-}
-
-.storyboard[data-effect="earth-zoom-out"] .frame::after {
-  height: 42%;
-  background: #24233f;
-  clip-path: polygon(0 50%, 28% 60%, 56% 0, 80% 37%, 100% 66%, 100% 100%, 0 100%);
-}
-
-.storyboard[data-effect="earth-zoom-out"] .frames > :last-child .frame::before {
-  height: 33%;
-}
-
-.storyboard[data-effect="earth-zoom-out"] .frames > :last-child .frame::after {
-  height: 24%;
-}
-
 .frame span {
   width: 13%;
   height: 25%;
@@ -185,14 +157,6 @@
   border-radius: 50%;
   background: inherit;
   content: "";
-}
-
-.storyboard[data-effect="earth-zoom-out"] .frame span {
-  transform: translate(22%, 96%) scale(.38);
-}
-
-.storyboard[data-effect="earth-zoom-out"] .frames > :last-child .frame span {
-  transform: translate(22%, 196%) scale(.18);
 }
 
 .storyboard[data-effect="ai-angel-video-generator"] .frames > :last-child .frame::before,
@@ -283,4 +247,73 @@
   .page { padding-inline: 16px; }
   .hero, .workflow, .prompt { grid-template-columns: minmax(0, 1fr); }
   .copyAction { grid-column: 1; }
+}
+
+.earthGuide {
+  width: min(54rem, 100%);
+  margin-inline: auto;
+  line-height: 1.7;
+}
+
+.earthGuide h1 {
+  max-width: 20ch;
+  margin: 0 0 18px;
+  font-size: clamp(2.25rem, 5vw, 4.25rem);
+  letter-spacing: -.045em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.earthGuide h2 {
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  line-height: 1.2;
+}
+
+.earthGuide h3 { font-size: 1.125rem; line-height: 1.35; }
+.earthGuide p,
+.earthGuide dd { color: var(--effect-muted); }
+
+.earthGuide > section {
+  margin-top: clamp(32px, 6vw, 56px);
+  padding-top: 28px;
+  border-top: 1px solid var(--platform-line);
+}
+
+.earthShots {
+  list-style: decimal;
+  padding-inline-start: 1.5rem;
+}
+
+.earthShots li,
+.earthFixes div { margin-block: 18px; }
+.earthShots p { margin-block: 6px; }
+.earthShots strong,
+.earthFixes dt { display: block; color: var(--effect-ink); font-weight: 650; }
+.earthShots li::marker { color: var(--effect-accent); font-weight: 700; }
+.earthFixes dd { margin-inline-start: 0; }
+
+.earthPrompt {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.earthPrompt h3,
+.earthPrompt p { margin: 0; }
+.earthPrompt .copyAction { grid-column: 1; }
+
+.earthLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-block: 18px 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.earthLinks a,
+.earthGuide .status a {
+  color: var(--effect-accent);
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
